@@ -1,0 +1,61 @@
+# Configuration settings for all YDB cluster nodes
+
+ansible_python_interpreter: /usr/bin/python3
+
+# libidn compiled code.
+# Required for RHEL 8, RHEL 9 and similar (AlmaLinux, etc)
+# libidn_archive: libidn.tar.gz
+
+# YDB cluster domain (aka cluster identifier), Root in the documentation
+ydb_domain: ycydb00
+
+# YDB software installation directory
+ydb_dir: /opt/ydb
+
+# Source directory with TLS keys and certificares
+ydb_tls_dir: ./tls/CA/certs/2023-03-09_16-49-39
+
+# YDB server software archive
+ydb_archive: ydbd-23.1.26-linux-amd64.tar.gz
+
+# Extra options passed to tar for unpack, typically "--strip-component=1"
+ydb_unpack_options: "--strip-component=1"
+
+# Database name for the dynamic nodes
+ydb_dbname: testdb
+
+# YDB default storage pool kind, as specified in the static nodes
+#   configuration file in the storage_pool_types.kind field
+ydb_pool_kind: ssd
+
+# Default number of groups per newly created database
+ydb_default_groups: 9
+
+# Name of YDB cluster configuration file
+ydb_config: config.yaml
+
+# Number of cores for static and dynamic nodes
+ydb_cores_static: 7
+ydb_cores_dynamic: 7
+
+# YDB physical disk device names and labels for static nodes
+ydb_disks:
+    - name: /dev/vdb
+      label: ydb_disk_1
+# Configuration settings for dynamic YDB cluster nodes
+
+# The list of exactly three node brokers (static nodes)
+ydb_brokers:
+  - ycydb-s1
+  - ycydb-s2
+  - ycydb-s3
+
+# The list of dynnodes to run on each host
+ydb_dynnodes:
+  - { instance: 'alfa', offset: 0 }
+  - { instance: 'bravo', offset: 1 }
+  - { instance: 'charlie', offset: 2 }
+  - { instance: 'delta', offset: 3 }
+
+# Extra sleep time to allow dynamic nodes to settle up
+dynnode_restart_sleep_seconds: 30

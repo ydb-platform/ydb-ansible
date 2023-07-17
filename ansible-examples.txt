@@ -1,0 +1,13 @@
+# Missing Python
+rm ~/.ssh/known_hosts
+for x in `seq 1 9`; do screen -d -m ssh -o StrictHostKeyChecking=accept-new yc-user@ycydb-s"$x" sudo yum install -y python3; done
+
+ansible -b -i hosts-static -m shell -a 'DEBIAN_FRONTEND=noninteractive apt-get update -y' all
+ansible -b -i hosts-static -m shell -a 'DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y' all
+
+ansible -b -i hosts-static -m shell -a 'rm -rf /opt/ydb' all
+ansible -b -i hosts-static -m shell -a 'shutdown -r now' all
+ansible -b -i hosts-static -m shell -a 'systemctl start ydbd-storage.service' all
+ansible -b -i hosts-static -m shell -a '/opt/ydb/bin/ydbd admin blobstorage disk obliterate /dev/disk/by-partlabel/ydb_disk_1' all
+
+ansible -b -i hosts-static -m shell -a 'astra-ptrace-lock disable' all
