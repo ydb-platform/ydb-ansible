@@ -58,9 +58,9 @@ Overall installation is performed according to the [official instruction](https:
 1. [Review the system requirements](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#requirements), and prepare the YDB hosts. Ensure that SSH access and sudo-based root privileges are available.
 1. [Prepare the TLS certificates](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#tls-certificates), the provided [sample script](https://github.com/ydb-platform/ydb/tree/main/ydb/deploy/tls_cert_gen) may be used for automation of this step.
 1. Download the [YDB server distribution](https://ydb.tech/en/docs/downloads/#ydb-server). It is better to use the latest binary version available.
-1. Clone the [Github repository](https://github.com/zinal/ydb-snippets/tree/main/ydb-ansible) containing the YDB Ansible playbooks:
+1. Clone the [Github repository](https://github.com/ydb-platform/ydb-ansible) containing the YDB Ansible playbooks:
     ```bash
-    git clone https://github.com/zinal/ydb-snippets.git
+    git clone https://github.com/ydb-platform/ydb-ansible
     cd ydb-ansible
     ```
 1. Prepare the list of hosts to deploy the YDB static and dynamic nodes, as sections `[ydbd_static]` and `[ydbd_dynamic]` in the `hosts` file. An example file is provided.
