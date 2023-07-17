@@ -2,14 +2,14 @@
 
 Ansible playbooks supporting the deployment of [YDB](https://ydb.tech) clusters into VM or baremetal servers.
 
-Currently the playbooks provide support the following scenarious:
+Currently the playbooks support the following scenarious:
 * the initial deployment of YDB static (storage) nodes;
 * YDB database creation;
 * the initial deployment of YDB dynamic (database) nodes;
 * adding extra YDB dynamic nodes to the YDB cluster;
 * updating cluster configuration file and TLS certificates, with automatic rolling restart.
 
-The following scenarious are yet to be implemented:
+The following scenarious are yet to be implemented (TODO):
 * configuring extra storage devices within the existing YDB static nodes;
 * adding extra YDB static nodes to the existing cluster;
 * removing YDB dynamic nodes from the existing cluster.
@@ -17,7 +17,7 @@ The following scenarious are yet to be implemented:
 Current limitations:
 * configuration file customization depends on the support of automatic actor system threads management, which requires YDB version 23.1.26.hotfix1 or later;
 * the cluster configuration file has to be manually created;
-* there are no examples on configuring the storage nodes with different disk layouts (it seems to be doable by defining different `ydb_disks` values for different host groups).
+* there are no examples for configuring the storage nodes with different disk layouts (it seems to be doable by defining different `ydb_disks` values for different host groups).
 
 Playbooks were specifically tested on the following Linux flavours:
 * Ubuntu 22.04 LTS
