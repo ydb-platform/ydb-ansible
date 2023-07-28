@@ -26,6 +26,10 @@ Playbooks were specifically tested on the following Linux flavours:
 * AstraLinux Special Edition 1.7
 * REDOS 7.3
 
+# Ansible Collection - ydb_platform.ydb
+
+Documentation for the collection.
+
 ## Playbook configuration settings
 
 Default configuration settings are defined in the `group_vars/all` file as a set of Ansible variables. An example file is provided. Different playbook executions may require different variable values, which can be accomplished by specifying extra JSON-format files and passing those files [in the command line](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#vars-from-a-json-or-yaml-file).
