@@ -1,0 +1,15 @@
+- name: assert required variables are defined
+  ansible.builtin.assert:
+    that:
+      - factory_ipv4_connectivity_interface is defined
+      - factory_ipv4_connectivity_address is defined
+      - factory_ipv4_connectivity_gateway is defined
+
+- name: configure setup ipv4 address
+  shell: 'ip -o addr | grep "{{ factory_ipv4_connectivity_interface }}.*inet {{ factory_ipv4_connectivity_address }}" && echo OK || ip addr add {{ factory_ipv4_connectivity_address }} dev {{ factory_ipv4_connectivity_interface }}'
+  register: result
+  changed_when: '"OK" not in result.stdout_lines'
+
+- name: configure setup ipv4 gateway
+  shell: 'ip -o route | grep "default via {{ factory_ipv4_connectivity_gateway }}" && echo OK || ip route add default via {{ factory_ipv4_connectivity_gateway }}'
+  changed_when: '"OK" not in result.stdout_lines'

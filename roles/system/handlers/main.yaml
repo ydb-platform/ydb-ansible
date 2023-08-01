@@ -1,0 +1,22 @@
+- name: restart timesyncd
+  ansible.builtin.systemd:
+    name: systemd-timesyncd.service
+    state: restarted
+
+- name: restart journald
+  ansible.builtin.systemd:
+    name: systemd-journald.service
+    state: restarted
+
+- name: restart cron
+  ansible.builtin.systemd:
+    name: cron.service
+    state: restarted
+
+- name: apply kernel settings
+  ansible.builtin.shell: sysctl -p
+
+- name: restart cpufrequtils
+  ansible.builtin.systemd:
+    name: cpufrequtils.service
+    state: restarted

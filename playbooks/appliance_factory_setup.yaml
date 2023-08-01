@@ -1,0 +1,36 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: gather information using ansible setup module
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.collect_data
+
+    - name: setup ipv4 connectivity
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.factory_ipv4_connectivity
+
+    - name: check and run dpkg configure if needed
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.dpkg_configure
+
+    - name: setup packages
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.packages
+
+    - name: upgrade apt packages
+      ansible.builtin.apt:
+        upgrade: yes
+        cache_valid_time: 3600
+      timeout: 900
+
+    - name: configure system
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.system
+
+    - name: configure system
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.unbound
+
+    - name: finalize playbook run
+      ansible.builtin.include_role:
+        name: ydb_platform.ydb.finalize

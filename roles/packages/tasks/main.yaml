@@ -1,0 +1,45 @@
+- name: set distro variables
+  ansible.builtin.include_vars:
+    file: "{{ distribution_vars_file_map[ansible_distribution][ansible_distribution_version] }}"
+    name: distro
+
+- name: setup apt repositories
+  ansible.builtin.apt_repository:
+    repo: "{{ item }}"
+    state: present
+    update_cache: no
+  loop: "{{ distro.repositories }}"
+  when: distro.repositories
+  notify:
+    - update apt cache
+
+- name: setup apt preferences
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    force: true
+  loop: "{{ distro.preferences }}"
+  when: distro.preferences
+  notify:
+    - update apt cache
+
+- name: setup apt configs
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    force: true
+  loop: "{{ distro.configs }}"
+  when: distro.configs
+  notify:
+    - update apt cache
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: install packages
+  ansible.builtin.apt:
+    pkg: "{{ distro.packages }}"
+    state: present
+    force: true
+    cache_valid_time: 3600
+  timeout: 900

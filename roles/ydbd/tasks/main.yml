@@ -17,15 +17,12 @@
     state: present
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RED'
 
-- name: Ensure chrony is installed
-  ansible.builtin.package:
-    name: chrony
-    state: present
-
 - name: Ensure jq is installed
   ansible.builtin.package:
     name: jq
     state: present
+    cache_valid_time: 3600
+  timeout: 300
 
 - name: Deploy custom libidn
   block:
@@ -55,10 +52,19 @@
   when: libidn_archive is defined
 
 - name: Create the ydb group
-  group: name=ydb system=true
+  group:
+    name: ydb
+    system: true
 
 - name: Create the ydb user
-  user: name=ydb group=ydb groups=disk system=true create_home=true home={{ ydb_dir }}/home comment="YDB Service Account"
+  user:
+    name: ydb
+    group: ydb
+    groups: disk
+    system: true
+    create_home: true
+    home: "{{ ydb_dir }}/home"
+    comment: "YDB Service Account"
 
 - name: Install the YDB server binary package
   ansible.builtin.unarchive:

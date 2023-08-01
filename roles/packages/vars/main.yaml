@@ -1,0 +1,3 @@
+distribution_vars_file_map:
+  "Astra Linux":
+    "1.7_x86-64": astra_linux_1.7.yaml

@@ -1,0 +1,10 @@
+- name: gather information using ansible setup module
+  ansible.builtin.setup:
+    gather_subset:
+      - distribution
+      - network
+  timeout: 300
+
+- name: gather services information
+  ansible.builtin.service_facts:
+  timeout: 300

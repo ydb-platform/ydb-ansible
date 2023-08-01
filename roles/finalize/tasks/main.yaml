@@ -1,0 +1,7 @@
+- name: call fsync after all tasks
+  ansible.builtin.shell: sync
+  changed_when: false
+  throttle: 30
+
+- name: close persistent connections
+  ansible.builtin.meta: reset_connection
