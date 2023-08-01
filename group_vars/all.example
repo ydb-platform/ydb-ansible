@@ -7,7 +7,7 @@ ansible_python_interpreter: /usr/bin/python3
 # libidn_archive: libidn.tar.gz
 
 # YDB cluster domain (aka cluster identifier), Root in the documentation
-ydb_domain: ycydb00
+ydb_domain: Domain0
 
 # YDB software installation directory
 ydb_dir: /opt/ydb

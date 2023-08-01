@@ -32,7 +32,7 @@ domains_config:
   # There can be only one root domain in a cluster. Domain name prefixes all scheme objects names, e.g. full name of a table table1 in database db1.
   # in a cluster with domains_config.domain.name parameter set to Root would be equal to /Root/db1/table1
   domain:
-  - name: ycydb00
+  - name: Domain0
     domain_id: 1
     storage_pool_types:
     - kind: ssd

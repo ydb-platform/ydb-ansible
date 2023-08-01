@@ -62,7 +62,7 @@ hosts:
     rack: '9'
 domains_config:
   domain:
-  - name: Root
+  - name: Domain0
     storage_pool_types:
     - kind: ssd
       pool_config:
