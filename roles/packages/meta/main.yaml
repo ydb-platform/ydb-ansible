@@ -1,0 +1,2 @@
+dependencies:
+  - ydb_platform.ydb.gather_facts

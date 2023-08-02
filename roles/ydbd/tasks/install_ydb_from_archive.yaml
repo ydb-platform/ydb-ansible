@@ -1,0 +1,8 @@
+- name: unpack YDB server archive
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/bin/ydbd"
+    dest: "{{ ydb_dir }}"
+    owner: root
+    group: root
+    src: "{{ ydb_archive }}"
+    extra_opts: "{{ ydb_archive_unpack_options }}"

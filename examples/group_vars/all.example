@@ -1,16 +1,11 @@
 # Configuration settings for all YDB cluster nodes
 
-ansible_python_interpreter: /usr/bin/python3
-
 # libidn compiled code.
 # Required for RHEL 8, RHEL 9 and similar (AlmaLinux, etc)
-# libidn_archive: libidn.tar.gz
+# ydb_libidn_archive: libidn.tar.gz
 
 # YDB cluster domain (aka cluster identifier), Root in the documentation
 ydb_domain: ycydb00
-
-# YDB software installation directory
-ydb_dir: /opt/ydb
 
 # Source directory with TLS keys and certificares
 ydb_tls_dir: ./tls/CA/certs/2023-03-09_16-49-39
@@ -58,4 +53,4 @@ ydb_dynnodes:
   - { instance: 'delta', offset: 3 }
 
 # Extra sleep time to allow dynamic nodes to settle up
-dynnode_restart_sleep_seconds: 30
+ydb_dynnode_restart_sleep_seconds: 30

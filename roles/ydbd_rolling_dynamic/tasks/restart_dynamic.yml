@@ -29,4 +29,4 @@
   delegate_facts: true
 
 - name: Additional delay to settle the dynamic nodes
-  ansible.builtin.pause: seconds={{ dynnode_restart_sleep_seconds }}
+  ansible.builtin.pause: seconds={{ ydb_dynnode_restart_sleep_seconds }}

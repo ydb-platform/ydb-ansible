@@ -1,0 +1,32 @@
+- name: Unpacking custom libidn
+  ansible.builtin.unarchive:
+    creates: /usr/local/lib/libidn.so.11
+    dest: /usr/local/lib
+    owner: root
+    group: root
+    src: '{{ ydb_libidn_archive }}'
+    extra_opts: "{{ ydb_libidn_archive_unpack_options }}"
+
+- name: Symlinking libidn.so.11 to /lib64
+  ansible.builtin.file:
+    src: /usr/local/lib/libidn.so.11
+    dest: /lib64/libidn.so.11
+    owner: root
+    group: bin
+    state: link
+
+- name: Symlinking libidn.so.11 to /usr/lib
+  ansible.builtin.file:
+    src: /usr/local/lib/libidn.so.11
+    dest: /usr/lib/libidn.so.11
+    owner: root
+    group: bin
+    state: link
+
+- name: Symlinking libidn.so.12 to /usr/lib
+  ansible.builtin.file:
+    src: /usr/local/lib/libidn.so.12
+    dest: /usr/lib/libidn.so.12
+    owner: root
+    group: bin
+    state: link

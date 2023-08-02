@@ -1,0 +1,31 @@
+- name: gather information using ansible setup module
+  ansible.builtin.setup:
+    gather_subset:
+      - distribution
+      - network
+      - python
+  timeout: 300
+
+- name: display discovered facts
+  ansible.builtin.debug:
+    var: "{{ item }}"
+  loop:
+    - ansible_distribution
+    - ansible_distribution_version
+    - ansible_python_version
+
+- name: gather services information
+  ansible.builtin.service_facts:
+  timeout: 300
+
+- name: check ansible_python
+  ydb_platform.ydb.warn:
+    msg: "discovered ansible_python version is out of date and is not supported"
+    that:
+      - "ansible_python_version is version_compare('3.7', '<')"
+
+- name: check ydb_dir variable
+  ydb_platform.ydb.warn:
+    msg: "Variable ydb_dir is not equal to '/opt/ydb', which is not properly tested and generally not recommended"
+    that:
+      - ydb_dir != '/opt/ydb'
