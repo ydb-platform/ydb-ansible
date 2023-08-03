@@ -4,6 +4,7 @@ After=network-online.target rc-local.service
 Wants=network-online.target
 StartLimitInterval=10
 StartLimitBurst=15
+After=ydbd-storage.service
 
 [Service]
 Restart=always

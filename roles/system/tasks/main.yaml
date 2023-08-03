@@ -21,13 +21,14 @@
     - name: assert required variables are defined
       ansible.builtin.assert:
         that:
-          - system_ntp_servers is defined
           - "{{ (system_ntp_servers|length) > 1 }}"
+      when: system_ntp_servers is defined
 
     - name: create conf.d directory for timesyncd
       ansible.builtin.file:
         path: /etc/systemd/timesyncd.conf.d
         state: directory
+      when: system_ntp_servers is defined
 
     - name: configure systemd-timesyncd
       ansible.builtin.copy:
@@ -39,6 +40,7 @@
         owner: root
         group: root
         mode: '0644'
+      when: system_ntp_servers is defined
       notify:
         - restart timesyncd
 

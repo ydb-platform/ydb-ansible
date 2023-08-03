@@ -1,1 +1,5 @@
-ydb_archive_unpack_options: []
+ydb_libidn_archive_unpack_options: ['--strip-component=1']
+
+ydb_archive_unpack_options: ['--strip-component=1']
+
+ydb_transparent_hugepages_enable: true

@@ -1,3 +1,9 @@
+- name: check if required variables are defined
+  ansible.builtin.assert:
+    that:
+      - ydb_archive is defined
+    fail_msg: ydb_archive variable is required
+
 - name: set vars_for_distribution variables
   ansible.builtin.include_vars:
     file: "{{ vars_for_distribution_file }}"
@@ -35,35 +41,26 @@
     file: install_ydb_from_archive.yaml
   when: ydb_archive is defined
 
-# - name: Create the YDB configuration directory
-#   file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode=755
+- name: create YDB configuration directory
+  file:
+    path: "{{ ydb_dir }}/cfg"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
 
-# - name: Create the YDB audit directory
-#   file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode=700
+- name: create YDB audit directory
+  file:
+    path: "{{ ydb_dir }}/audit"
+    state: directory
+    owner: ydb
+    group: ydb
+    mode: 0700
 
-# - name: Create the YDB certs directory
-#   file: state=directory path={{ ydb_dir }}/certs group=ydb owner=ydb mode=700
-
-# - name: Create the YDB configuration backup directory
-#   file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode=700
-
-# - name: Disable YDB CLI version checks
-#   command: "sudo -u ydb LD_LIBRARY_PATH={{ ydb_dir }}/lib {{ ydb_dir }}/bin/ydb version --disable-checks"
-
-# - name: Copy the thp-config.sh script
-#   copy: src=thp-config.sh dest={{ ydb_dir }}/bin/thp-config.sh
-
-# - name: Generate the THP service files
-#   template:
-#     src: thp-service.j2
-#     dest: "/etc/systemd/system/ydb-hugepages.service"
-
-# - name: Refresh systemd services configuration
-#   ansible.builtin.systemd:
-#     daemon_reload: true
-
-# - name: Activate THP
-#   ansible.builtin.systemd:
-#     enabled: true
-#     state: started
-#     name: ydb-hugepages
+- name: create YDB certs directory
+  file:
+    path: "{{ ydb_dir }}/certs"
+    state: directory
+    owner: ydb
+    group: ydb
+    mode: 0700
