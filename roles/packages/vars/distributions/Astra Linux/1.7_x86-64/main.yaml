@@ -17,6 +17,7 @@ packages:
   - bind9-host
   - curl
   - dnsutils
+  - gdisk
   - iperf
   - iptables
   - jq

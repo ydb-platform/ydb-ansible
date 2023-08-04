@@ -1,5 +1,6 @@
----
-# ydbd static node deployment
+- name: build static node configuration file
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-static.yaml STORAGE {{ ydb_cores_static }}"
+  when: ydb_cores_static is defined
 
 - name: Generate the static node service files
   template:

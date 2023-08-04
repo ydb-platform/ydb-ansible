@@ -6,31 +6,6 @@
       - python
   timeout: 300
 
-- name: display special variables
-  run_once: true
-  ansible.builtin.debug:
-    var: "{{ item }}"
-  loop:
-    - ansible_check_mode
-    - ansible_config_file
-    - ansible_inventory_sources
-    - ansible_play_hosts
-    - ansible_playbook_python
-    - ansible_version
-    - playbook_dir
-    - inventory_file
-    - inventory_dir
-
-- name: display discovered facts and other variables
-  ansible.builtin.debug:
-    var: "{{ item }}"
-  loop:
-    - ansible_distribution
-    - ansible_distribution_version
-    - ansible_python_version
-    - ydb_dir
-    - ydb_archive
-
 - name: gather services information
   ansible.builtin.service_facts:
   timeout: 300
@@ -46,9 +21,3 @@
     msg: "Variable ydb_dir is not equal to '/opt/ydb', which is not properly tested and generally not recommended to change"
     that:
       - ydb_dir != '/opt/ydb'
-
-# TODO: add warning if vm.overcommit_memory != 1
-# TODO: add warning if not:
-# echo "always" >/sys/kernel/mm/transparent_hugepage/enabled
-# echo "defer+madvise" >/sys/kernel/mm/transparent_hugepage/defrag
-# echo "0" >/sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none

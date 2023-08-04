@@ -1,6 +1,10 @@
 ---
 # ydbd dynamic node deployment
 
+- name: build dynamic node configuration file
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
+  when: ydb_cores_dynamic is defined
+
 - name: Create the dynamic node startup script
   template: src=wait_dynamic.j2 dest={{ ydb_dir }}/home/wait_dynamic.sh mode=755
 
