@@ -2,7 +2,7 @@
 # ydbd dynamic node deployment
 
 - name: build dynamic node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
   when: ydb_cores_dynamic is defined
 
 - name: Create the dynamic node startup script

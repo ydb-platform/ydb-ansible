@@ -1,0 +1,87 @@
+- name: check if required variables are defined
+  ansible.builtin.assert:
+    that:
+      - "{{ item }} is defined"
+    fail_msg: "{{ item }} variable is required"
+  loop:
+    - ydb_cores_static
+
+- name: create static node configuration file
+  command:
+    cmd: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
+    creates: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+
+- name: create ydbd-storage.service systemd unit
+  template:
+    src: ydbd-storage.service
+    dest: "/etc/systemd/system/ydbd-storage.service"
+  notify:
+    - daemon reload
+
+- name: flush handlers
+  meta: flush_handlers
+
+
+
+
+- name: add legacy scripts, they will be replaced with ansible modules
+  block:
+
+    - name: add the storage recovery wait script
+      template:
+        src: wait_normal.sh
+        dest: "{{ ydb_dir }}/home/wait_normal.sh"
+        mode: 0755
+
+    - name: add the password initialization script
+      template:
+        src: init_password.sh
+        dest: "{{ ydb_dir }}/home/init_password.sh"
+        mode: 0755
+
+    - name: add the database creation script
+      template:
+        src: create_database.sh
+        dest: "{{ ydb_dir }}/home/create_database.sh"
+        mode: 0755
+
+- name: start the storage node
+  ansible.builtin.systemd:
+    state: started
+    name: ydbd-storage
+    enabled: true
+  any_errors_fatal: true
+
+- name: wait for storage node startup
+  shell: "ydb --ca-file {{ ydb_dir }}/certs/ca.crt -e grpcs://localhost:2135 -d {{ ydb_domain }} --user root --no-password discovery list"
+  register: ydb_discovery_list
+  until: "ydb_discovery_list.rc == 0"
+  any_errors_fatal: true
+  changed_when: false
+  failed_when: false
+  retries: 3
+  delay: 1
+
+- name: init storage if not initialized
+  ydb_platform.ydb.init_storage:
+    config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+  register: init_storage
+
+- name: initial YDB cluster setup
+  block:
+
+    - name: wait for storage bootstrap to complete
+      command: "sudo -u ydb {{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
+
+    - name: transfer the secrets
+      copy:
+        src: secret
+        dest: "{{ ydb_dir }}/certs/secret"
+
+    - name: set the initial cluster password
+      command: "sudo -u ydb {{ ydb_dir }}/home/init_password.sh {{ inventory_hostname }}"
+
+  run_once: true
+
+- name: cleanup the transferred secrets
+  file: state=absent path={{ ydb_dir }}/certs/secret

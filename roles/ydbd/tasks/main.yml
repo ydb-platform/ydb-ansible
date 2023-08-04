@@ -6,6 +6,7 @@
   loop:
     - ydb_archive
     - ydb_config
+    - ydb_tls_dir
 
 - name: set vars_for_distribution variables
   ansible.builtin.include_vars:
@@ -61,13 +62,12 @@
     mode: 0700
 
 - name: setup certificates
-  when: ydb_tls_dir is defined
   block:
     - name: create YDB certs directory
       file:
         path: "{{ ydb_dir }}/certs"
         state: directory
-        owner: ydb
+        owner: root
         group: ydb
         mode: 0700
 
@@ -75,24 +75,32 @@
       copy:
         src: "{{ ydb_tls_dir }}/ca.crt"
         dest: "{{ ydb_dir }}/certs/ca.crt"
+        owner: root
+        group: ydb
         mode: 0644
 
     - name: copy the TLS node.crt
       copy:
         src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.crt"
         dest: "{{ ydb_dir }}/certs/node.crt"
+        owner: root
+        group: ydb
         mode: 0644
 
     - name: copy the TLS node.key
       copy:
         src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.key"
         dest: "{{ ydb_dir }}/certs/node.key"
-        mode: 0600
+        owner: root
+        group: ydb
+        mode: 0640
 
     - name: copy the TLS web.pem
       copy:
         src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/web.pem"
         dest: "{{ ydb_dir }}/certs/web.pem"
+        owner: root
+        group: ydb
         mode: 0644
 
 - name: copy configuration file

@@ -15,6 +15,7 @@ packages:
   - atop
   - bash-completion
   - bind9-host
+  - ca-certificates
   - curl
   - dnsutils
   - gdisk

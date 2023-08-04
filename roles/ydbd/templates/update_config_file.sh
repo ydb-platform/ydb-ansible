@@ -27,4 +27,6 @@ actor_system_config:
   cpu_count: $CONF_CORES
 EOF
 
+chmod 644 $CONF_DST
+
 # End Of File

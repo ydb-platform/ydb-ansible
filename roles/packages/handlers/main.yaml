@@ -1,3 +1,7 @@
 - name: update apt cache
   ansible.builtin.apt:
     update_cache: yes
+  register: update_apt_cache
+  until: "update_apt_cache.rc == 0"
+  retries: 3
+  delay: 5

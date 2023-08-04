@@ -1,0 +1,31 @@
+[Unit]
+Description=YDB storage node
+StartLimitInterval=10
+StartLimitBurst=15
+After=network-online.target rc-local.service
+After=ydb-transparent-hugepages.service
+Wants=network-online.target
+
+
+[Service]
+Type=simple
+User=ydb
+PermissionsStartOnly=true
+Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
+ExecStart={{ ydb_dir }}/bin/ydbd server \
+    --grpcs-port 2135 \
+    --mon-port 8765 \
+    --ic-port 19001 \
+    --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-static.yaml \
+    --node static
+LimitNOFILE=65536
+LimitCORE=0
+LimitMEMLOCK=3221225472
+Restart=always
+RestartSec=1
+SyslogIdentifier=ydbd
+SyslogFacility=daemon
+SyslogLevel=err
+
+[Install]
+WantedBy=multi-user.target

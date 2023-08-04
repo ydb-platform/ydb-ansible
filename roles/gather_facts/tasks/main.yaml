@@ -17,7 +17,7 @@
       - "ansible_python_version is version_compare('3.7', '<')"
 
 - name: check ydb_dir variable
-  ydb_platform.ydb.warn:
-    msg: "Variable ydb_dir is not equal to '/opt/ydb', which is not properly tested and generally not recommended to change"
+  assert:
     that:
-      - ydb_dir != '/opt/ydb'
+      - ydb_dir == '/opt/ydb'
+    msg: "Changing ydb_dir is not supported."

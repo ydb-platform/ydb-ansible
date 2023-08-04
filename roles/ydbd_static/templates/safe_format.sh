@@ -18,7 +18,7 @@ disk_name="$1"
 disk_label="$2"
 disk_part=/dev/disk/by-partlabel/"$2"
 
-if [ -z "$disk_name" ] || [ -z "disk_label" ]; then
+if [ -z "$disk_name" ] || [ -z "$disk_label" ]; then
     echo "USAGE: $0 /dev/vdb ydb_disk_1" >&2
     exit 2
 fi

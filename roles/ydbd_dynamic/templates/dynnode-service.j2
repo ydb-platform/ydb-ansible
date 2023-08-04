@@ -17,7 +17,7 @@ SyslogFacility=daemon
 SyslogLevel=err
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
-    --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml \
+    --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
     --grpcs-port {{ 2136 + item.offset }} --grpc-ca {{ ydb_dir }}/certs/ca.crt \
     --ic-port {{ 19002 + item.offset }} --ca {{ ydb_dir }}/certs/ca.crt \
     --mon-port {{ 8766 + item.offset }} --mon-cert {{ ydb_dir }}/certs/web.pem \

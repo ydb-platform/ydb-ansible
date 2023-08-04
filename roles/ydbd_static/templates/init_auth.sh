@@ -7,7 +7,7 @@ set +u
 DB_ENDPOINT=grpcs://"$1":2135
 DB_DOMAIN=/{{ ydb_domain }}
 CAFILE={{ ydb_dir }}/certs/ca.crt
-CONFIG={{ ydb_dir }}/cfg/ydbd-static.yaml
+CONFIG={{ ydb_dir }}/cfg/ydbd-config-static.yaml
 TOKEN={{ ydb_dir }}/home/ydbd-token-file
 PASSFILE={{ ydb_dir }}/certs/secret
 
@@ -31,8 +31,5 @@ else
     --user root --no-password auth get-token -f > ${TOKEN}
 fi
 trap "rm -f ${TOKEN}" EXIT
-
-ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
-  admin blobstorage config init --yaml-file ${CONFIG}
 
 # End Of File

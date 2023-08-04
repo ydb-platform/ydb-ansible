@@ -22,14 +22,14 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd
 
-    - name: setup ydb static nodes
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.ydbd_static
+    # - name: setup ydb static nodes
+    #   ansible.builtin.import_role:
+    #     name: ydb_platform.ydb.ydbd_static
 
-    - name: setup ydb dynamic nodes
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.ydbd_dynamic
+    # - name: setup ydb dynamic nodes
+    #   ansible.builtin.import_role:
+    #     name: ydb_platform.ydb.ydbd_dynamic
 
-    - name: validate ydb installation
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.validate
+    # - name: validate ydb installation
+    #   ansible.builtin.import_role:
+    #     name: ydb_platform.ydb.validate
