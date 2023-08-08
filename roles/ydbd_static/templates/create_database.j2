@@ -38,7 +38,13 @@ else
 fi
 trap "rm -f ${TOKEN}" EXIT
 
+TMPLOG=`mktemp /tmp/ydbd.createdb.XXXXXX`
+trap "cat ${TMPLOG}; rm -f ${TMPLOG}" EXIT
+
 ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
-  admin database /{{ ydb_domain }}/${DB_NAME} create ${DB_POOL}:${DB_GROUPS}
+  admin database /{{ ydb_domain }}/${DB_NAME} create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1
+
+# Ensure success, e.g. no error messages even when the exit code is zero.
+grep -qE '^ERROR: ' ${TMPLOG}
 
 # End Of File
