@@ -69,16 +69,6 @@
 
           val-permissive-mode: yes
 
-          local-zone: "localhost.yandex.ru." static
-          local-data: "localhost.yandex.ru. 10800 IN NS localhost."
-          local-data: "localhost.yandex.ru. 10800 IN A 127.0.0.1"
-          local-data: "localhost.yandex.ru. 10800 IN AAAA ::1"
-
-          local-zone: "localhost.yandex.net." static
-          local-data: "localhost.yandex.net. 10800 IN NS localhost."
-          local-data: "localhost.yandex.net. 10800 IN A 127.0.0.1"
-          local-data: "localhost.yandex.net. 10800 IN AAAA ::1"
-
           cache-max-negative-ttl: 1
           cache-max-ttl: 300
 

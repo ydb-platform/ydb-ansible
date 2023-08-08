@@ -18,13 +18,17 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.unbound
 
+    - name: configure unbound
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.factory_unbound_zone
+
     - name: setup ydb
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd
 
-    # - name: setup ydb static nodes
-    #   ansible.builtin.import_role:
-    #     name: ydb_platform.ydb.ydbd_static
+    - name: setup ydb static nodes
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_static
 
     # - name: setup ydb dynamic nodes
     #   ansible.builtin.import_role:

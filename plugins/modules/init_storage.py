@@ -2,7 +2,7 @@ import os
 
 
 from ansible.module_utils.basic import AnsibleModule
-from project.collections.ansible_collections.ydb_platform.ydb.plugins.module_utils import ydbd_cli
+from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
 
 STORAGE_NOT_INITIALIZED_STRING = '''
@@ -14,28 +14,15 @@ Success: true
 
 
 def main():
-    module = AnsibleModule(
-        argument_spec=dict(
-            config_file=dict(type='str', required=True),
-            ca_file=dict(type='str', default=None),
-            endpoint=dict(type='str', default=None),
-            token=dict(type='str', default=None, no_log=True),
-            token_file=dict(type='str', default=None),
-        ),
-        supports_check_mode=False,
+    argument_spec=dict(
+        config_file=dict(type='str', required=True),
+
     )
-    result = {
-        'changed': False,
-    }
+    cli.YDBD.add_arguments(argument_spec)
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
+    result = {'changed': False}
     try:
-        ydbd_cli = ydbd_cli.YDBDCLI(
-            module=module,
-            ydbd_bin='/opt/ydb/bin/ydbd',
-            ca_file=module.params.get('ca_file'),
-            endpoint=module.params.get('endpoint'),
-            token=module.params.get('token'),
-            token_file=module.params.get('token_file'),
-        )
+        ydbd_cli = cli.YDBD.from_module(module)
         rc, stdout, stderr = ydbd_cli([
             'admin', 'blobstorage', 'config', 'invoke', '--proto', 'Command { ReadHostConfig {} }',
         ])
@@ -50,10 +37,10 @@ def main():
             result['msg'] = 'storage already initialized'
             result['stdout'] = stdout
             result['stderr'] = stderr
-            return
+            module.exit_json(**result)
 
         rc, stdout, stderr = ydbd_cli([
-            'admin', 'blobstorage', 'config', 'init', '--yaml-file', module.params.get('config')
+            'admin', 'blobstorage', 'config', 'init', '--yaml-file', module.params.get('config_file')
         ])
         if rc != 0:
             result['msg'] = 'blobstorage config init failed'
@@ -65,7 +52,7 @@ def main():
         result['msg'] = 'blobstorage config init succeeded'
         result['stdout'] = stdout
         result['stderr'] = stderr
-        return
+        module.exit_json(**result)
 
     except Exception as e:
         result['msg'] = f'unexpected exception: {e}'

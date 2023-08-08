@@ -15,9 +15,3 @@
     msg: "discovered ansible_python version is out of date and is not supported"
     that:
       - "ansible_python_version is version_compare('3.7', '<')"
-
-- name: check ydb_dir variable
-  assert:
-    that:
-      - ydb_dir == '/opt/ydb'
-    msg: "Changing ydb_dir is not supported."

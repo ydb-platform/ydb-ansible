@@ -1,3 +1,9 @@
+- name: check ydb_dir variable
+  assert:
+    that:
+      - ydb_dir == '/opt/ydb'
+    msg: "Changing ydb_dir is not supported."
+
 - name: check if required variables are defined
   ansible.builtin.assert:
     that:
@@ -69,7 +75,7 @@
         state: directory
         owner: root
         group: ydb
-        mode: 0700
+        mode: 0775
 
     - name: copy the TLS ca.crt
       copy:

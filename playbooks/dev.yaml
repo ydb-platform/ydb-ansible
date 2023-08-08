@@ -1,0 +1,5 @@
+- hosts: ydb
+  become: true
+  tasks:
+    - ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_static

@@ -20,12 +20,13 @@ class CLI:
                 argument_spec[key] = value
 
     @classmethod
-    def from_module(cls, module):
+    def from_module(cls, module, **params_override):
         params = {
             'module': module,
         }
         for key in cls.argument_spec:
             params[key] = module.params.get(key)
+        params.update(params_override)
         return cls(**params)
 
 
@@ -34,7 +35,7 @@ class YDBD(CLI):
         ydbd_bin=dict(type='str', default='/opt/ydb/bin/ydbd'),
         ld_library_path=dict(type='str', default='/opt/ydb/lib'),
         ca_file=dict(type='str', default=None),
-        endpoint=dict(type='str', default='grpcs://localhost:2135'),
+        endpoint=dict(type='str', required=True),
         token=dict(type='str', default=None, no_log=True),
         token_file=dict(type='str', default=None),
     )
@@ -64,6 +65,7 @@ class YDBD(CLI):
         environ_update = copy.deepcopy(self.common_environ)
         if isinstance(env, dict):
             environ_update.update(env)
+        self.module.log(f'calling command: {cmd}')
         return self.module.run_command(cmd, environ_update=environ_update)
 
 
@@ -72,7 +74,7 @@ class YDB(CLI):
         ydb_bin=dict(type='str', default='/opt/ydb/bin/ydb'),
         ld_library_path=dict(type='str', default='/opt/ydb/lib'),
         ca_file=dict(type='str', default=None),
-        endpoint=dict(type='str', default='grpcs://localhost:2135'),
+        endpoint=dict(type='str', required=True),
         database=dict(type='str', required=True),
         user=dict(type='str', default=None),
         password=dict(type='str', default=None, no_log=True),
@@ -80,7 +82,7 @@ class YDB(CLI):
         token_file=dict(type='str', default=None),
     )
 
-    def __init__(self, module, ydb_bin, ld_library_path=None, ca_file=None, endpoint=None, database=None, token=None, token_file=None, user=None, password=None):
+    def __init__(self, module, ydb_bin, ld_library_path=None, ca_file=None, endpoint=None, database=None, user=None, password=None, token=None, token_file=None):
         self.module = module
 
         self.common_environ = {}
@@ -91,7 +93,9 @@ class YDB(CLI):
         if ca_file is not None:
             self.common_options.extend(['--ca-file', ca_file])
         if endpoint is not None:
-            self.common_options.extend(['--server', endpoint])
+            self.common_options.extend(['--endpoint', endpoint])
+        if database is not None:
+            self.common_options.extend(['--database', database])
 
         if token is not None:
             self.common_environ['YDB_TOKEN'] = token
@@ -101,7 +105,7 @@ class YDB(CLI):
             self.common_environ['YDB_USER'] = user
             self.common_environ['YDB_PASSWORD'] = password
         elif user is not None and password is not None and password == '':
-            self.common_environ['YDB_USER'] = user
+            self.common_options.extend(['--user', user])
             self.common_options.extend(['--no-password', token_file])
 
     def __call__(self, cmd, env=None):
@@ -111,4 +115,5 @@ class YDB(CLI):
         environ_update = copy.deepcopy(self.common_environ)
         if isinstance(env, dict):
             environ_update.update(env)
+        self.module.log(f'calling command: {cmd}')
         return self.module.run_command(cmd, environ_update=environ_update)

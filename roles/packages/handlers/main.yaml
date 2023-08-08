@@ -3,5 +3,5 @@
     update_cache: yes
   register: update_apt_cache
   until: "update_apt_cache.rc == 0"
-  retries: 3
+  retries: 5
   delay: 5

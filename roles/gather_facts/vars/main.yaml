@@ -1,4 +1,3 @@
-ydb_dir: "/opt/ydb"
 vars_for_distribution_dir: "distributions/{{ ansible_distribution }}"
 vars_for_distribution_file: "distributions/{{ ansible_distribution }}/main.yaml"
 vars_for_distribution_version_dir: "distributions/{{ ansible_distribution }}/{{ ansible_distribution_version }}"

@@ -19,7 +19,7 @@
     - name: flush handlers
       meta: flush_handlers
 
-    - name: configure ydb-transparent-hugepages.service
+    - name: start ydb-transparent-hugepages.service
       ansible.builtin.systemd:
         name: ydb-transparent-hugepages.service
         state: started
