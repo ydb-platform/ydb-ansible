@@ -1,0 +1,5 @@
+# Rolling restart for the configured static nodes
+
+- hosts: ydbd_static
+  roles:
+  - role: ydbd_rolling_static

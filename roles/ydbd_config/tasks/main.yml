@@ -12,6 +12,7 @@
   command: "{{ ydb_dir }}/home/backup_config.sh {{ ydb_config_backup }}"
   become: true
   become_user: ydb
+  when: ydb_config_backup is defined
 
 - name: Copy the TLS ca.crt
   copy: src={{ ydb_tls_dir }}/ca.crt dest={{ ydb_dir }}/certs/ca.crt

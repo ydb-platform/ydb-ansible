@@ -7,6 +7,11 @@ set +u
 YDB_DIR="{{ ydb_dir }}"
 BACKUP_DIR=${YDB_DIR}/reserve/"$1"
 
+if [ -z "$1" ] || [ "$1" = "none" ]; then
+  echo "$0: skipping configuration backup" >&2
+  exit 0
+fi
+
 if [ -d ${BACKUP_DIR} ]; then
   echo "$0: target directory already exists" >&2
   exit 1
