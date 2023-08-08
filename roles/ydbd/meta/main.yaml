@@ -1,3 +1,4 @@
 dependencies:
   - ydb_platform.ydb.gather_facts
   - ydb_platform.ydb.transparent_hugepages
+allow_duplicates: false

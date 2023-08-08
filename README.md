@@ -53,7 +53,7 @@ The meaning and format of the variables used is specified in the table below.
 | `ydb_cores_dynamic` | Number of cores to be used by thread pools of the dynamic nodes |
 | `ydb_dbname` | Database name, for database creation, dynamic nodes deployment and dynamic nodes rolling restart |
 | `ydb_pool_kind` | YDB default storage pool kind, as specified in the static nodes configuration file in the `storage_pool_types.kind` field |
-| `ydb_default_groups` | Initial number of storage groups in the newly created database |
+| `ydb_database_groups` | Initial number of storage groups in the newly created database |
 | `ydb_dynnode_restart_sleep_seconds` | Number of seconds to sleep after startup of each dynamic node during the rolling restart. |
 
 ## Installing the YDB cluster using the Ansible playbooks
@@ -72,7 +72,7 @@ Overall installation is performed according to the [official instruction](https:
 1. Copy the `group_vars/all.example` file into `group_vars/all`, and customize it according to your environment.
 1. Copy the `files/secret.example` file to `files/secret`, and customize the desired initial administrative password, leaving the username `root` unchanged. Ansible Vault can be configured to protect this sensitive file (TODO document actions).
 1. Deploy the static nodes and initialize the cluster by running the `run-install-static.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
-1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on the single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_default_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
+1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on the single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_database_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
 1. Deploy the dynamic nodes running the `run-install-dynamic.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
 1. Repeat steps 10-11 as necessary to create more databases, or step 11 to deploy more YDB dynamic nodes.
 

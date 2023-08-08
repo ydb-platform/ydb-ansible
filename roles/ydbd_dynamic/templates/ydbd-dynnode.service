@@ -1,20 +1,14 @@
 [Unit]
 Description=YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
-After=network-online.target rc-local.service
-Wants=network-online.target
 StartLimitInterval=10
 StartLimitBurst=15
+After=network-online.target rc-local.service ydb-transparent-hugepages.service
+Wants=network-online.target
 
 [Service]
-Restart=always
-RestartSec=1
+Type=simple
 User=ydb
 PermissionsStartOnly=true
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=ydbd
-SyslogFacility=daemon
-SyslogLevel=err
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
@@ -28,6 +22,11 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
 LimitNOFILE=65536
 LimitCORE=0
 LimitMEMLOCK=32212254720
+Restart=always
+RestartSec=1
+SyslogIdentifier=ydbd
+SyslogFacility=daemon
+SyslogLevel=err
 
 [Install]
 WantedBy=multi-user.target

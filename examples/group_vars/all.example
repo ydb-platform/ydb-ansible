@@ -24,7 +24,7 @@ ydb_dbname: testdb
 ydb_pool_kind: ssd
 
 # Default number of groups per newly created database
-ydb_default_groups: 9
+ydb_database_groups: 9
 
 # Name of YDB cluster configuration file
 ydb_config: config.yaml

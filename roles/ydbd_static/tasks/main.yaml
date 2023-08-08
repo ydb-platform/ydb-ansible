@@ -4,8 +4,10 @@
       - "{{ item }} is defined"
     fail_msg: "{{ item }} variable is required"
   loop:
-    - ydb_user
     - ydb_cores_static
+    - ydb_disks
+    - ydb_domain
+    - ydb_user
 
 - name: check if required secrets are defined
   no_log: true
@@ -20,7 +22,7 @@
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
   changed_when: false
 
-- name: create ydbd-storage.service systemd unit
+- name: create static node systemd unit
   template:
     src: ydbd-storage.service
     dest: "/etc/systemd/system/ydbd-storage.service"
@@ -55,10 +57,10 @@
     allow_format: "{{ ydb_allow_format_drives }}"
   with_items: "{{ ydb_disks }}"
 
-- name: start the storage node
+- name: start storage node
   ansible.builtin.systemd:
-    state: started
     name: ydbd-storage
+    state: started
     enabled: true
   any_errors_fatal: true
 
@@ -73,6 +75,7 @@
     password: "{{ ydb_password }}"
   run_once: true
   register: ydb_credentials
+  when: ydb_credentials is undefined
 
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
@@ -84,7 +87,7 @@
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
 
-- name: init storage if not initialized
+- name: init YDB storage if not initialized
   ydb_platform.ydb.init_storage:
     config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"

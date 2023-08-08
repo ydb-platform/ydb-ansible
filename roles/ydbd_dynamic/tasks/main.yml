@@ -1,35 +1,69 @@
----
-# ydbd dynamic node deployment
+- name: check if required variables are defined
+  ansible.builtin.assert:
+    that:
+      - "{{ item }} is defined"
+    fail_msg: "{{ item }} variable is required"
+  loop:
+    - ydb_domain
+    - ydb_dbname
+    - ydb_pool_kind
+    - ydb_cores_dynamic
+    - ydb_dynnodes
+    - ydb_brokers
 
-- name: build dynamic node configuration file
+- name: create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
-  when: ydb_cores_dynamic is defined
+  changed_when: false
 
-- name: Create the dynamic node startup script
-  template: src=wait_dynamic.j2 dest={{ ydb_dir }}/home/wait_dynamic.sh mode=755
-
-- name: Generate the dynamic node service files
+- name: create dynamic node systemd unit
   template:
-    src: dynnode-service.j2
+    src: ydbd-dynnode.service
     dest: "/etc/systemd/system/ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
   loop: "{{ ydb_dynnodes }}"
+  notify:
+    - daemon reload
 
-- name: Refresh systemd services configuration
-  ansible.builtin.systemd:
-    daemon_reload: true
+- name: flush handlers
+  meta: flush_handlers
 
-- name: Start the dynamic nodes
+- name: start dynamic nodes
   ansible.builtin.systemd:
+    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
     state: started
-    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
+    enabled: true
   loop: "{{ ydb_dynnodes }}"
 
-- name: Transfer the secrets
-  copy: src=secret dest={{ ydb_dir }}/certs/secret
+- name: get ydb token
+  ydb_platform.ydb.get_token:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
+  run_once: true
+  register: ydb_credentials
+  when: ydb_credentials is undefined
 
-- name: Wait for the dynamic nodes availability
-  command: "sudo -u ydb {{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
+- name: create YDB database
+  ydb_platform.ydb.create_database:
+    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+    token: "{{ ydb_credentials.token }}"
+    pool_kind: "{{ ydb_pool_kind }}"
+    groups: "{{ ydb_database_groups }}"
+  run_once: true
+
+- name: wait for ydb discovery to start working locally
+  ydb_platform.ydb.wait_discovery:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:{{ 2136 + item.offset }}"
+    database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+    token: "{{ ydb_credentials.token }}"
   loop: "{{ ydb_dynnodes }}"
-
-- name: Cleanup the transferred secrets
-  file: state=absent path={{ ydb_dir }}/certs/secret
