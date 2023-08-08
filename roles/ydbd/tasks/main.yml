@@ -70,7 +70,7 @@
   file:
     path: "{{ ydb_dir }}/home/.ansible/tmp"
     state: directory
-    recursive: true
+    recurse: true
     group: ydb
     owner: ydb
     mode: 770
