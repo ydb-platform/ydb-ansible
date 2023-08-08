@@ -73,7 +73,6 @@
     recurse: true
     group: ydb
     owner: ydb
-    mode: 770
 
 - name: Install the YDB server binary package
   ansible.builtin.unarchive:
