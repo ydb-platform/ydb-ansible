@@ -68,7 +68,7 @@
 
 - name: Create the Ansible remote_tmp for ydb user
   file:
-    path: {{ ydb_dir }}/home/.ansible/tmp
+    path: "{{ ydb_dir }}/home/.ansible/tmp"
     state: directory
     recursive: true
     group: ydb
