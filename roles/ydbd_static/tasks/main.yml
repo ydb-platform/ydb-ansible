@@ -39,19 +39,27 @@
   any_errors_fatal: true
 
 - name: Wait for storage node startup
-  command: "sudo -u ydb {{ ydb_dir }}/home/wait_initial.sh {{ inventory_hostname }}"
+  command: "{{ ydb_dir }}/home/wait_initial.sh {{ inventory_hostname }}"
+  become: true
+  become_user: ydb
   any_errors_fatal: true
 
 - name: Initial YDB cluster setup
   block:
     - name: Initialize the YDB storage
-      command: "sudo -u ydb {{ ydb_dir }}/home/init_storage.sh {{ inventory_hostname }}"
+      command: "{{ ydb_dir }}/home/init_storage.sh {{ inventory_hostname }}"
+      become: true
+      become_user: ydb
     - name: Wait for storage bootstrap to complete
-      command: "sudo -u ydb {{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
+      command: "{{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
+      become: true
+      become_user: ydb
     - name: Transfer the secrets
       copy: src=secret dest={{ ydb_dir }}/certs/secret
     - name: Set the initial cluster password
-      command: "sudo -u ydb {{ ydb_dir }}/home/init_password.sh {{ inventory_hostname }}"
+      command: "{{ ydb_dir }}/home/init_password.sh {{ inventory_hostname }}"
+      become: true
+      become_user: ydb
   run_once: true
 
 - name: Cleanup the transferred secrets

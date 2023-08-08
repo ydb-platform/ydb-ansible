@@ -22,6 +22,12 @@
     name: chrony
     state: present
 
+- name: Ensure chrony is running
+  ansible.builtin.systemd:
+    enabled: true
+    state: started
+    name: chronyd
+
 - name: Ensure jq is installed
   ansible.builtin.package:
     name: jq
@@ -60,6 +66,15 @@
 - name: Create the ydb user
   user: name=ydb group=ydb groups=disk system=true create_home=true home={{ ydb_dir }}/home comment="YDB Service Account"
 
+- name: Create the Ansible remote_tmp for ydb user
+  file:
+    path: {{ ydb_dir }}/home/.ansible/tmp
+    state: directory
+    recursive: true
+    group: ydb
+    owner: ydb
+    mode: 770
+
 - name: Install the YDB server binary package
   ansible.builtin.unarchive:
     creates: "{{ ydb_dir }}/bin/ydbd"
@@ -81,8 +96,11 @@
 - name: Create the YDB configuration backup directory
   file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode=700
 
+- name: Create the YDB CLI default binary directory
+  file: state=directory path={{ ydb_dir }}/home/ydb/bin recursive=true group=ydb owner=ydb mode=700
+
 - name: Disable YDB CLI version checks
-  command: "sudo -u ydb LD_LIBRARY_PATH={{ ydb_dir }}/lib {{ ydb_dir }}/bin/ydb version --disable-checks"
+  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb
 
 - name: Copy the thp-config.sh script
   copy: src=thp-config.sh dest={{ ydb_dir }}/bin/thp-config.sh

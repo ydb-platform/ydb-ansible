@@ -24,7 +24,9 @@
   copy: src=secret dest={{ ydb_dir }}/certs/secret
 
 - name: Wait for the dynamic nodes availability
-  command: "sudo -u ydb {{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
+  command: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
+  become: true
+  become_user: ydb
   loop: "{{ ydb_dynnodes }}"
 
 - name: Cleanup the transferred secrets

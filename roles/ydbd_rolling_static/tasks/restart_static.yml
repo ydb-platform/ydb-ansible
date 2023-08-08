@@ -16,7 +16,9 @@
   any_errors_fatal: true
 
 - name: Wait for storage state recovery on {{ snode_name }}
-  command: "sudo -u ydb {{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
+  command: "{{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
+  become: true
+  become_user: ydb
   delegate_to: "{{ snode_name }}"
   delegate_facts: true
   any_errors_fatal: true

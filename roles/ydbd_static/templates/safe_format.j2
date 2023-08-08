@@ -1,5 +1,13 @@
 #! /bin/sh
 # Safely format YDB disks, with pre-checks to avoid re-formatting.
+# WARNING: this script should not be used with non-default YDB encryption key!
+
+# Default (built-in) YDB encryption key
+YDB_KEY=8229298086344098676
+export YDB_KEY
+
+LD_LIBRARY_PATH={{ ydb_dir }}/lib
+export LD_LIBRARY_PATH
 
 set +e
 set +u
@@ -48,7 +56,7 @@ if [ ! -e "$disk_part" ]; then
 fi
 
 set +e
-LD_LIBRARY_PATH={{ ydb_dir }}/lib {{ ydb_dir }}/bin/ydbd admin bs disk info -k 8229298086344098676 ${disk_part} >/dev/null 2>&1
+{{ ydb_dir }}/bin/ydbd admin bs disk info -k ${YDB_KEY} ${disk_part} >/dev/null 2>&1
 CHECK_RESULT=$?
 set -e
 if [ $CHECK_RESULT -eq 0 ]; then
@@ -60,7 +68,7 @@ else
         echo "Found pre-obliterated YDB disk ${disk_part} on "`hostname -f` >&2
     else
         echo "Formatting YDB disk ${disk_part} on "`hostname -f` >&2
-        LD_LIBRARY_PATH={{ ydb_dir }}/lib {{ ydb_dir }}/bin/ydbd admin bs disk obliterate ${disk_part}
+        {{ ydb_dir }}/bin/ydbd admin bs disk obliterate ${disk_part}
     fi
 fi
 
