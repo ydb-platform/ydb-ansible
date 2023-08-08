@@ -1,0 +1,30 @@
+#! /bin/sh
+# Backup the YDB configuration files.
+
+set +e
+set +u
+
+YDB_DIR="{{ ydb_dir }}"
+BACKUP_DIR=${YDB_DIR}/reserve/"$1"
+
+if [ -d ${BACKUP_DIR} ]; then
+  echo "$0: target directory already exists" >&2
+  exit 1
+fi
+
+set -e
+
+if [ -f ${YDB_DIR}/certs/ca.crt ]; then
+  mkdir -pv ${BACKUP_DIR}
+  chmod 700 ${BACKUP_DIR}
+  cp -v ${YDB_DIR}/certs/ca.crt               ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/certs/node.crt             ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/certs/node.key             ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/certs/web.pem              ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/certs/web.pem              ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/cfg/ydbd-config.yaml       ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/cfg/ydbd-static.yaml       ${BACKUP_DIR}/
+  cp -v ${YDB_DIR}/cfg/ydbd-dynamic.yaml      ${BACKUP_DIR}/
+fi
+
+# End Of File
