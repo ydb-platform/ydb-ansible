@@ -3,4 +3,4 @@ roles: []
 collections:
   - name: git+https://github.com/ydb-platform/ydb-ansible
     type: git
-    version: 4342139a7f000fb19459e73b57fe09cc32f2f82e
+    version: 530af81b52804e15187ff4ea605bb5bbe27f23f2
