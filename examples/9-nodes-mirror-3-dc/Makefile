@@ -14,7 +14,6 @@ run:
 	-ti \
 	--rm \
 	--network host \
-	--name ydb-appliance-ansible \
-	--mount type=bind,src=${PWD}/project,dst=/opt/project \
+	--mount type=bind,src=${PWD},dst=/home/user/project \
 	$(image) /bin/bash
 .PHONY: run

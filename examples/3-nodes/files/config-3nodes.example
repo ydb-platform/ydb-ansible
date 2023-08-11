@@ -148,9 +148,3 @@ audit_config:
   file_backend:
     format: JSON
     file_path: "/opt/ydb/audit/ydb-audit.log"
-# Actor system config is appended to the configuration file by Ansible task.
-# Provided here in the commented form for reference
-#actor_system_config:
-#  use_auto_config: true
-#  node_type: STORAGE # STORAGE or COMPUTE
-#  cpu_count: 6

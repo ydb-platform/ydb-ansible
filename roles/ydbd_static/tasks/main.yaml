@@ -75,7 +75,9 @@
     password: "{{ ydb_password }}"
   run_once: true
   register: ydb_credentials
-  when: ydb_credentials is undefined
+  until: "'token' in ydb_credentials"
+  retries: 10
+  delay: 10
 
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:

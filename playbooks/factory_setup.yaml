@@ -18,7 +18,7 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.unbound
 
-    - name: configure unbound
+    - name: configure unbound factory zone
       ansible.builtin.import_role:
         name: ydb_platform.ydb.factory_unbound_zone
 
