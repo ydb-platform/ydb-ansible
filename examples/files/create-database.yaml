@@ -1,3 +1,0 @@
-- hosts: ydbd_static
-  roles:
-  - role: ydbd_newdb
