@@ -56,21 +56,23 @@ The meaning and format of the variables used is specified in the table below.
 | `ydb_database_groups` | Initial number of storage groups in the newly created database |
 | `ydb_dynnode_restart_sleep_seconds` | Number of seconds to sleep after startup of each dynamic node during the rolling restart. |
 
-## Installing the YDB cluster using the Ansible playbooks
+## Installing the YDB cluster using Ansible
 
 Overall installation is performed according to the [official instruction](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises), with several steps automated with Ansible. The steps below are adopted for the Ansible-based process:
 1. [Review the system requirements](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#requirements), and prepare the YDB hosts. Ensure that SSH access and sudo-based root privileges are available.
 1. [Prepare the TLS certificates](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#tls-certificates), the provided [sample script](https://github.com/ydb-platform/ydb/tree/main/ydb/deploy/tls_cert_gen) may be used for automation of this step.
 1. Download the [YDB server distribution](https://ydb.tech/en/docs/downloads/#ydb-server). It is better to use the latest binary version available.
-1. Clone the [Github repository](https://github.com/ydb-platform/ydb-ansible) containing the YDB Ansible playbooks:
+1. Install the latest version of Ansible which is available for your Linux system.
+1. Install the YDB Ansible collection from Github:
     ```bash
-    git clone https://github.com/ydb-platform/ydb-ansible
-    cd ydb-ansible
+    ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git,refactor-use-collections
     ```
-1. Prepare the list of hosts to deploy the YDB static and dynamic nodes, as sections `[ydbd_static]` and `[ydbd_dynamic]` in the `hosts` file. An example file is provided.
+    Alternatively, download the current release of YDB Ansible collection from the [Releases page](https://github.com/ydb-platform/ydb-ansible/releases), and install the collection from the archive:
+    ```bash
+    ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
+    ```
+1. Create the `inventory` directory, and the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](examples/common/50-inventory.yaml), [inventory-vault.yaml](examples/common/99-inventory-vault.yaml).
 1. Prepare the cluster configuration file [according to the instructions in the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#config), and save it to the `files` subdirectory. Omit the `actor_system_config` section - it will be added automatically.
-1. Copy the `group_vars/all.example` file into `group_vars/all`, and customize it according to your environment.
-1. Copy the `files/secret.example` file to `files/secret`, and customize the desired initial administrative password, leaving the username `root` unchanged. Ansible Vault can be configured to protect this sensitive file (TODO document actions).
 1. Deploy the static nodes and initialize the cluster by running the `run-install-static.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
 1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on the single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_database_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
 1. Deploy the dynamic nodes running the `run-install-dynamic.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
