@@ -62,6 +62,7 @@ Overall installation is performed according to the [official instruction](https:
 1. [Review the system requirements](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#requirements), and prepare the YDB hosts. Ensure that SSH access and sudo-based root privileges are available.
 1. [Prepare the TLS certificates](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#tls-certificates), the provided [sample script](https://github.com/ydb-platform/ydb/tree/main/ydb/deploy/tls_cert_gen) may be used for automation of this step.
 1. Download the [YDB server distribution](https://ydb.tech/en/docs/downloads/#ydb-server). It is better to use the latest binary version available.
+1. Ensure that you have Python 3.8 or later installed.
 1. Install the latest version of Ansible which is available for your Linux system.
 1. Install the YDB Ansible collection from Github:
     ```bash
@@ -71,7 +72,10 @@ Overall installation is performed according to the [official instruction](https:
     ```bash
     ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
     ```
-1. Create the `inventory` directory, and the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](examples/common/50-inventory.yaml), [inventory-vault.yaml](examples/common/99-inventory-vault.yaml).
+1. In the new subdirectory, create the `ansible.cfg` file using the [provided example](examples/common/ansible.cfg).
+1. Create the `inventory` directory, and the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](examples/common/inventory/50-inventory.yaml), [inventory-vault.yaml](examples/common/inventory/99-inventory-vault.yaml).
+1. Create the [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/vault_managing_passwords.html) password file as `ansible_vault_password_file`, with the password to protect the sensible secrets.
+1. Encrypt `inventory/99-inventory-vault.yaml` with `ansible-vault encrypt inventory/99-inventory-vault.yaml` command. To edit this file use command `ansible-vault edit inventory/99-inventory-vault.yaml`.
 1. Prepare the cluster configuration file [according to the instructions in the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#config), and save it to the `files` subdirectory. Omit the `actor_system_config` section - it will be added automatically.
 1. Deploy the static nodes and initialize the cluster by running the `run-install-static.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
 1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on the single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_database_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
