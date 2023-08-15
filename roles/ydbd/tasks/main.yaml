@@ -107,7 +107,7 @@
         dest: "{{ ydb_dir }}/certs/web.pem"
         owner: root
         group: ydb
-        mode: 0644
+        mode: 0640
 
 - name: copy configuration file
   copy:
