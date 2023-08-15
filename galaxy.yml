@@ -17,7 +17,7 @@ readme: README.md
 # @nicks:irc/im.site#channel'
 authors:
 - Artem Gromov <artgromov@ydb.tech> artgromov
-- Maksim Zinal <maxzinal@yandex.ru> zinal
+- Maksim Zinal <zinal@ydb.tech> zinal
 
 
 ### OPTIONAL but strongly recommended
@@ -43,10 +43,10 @@ dependencies:
 repository: https://github.com/ydb-platform/ydb-ansible
 
 # The URL to any online docs
-documentation: https://ydb.tech/
+documentation: https://ydb.tech/en/docs/
 
 # The URL to the homepage of the collection/project
-homepage: https://ydb.tech/en/docs/
+homepage: https://ydb.tech/
 
 # The URL to the collection issue tracker
 issues: https://github.com/ydb-platform/ydb-ansible/issues
