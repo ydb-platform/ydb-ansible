@@ -1,3 +1,8 @@
+- name: check if ydbd present
+  stat:
+    path: "{{ ydb_dir }}/bin/ydbd"
+  register: ydbd_stat
+
 - name: unpack YDB server archive
   ansible.builtin.unarchive:
     src: "{{ ydb_archive }}"
@@ -5,4 +10,4 @@
     owner: root
     group: root
     extra_opts: "{{ ydb_archive_unpack_options }}"
-    creates: "{{ ydb_dir }}/bin/ydbd"
+  when: not ydbd_stat.stat.exists or ydb_archive_force_install

@@ -1,5 +1,5 @@
 - name: playbook to perform ipmi power reset on YDB appliance factory
-  hosts: "{{ playbook_hosts | default('ydb') }}"
+  hosts: ydb
   tasks:
     - name: send ipmi reset command
       shell: ipmitool -H {{ factory_ipmi_ip_address }} -U {{ factory_ipmi_user }} -P {{ factory_ipmi_password }} power reset

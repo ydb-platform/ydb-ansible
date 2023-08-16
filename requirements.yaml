@@ -4,3 +4,6 @@ collections:
   - name: git+https://github.com/ansible-collections/community.general
     type: git
     version: 7.2.0
+  - name: https://github.com/prometheus-community/ansible
+    type: git
+    version: 0.5.1

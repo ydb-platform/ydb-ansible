@@ -1,5 +1,5 @@
-- name: playbook to perform hosts setup on YDB appliance factory
-  hosts: "{{ playbook_hosts | default('ydb') }}"
+- name: setup YDB on appliance factory
+  hosts: ydb
   become: true
   tasks:
     - name: setup ipv4 connectivity
@@ -22,10 +22,6 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.factory_unbound_zone
 
-    - name: setup ydb
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.ydbd
-
     - name: setup ydb static nodes
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_static
@@ -37,3 +33,11 @@
     # - name: validate ydb installation
     #   ansible.builtin.import_role:
     #     name: ydb_platform.ydb.validate
+
+# - name: setup YDB monitoring on appliance factory
+#   hosts: monitoring
+#   become: true
+#   tasks:
+#     - name: setup monitoring service
+#       ansible.builtin.import_role:
+#         name: ydb_platform.ydb.monitoring_service

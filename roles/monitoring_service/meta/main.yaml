@@ -1,0 +1,4 @@
+dependencies:
+  # - ydb_platform.ydb.gather_facts
+  - ydb_platform.ydb.prometheus
+  # - ydb_platform.ydb.graphana
