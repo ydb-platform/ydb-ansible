@@ -4,6 +4,7 @@
       - distribution
       - network
       - python
+      - processor
   timeout: 300
 
 - name: gather services information

@@ -3,7 +3,7 @@
 
 global:
   scrape_interval: 15s
-  scrape_timeout: 60s
+  scrape_timeout: 15s
   evaluation_interval: 15s
 
 scrape_configs:

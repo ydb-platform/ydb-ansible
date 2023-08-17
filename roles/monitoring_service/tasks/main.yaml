@@ -18,3 +18,33 @@
     owner: root
     group: prometheus
     mode: 0640
+
+- name: create /etc/systemd/system/prometheus.service.d/ directory
+  file:
+    path: /etc/systemd/system/prometheus.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: create prometheus.service override for astra linux
+  copy:
+    content: |
+      [Service]
+      PrivateUsers=no
+    dest: /etc/systemd/system/prometheus.service.d/50-override-private-users.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - daemon reload
+    - restart prometheus
+
+- name: flush_handlers
+  meta: flush_handlers
+
+- name: start prometheus
+  ansible.builtin.systemd:
+    name: prometheus.service
+    state: started
+    enabled: true

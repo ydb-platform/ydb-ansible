@@ -34,8 +34,8 @@
       ansible.builtin.copy:
         content: |
           [Time]
-          NTP={{ system_ntp_servers[0] }}
-          FallbackNTP={{ system_ntp_servers[1:] | join(" ") }}
+          NTP={{ system_ntp_servers | join(" ") }}
+          FallbackNTP={{ system_ntp_servers | join(" ") }}
         dest: /etc/systemd/timesyncd.conf.d/ydb.conf
         owner: root
         group: root
