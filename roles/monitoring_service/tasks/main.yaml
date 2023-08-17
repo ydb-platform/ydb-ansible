@@ -1,0 +1,20 @@
+- import_role:
+    name: prometheus.prometheus.prometheus
+
+- name: create storage file_sd targets
+  ansible.builtin.template:
+    src: "ydb-file-sd-ydbd-storage.yml"
+    dest: "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
+    force: true
+    owner: root
+    group: prometheus
+    mode: 0640
+
+- name: create database file_sd targets
+  ansible.builtin.template:
+    src: "ydb-file-sd-ydbd-database.yml"
+    dest: "{{ prometheus_config_dir }}/file_sd/ydbd-database.yml"
+    force: true
+    owner: root
+    group: prometheus
+    mode: 0640

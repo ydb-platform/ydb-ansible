@@ -1,0 +1,3 @@
+prometheus_config_file: ydb-prometheus-config.yml
+
+prometheus_config_dir: /etc/prometheus

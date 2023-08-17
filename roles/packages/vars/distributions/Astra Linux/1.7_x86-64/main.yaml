@@ -34,5 +34,6 @@ packages:
   - tar
   - tmux
   - tzdata
+  - unzip
   - wget
   - xfsprogs
