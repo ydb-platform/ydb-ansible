@@ -25,11 +25,14 @@ Current limitations:
 
 Playbooks were specifically tested on the following Linux flavours:
 
+* AstraLinux Special Edition 1.7
+
+The following configurations are planned to be tested:
+
+* REDOS 7.3
 * Ubuntu 22.04 LTS
 * AlmaLinux 8
 * AlmaLinux 9
-* AstraLinux Special Edition 1.7
-* REDOS 7.3
 
 ## Ansible Collection - ydb_platform.ydb
 
@@ -99,7 +102,7 @@ Overall installation is performed according to the [official instruction](https:
     ansible-playbook setup_playbook.yaml
     ```
 
-## Updating the cluster configuration files
+### Updating the cluster configuration files
 
 To update the YDB cluster configuration files (`ydbd-config.yaml`, TLS certificates and keys) using the Ansible playbook, the following actions are necessary:
 
@@ -109,14 +112,16 @@ To update the YDB cluster configuration files (`ydbd-config.yaml`, TLS certifica
 1. Apply the updated configuration to the cluster by running the `run-update-config.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
 
 Notes:
+
 1. Please take into account that rolling restart is performed node by node, and for a large cluster the process may consume a significant amount of time.
 1. For Certificate Authority (CA) certificate rotation, at least two separate configuration updates are needed:
     * first to deploy the ca.crt file, containing both new and old CA certificates;
     * second to deploy the fresh server keys and certificates signed by the new CA certificate.
 
-## What is actually done by the playbooks?
+### What is actually done by the playbooks?
 
-### Actions executed for installing YDB nodes
+#### Actions executed for installing YDB nodes
+
 1. libaio or libaio1 is installed, depending on the operating system
 1. chrony is installed and enabled to ensure time synchronization
 1. jq is installed to support some scripting logic used in the playbooks
@@ -128,7 +133,8 @@ Notes:
 1. YDB cluster configuration file is copied to each server
 1. [Transparent huge pages](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html) (THP) are enabled on each server, which is implemented by the creation, activation and start of the corresponding systemd service.
 
-### Actions executed for the initial deployment of YDB storage cluster
+#### Actions executed for the initial deployment of YDB storage cluster
+
 1. Installation actions are executed.
 1. For each disk configured, it is checked for the existing YDB data. If none found, disk is completely re-partitioned, and obliterated. For the existing YDB data, no changes are made.
    > WARNING: the safety checks do not work for YDB disks using non-default encryption keys. DATA LOSS IS POSSIBLE if the encryption is actually used. Probably an enhancement is needed to support the encryption key to be specified in the deployment option.
@@ -138,12 +144,14 @@ Notes:
 1. The playbook waits for completion of YDB storage initialization.
 1. The initial password for the `root` user is configured according to contents of the `files/secret` file.
 
-### Actions executed for YDB dynamic nodes deployment
+#### Actions executed for YDB dynamic nodes deployment
+
 1. Installation actions are executed.
 1. For each database configured, the list of YDB dynnode systemd services are created and configured.
 1. YDB dynnode services are started.
 
-### Actions executed for the configuration update
+#### Actions executed for the configuration update
+
 1. YDB TLS certificates and keys are copied to each server.
 1. YDB cluster configuration file is copied to each server.
 1. Rolling restart is performed for YDB storage nodes, node by node, checking for the YDB storage cluster to become healthy after the restart of each node.
