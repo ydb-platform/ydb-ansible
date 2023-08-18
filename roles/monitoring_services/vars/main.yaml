@@ -1,0 +1,7 @@
+ydb_prometheus_config_file: prometheus-config.yml
+ydb_prometheus_config_dir: /etc/prometheus
+ydb_prometheus_config_file_sd_dir: '{{ ydb_prometheus_config_dir }}/file_sd'
+
+ydb_grafana_config_dir: /etc/grafana
+
+ydb_grafana_data_dir: /var/lib/grafana

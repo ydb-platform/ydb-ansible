@@ -30,14 +30,10 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic
 
-    # - name: validate ydb installation
-    #   ansible.builtin.import_role:
-    #     name: ydb_platform.ydb.validate
-
 - name: setup YDB monitoring on appliance factory
   hosts: monitoring
   become: true
   tasks:
     - name: setup monitoring service
       ansible.builtin.import_role:
-        name: ydb_platform.ydb.monitoring_service
+        name: ydb_platform.ydb.monitoring_services

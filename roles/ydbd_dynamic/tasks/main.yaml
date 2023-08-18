@@ -5,11 +5,11 @@
     fail_msg: "{{ item }} variable is required"
   loop:
     - ydb_domain
-    - ydb_dbname
     - ydb_pool_kind
     - ydb_cores_dynamic
-    - ydb_dynnodes
     - ydb_brokers
+    - ydb_dbname
+    - ydb_dynnodes
 
 - name: create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"

@@ -1,0 +1,22 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+apiVersion: 1
+deleteDatasources: []
+
+datasources:
+  - name: default
+    type: prometheus
+    orgId: 1
+    access: proxy
+    url: https://{{ ansible_fqdn | default(ansible_host) | default(inventory_hostname) }}:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      prometheusType: Prometheus
+      prometheusVersion: {{ ydb_prometheus_version }}
+      sslRootCertFile: {{ ydb_grafana_ca_file }}
+      tlsAuthWithCACert: false
+      tlsAuth: false
+      tlsSkipVerify: true
+

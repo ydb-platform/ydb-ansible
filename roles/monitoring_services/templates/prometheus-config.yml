@@ -7,7 +7,10 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-- job_name: ydb/counter/ydb
+- job_name: ydb/ydb
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: ydb_$1
@@ -27,10 +30,13 @@ scrape_configs:
     replacement: ydb
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/auth
+- job_name: ydb/auth
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: auth_$1
@@ -50,10 +56,13 @@ scrape_configs:
     replacement: auth
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/coordinator
+- job_name: ydb/coordinator
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: coordinator_$1
@@ -73,10 +82,13 @@ scrape_configs:
     replacement: coordinator
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/dsproxy_queue
+- job_name: ydb/dsproxy_queue
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: dsproxy_queue_$1
@@ -96,10 +108,13 @@ scrape_configs:
     replacement: dsproxy_queue
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/dsproxy
+- job_name: ydb/dsproxy
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: dsproxy_$1
@@ -119,10 +134,13 @@ scrape_configs:
     replacement: dsproxy
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/dsproxy_percentile
+- job_name: ydb/dsproxy_percentile
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: dsproxy_percentile_$1
@@ -142,10 +160,13 @@ scrape_configs:
     replacement: dsproxy_percentile
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/grpc
+- job_name: ydb/grpc
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: grpc_$1
@@ -165,10 +186,13 @@ scrape_configs:
     replacement: grpc
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/kqp
+- job_name: ydb/kqp
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: kqp_$1
@@ -188,9 +212,12 @@ scrape_configs:
     replacement: kqp
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/processing
+- job_name: ydb/processing
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: processing_$1
@@ -210,10 +237,13 @@ scrape_configs:
     replacement: processing
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/proxy
+- job_name: ydb/proxy
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: proxy_$1
@@ -233,10 +263,13 @@ scrape_configs:
     replacement: proxy
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/followers
+- job_name: ydb/followers
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: followers_$1
@@ -256,10 +289,13 @@ scrape_configs:
     replacement: followers
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/storage_pool_stat
+- job_name: ydb/storage_pool_stat
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: storage_pool_stat_$1
@@ -279,10 +315,13 @@ scrape_configs:
     replacement: storage_pool_stat
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/tablets
+- job_name: ydb/tablets
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: tablets_$1
@@ -302,10 +341,13 @@ scrape_configs:
     replacement: tablets
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/utils
+- job_name: ydb/utils
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: utils_$1
@@ -325,10 +367,13 @@ scrape_configs:
     replacement: utils
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/dsproxynode
+- job_name: ydb/dsproxynode
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: dsproxynode_$1
@@ -348,10 +393,13 @@ scrape_configs:
     replacement: dsproxynode
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/interconnect
+- job_name: ydb/interconnect
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: interconnect_$1
@@ -371,10 +419,13 @@ scrape_configs:
     replacement: interconnect
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"
 
-- job_name: ydb/counter/pdisks
+- job_name: ydb/pdisks
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: pdisks_$1
@@ -394,9 +445,12 @@ scrape_configs:
     replacement: pdisks
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
 
-- job_name: ydb/counter/vdisks
+- job_name: ydb/vdisks
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metric_relabel_configs:
   - regex: (.*)
     replacement: vdisks_$1
@@ -416,9 +470,12 @@ scrape_configs:
     replacement: vdisks
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
 
-- job_name: ydb/counter/healthcheck
+- job_name: ydb/healthcheck
+  scheme: https
+  tls_config:
+    ca_file: '{{ ydb_prometheus_ca_file }}'
   metrics_path: /healthcheck
   params:
     format:
@@ -435,5 +492,5 @@ scrape_configs:
     replacement: healthcheck
   file_sd_configs:
   - files:
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-storage.yml"
-    - "{{ prometheus_config_dir }}/file_sd/ydbd-database-*.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-storage.yml"
+    - "{{ ydb_prometheus_config_file_sd_dir }}/ydbd-database-*.yml"

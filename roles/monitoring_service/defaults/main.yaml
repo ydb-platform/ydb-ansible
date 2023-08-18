@@ -1,3 +1,0 @@
-prometheus_version: 2.46.0
-
-prometheus_storage_retention_size: 500GB

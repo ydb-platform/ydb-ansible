@@ -21,3 +21,7 @@
   ansible.builtin.assert:
     that: ansible_service_mgr == 'systemd'
     msg: "only systemd service manager is supported"
+
+- name: set collection level constants
+  set_fact:
+    ydb_dir: /opt/ydb
