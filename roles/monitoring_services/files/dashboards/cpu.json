@@ -23,7 +23,7 @@
   },
   "editable": false,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "iteration": 1667486544253,
   "links": [],
   "liveNow": false,
