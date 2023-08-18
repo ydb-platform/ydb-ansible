@@ -3,6 +3,7 @@
 Ansible playbooks supporting the deployment of [YDB](https://ydb.tech) clusters into VM or baremetal servers.
 
 Currently the playbooks support the following scenarious:
+
 * the initial deployment of YDB static (storage) nodes;
 * YDB database creation;
 * the initial deployment of YDB dynamic (database) nodes;
@@ -10,28 +11,31 @@ Currently the playbooks support the following scenarious:
 * updating cluster configuration file and TLS certificates, with automatic rolling restart.
 
 The following scenarious are yet to be implemented (TODO):
+
 * configuring extra storage devices within the existing YDB static nodes;
 * adding extra YDB static nodes to the existing cluster;
 * removing YDB dynamic nodes from the existing cluster.
 
 Current limitations:
+
 * supported python interpreter version on managed should must be >= 3.7
 * configuration file customization depends on the support of automatic actor system threads management, which requires YDB version 23.1.26.hotfix1 or later;
 * the cluster configuration file has to be manually created;
 * there are no examples for configuring the storage nodes with different disk layouts (it seems to be doable by defining different `ydb_disks` values for different host groups).
 
 Playbooks were specifically tested on the following Linux flavours:
+
 * Ubuntu 22.04 LTS
 * AlmaLinux 8
 * AlmaLinux 9
 * AstraLinux Special Edition 1.7
 * REDOS 7.3
 
-# Ansible Collection - ydb_platform.ydb
+## Ansible Collection - ydb_platform.ydb
 
 Documentation for the collection.
 
-## Playbook configuration settings
+### Playbook configuration settings
 
 Default configuration settings are defined in the `group_vars/all` file as a set of Ansible variables. An example file is provided. Different playbook executions may require different variable values, which can be accomplished by specifying extra JSON-format files and passing those files [in the command line](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#vars-from-a-json-or-yaml-file).
 
@@ -57,35 +61,48 @@ The meaning and format of the variables used is specified in the table below.
 | `ydb_database_groups` | Initial number of storage groups in the newly created database |
 | `ydb_dynnode_restart_sleep_seconds` | Number of seconds to sleep after startup of each dynamic node during the rolling restart. |
 
-## Installing the YDB cluster using Ansible
+### Installing the YDB cluster using Ansible
 
 Overall installation is performed according to the [official instruction](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises), with several steps automated with Ansible. The steps below are adopted for the Ansible-based process:
+
 1. [Review the system requirements](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#requirements), and prepare the YDB hosts. Ensure that SSH access and sudo-based root privileges are available.
 1. [Prepare the TLS certificates](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#tls-certificates), the provided [sample script](https://github.com/ydb-platform/ydb/tree/main/ydb/deploy/tls_cert_gen) may be used for automation of this step.
 1. Download the [YDB server distribution](https://ydb.tech/en/docs/downloads/#ydb-server). It is better to use the latest binary version available.
-1. Ensure that you have Python 3.8 or later installed.
-1. Install the latest version of Ansible which is available for your Linux system.
-1. Install the YDB Ansible collection from Github:
+1. Ensure that you have Python 3.8 or later installed on all hosts of the cluster.
+1. Configure the passwordless SSH access to all hosts of the cluster.
+1. Configure the [priviledge escalation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html) on all hosts of the cluster, such as passwordless sudo for the user account with the SSH access.
+1. Install `ansible-core` version 2.11-2.15. Ansible 2.10 or older is not supported.
+1. Install the required YDB Ansible collections from Github:
+
     ```bash
     ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git,refactor-use-collections
     ```
-    Alternatively, download the current release of YDB Ansible collection from the [Releases page](https://github.com/ydb-platform/ydb-ansible/releases), and install the collection from the archive:
+
+    Alternatively, download the current releases of Ansible collections for [YDB](https://github.com/ydb-platform/ydb-ansible/releases), [community.general](https://github.com/ansible-collections/community.general/releases) and [Prometheus](https://github.com/prometheus-community/ansible/releases), and install the collections from the archives:
+
     ```bash
+    ansible-galaxy collection install community.general-X.Y.Z.tar.gz
+    ansible-galaxy collection install prometheus-prometheus-X.Y.Z.tar.gz
     ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
     ```
+
 1. In the new subdirectory, create the `ansible.cfg` file using the [provided example](examples/common/ansible.cfg).
-1. Create the `inventory` directory, and the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](examples/common/inventory/50-inventory.yaml), [inventory-vault.yaml](examples/common/inventory/99-inventory-vault.yaml).
+1. Create the `files` and `files/certs` directories, and put the TLS keys and certificates there. If the certificates were generated using the provided helper script, the `CA/certs/YYYY-MM-DD_hh-mm-ss` subdirectory should typically be copied as `files/certs`.
+1. Create the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](examples/common/inventory/50-inventory.yaml), [inventory-vault.yaml](examples/common/inventory/99-inventory-vault.yaml).
 1. Create the [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/vault_managing_passwords.html) password file as `ansible_vault_password_file`, with the password to protect the sensible secrets.
 1. Encrypt `inventory/99-inventory-vault.yaml` with `ansible-vault encrypt inventory/99-inventory-vault.yaml` command. To edit this file use command `ansible-vault edit inventory/99-inventory-vault.yaml`.
-1. Prepare the cluster configuration file [according to the instructions in the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#config), and save it to the `files` subdirectory. Omit the `actor_system_config` section - it will be added automatically.
-1. Deploy the static nodes and initialize the cluster by running the `run-install-static.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
-1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on the single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_database_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
-1. Deploy the dynamic nodes running the `run-install-dynamic.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
-1. Repeat steps 10-11 as necessary to create more databases, or step 11 to deploy more YDB dynamic nodes.
+1. Prepare the cluster configuration file [according to the instructions in the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#config), and save as `files/config.yaml`. Omit the `actor_system_config` section - it will be added automatically.
+1. Create the setup playbook based on the [provided example](examples/common/setup_playbook.yaml). Customize the required actions as needed.
+1. Deploy the YDB cluster by running the playbook with the following command:
+
+    ```bash
+    ansible-playbook setup_playbook.yaml
+    ```
 
 ## Updating the cluster configuration files
 
 To update the YDB cluster configuration files (`ydbd-config.yaml`, TLS certificates and keys) using the Ansible playbook, the following actions are necessary:
+
 1. Ensure that the `hosts` file contains the current list of YDB cluster nodes, both static and dynamic.
 1. Ensure that the configuration variable `ydbd_config` in the `group_vars/all` file points to the desired YDB server configuration file.
 1. Ensure that the configuration variable `ydbd_tls_dir` points to the directory containing the desired TLS key and certificate files for all the nodes within the YDB cluster.
