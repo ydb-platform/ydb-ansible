@@ -1,0 +1,6 @@
+- name: setup YDB on site
+  hosts: ydb
+  become: true
+  tasks:
+    - debug:
+        msg: work in progress

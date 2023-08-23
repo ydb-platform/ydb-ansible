@@ -7,6 +7,11 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+- job_name: node
+  file_sd_configs:
+  - files:
+    - "{{ ydb_prometheus_config_file_sd_dir }}/node-exporter.yml"
+
 - job_name: ydb/ydb
   scheme: https
   tls_config:

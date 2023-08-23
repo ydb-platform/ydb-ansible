@@ -1,0 +1,8 @@
+auto lo
+iface lo inet loopback
+
+iface eth0 inet6 auto
+iface {{ connectivity_interface }} inet static
+  address {{ site_ipv4_connectivity_address }}/{{ site_ipv4_connectivity_prefix }}
+  gateway {{ site_ipv4_connectivity_gateway }}
+  mtu 8950

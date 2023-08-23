@@ -1,0 +1,10 @@
+auto lo {{ connectivity_interface }}
+iface lo inet loopback
+
+iface {{ connectivity_interface }} inet6 auto
+  privext 0
+  mtu 8950
+{% if factory_ipv4_connectivity_address is defined and factory_ipv4_connectivity_prefix is defined and factory_ipv4_connectivity_gateway is defined %}
+  up ip addr add {{ factory_ipv4_connectivity_address }}/{{ factory_ipv4_connectivity_prefix }} dev {{ connectivity_interface }}
+  up ip route add default via {{ factory_ipv4_connectivity_gateway }}
+{% endif %}

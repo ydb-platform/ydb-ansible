@@ -1,0 +1,7 @@
+- name: setup YDB connectivity on site
+  hosts: ydb
+  become: true
+  tasks:
+    - name: setup ipv4 connectivity
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.site_ipv4_connectivity

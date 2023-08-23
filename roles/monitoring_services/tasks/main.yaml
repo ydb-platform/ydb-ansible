@@ -14,6 +14,15 @@
         groups: [certs]
         append: true
 
+    - name: create node exporter file_sd targets
+      ansible.builtin.template:
+        src: "file-sd-node-exporter.yml"
+        dest: "{{ ydb_prometheus_config_dir }}/file_sd/node-exporter.yml"
+        force: true
+        owner: root
+        group: prometheus
+        mode: 0640
+
     - name: create storage file_sd targets
       ansible.builtin.template:
         src: "file-sd-ydbd-storage.yml"
