@@ -17,7 +17,8 @@
   ansible.builtin.package:
     name: "{{ vars_for_distribution.libaio_package }}"
     state: present
-    cache_valid_time: 3600
+    cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
+    update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 300
 
 - name: install custom libidn from archive

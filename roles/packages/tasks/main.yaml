@@ -64,5 +64,6 @@
     pkg: "{{ vars_for_distribution_version.packages }}"
     state: present
     force: true
-    cache_valid_time: 3600
+    cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
+    update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 900
