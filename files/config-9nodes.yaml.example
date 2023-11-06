@@ -94,30 +94,6 @@ domains_config:
     - "DATABASE-ADMINS"
 table_service_config:
   sql_version: 1
-actor_system_config:          # the configuration of the actor system which descibes how cores of the instance are distributed
-  executor:                   # accross different types of workloads in the instance.
-  - name: System              # system executor of the actor system. in this executor YDB launches system type of workloads, like system tablets
-    threads: 2                # the number of threads allocated to system executor.
-    type: BASIC
-  - name: User                # user executor of the actor system. In this executor YDB launches user workloads, like datashard activities,
-    threads: 4                # the number of threads allocated to user executor.
-    type: BASIC
-  - name: Batch               # user executor of the actor system. In this executor YDB launches batch operations, like scan queries, table
-    threads: 1                # the number of threads allocated to the batch executor.
-    type: BASIC
-  - name: IO                  # the io executor. In this executor launches sync operations and writes logs.
-    threads: 1
-    time_per_mailbox_micro_secs: 100
-    type: IO
-  - name: IC                  # the interconnect executor which YDB uses for network communications accross different nodes of the cluster.
-    spin_threshold: 10
-    threads: 2                # the number of threads allocated to the interconnect executor.
-    time_per_mailbox_micro_secs: 100
-    type: BASIC
-  scheduler:
-    progress_threshold: 10000
-    resolution: 256
-    spin_threshold: 0
 blob_storage_config:
   service_set:
     groups:
