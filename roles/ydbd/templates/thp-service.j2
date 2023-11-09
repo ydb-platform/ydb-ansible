@@ -6,7 +6,7 @@ Before=ydbd-storage.service
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh {{ ydb_dir }}/bin/thp-config.sh
+ExecStart=/bin/sh /usr/local/bin/ydbd-thp-config.sh
 
 [Install]
 WantedBy=basic.target

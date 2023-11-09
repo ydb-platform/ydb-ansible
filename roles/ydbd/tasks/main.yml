@@ -60,6 +60,42 @@
         state: link
   when: libidn_archive is defined
 
+- name: Copy the thp-config.sh script
+  copy: src=thp-config.sh dest=/usr/local/bin/ydbd-thp-config.sh
+
+- name: Generate the THP service files
+  template:
+    src: thp-service.j2
+    dest: "/etc/systemd/system/ydb-hugepages.service"
+
+- name: Refresh systemd services configuration
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Activate THP
+  ansible.builtin.systemd:
+    enabled: true
+    state: started
+    name: ydb-hugepages
+
+- name: Ensure kernel-modules-extra is installed on RHEL variants
+  ansible.builtin.package:
+    name: kernel-modules-extra
+    state: present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RED'
+
+- name: Copy the kernel module customization for htcp congestion
+  copy: src=modules-ydbd.conf dest=/etc/modules-load.d/50-ydbd.conf
+
+- name: Copy the network sysctl adjustments
+  copy: src=sysctl-ydbd.conf dest=/etc/sysctl.d/50-ydbd.conf
+
+- name: Load the tcp_htcp module
+  command: "/sbin/modprobe tcp_htcp"
+
+- name: Refresh the current sysctl settings
+  command: "/sbin/sysctl --system"
+
 - name: Create the ydb group
   group: name=ydb system=true
 
@@ -100,39 +136,3 @@
 
 - name: Disable YDB CLI version checks
   copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb
-
-- name: Copy the thp-config.sh script
-  copy: src=thp-config.sh dest={{ ydb_dir }}/bin/thp-config.sh
-
-- name: Generate the THP service files
-  template:
-    src: thp-service.j2
-    dest: "/etc/systemd/system/ydb-hugepages.service"
-
-- name: Refresh systemd services configuration
-  ansible.builtin.systemd:
-    daemon_reload: true
-
-- name: Activate THP
-  ansible.builtin.systemd:
-    enabled: true
-    state: started
-    name: ydb-hugepages
-
-- name: Ensure kernel-modules-extra is installed on RHEL variants
-  ansible.builtin.package:
-    name: kernel-modules-extra
-    state: present
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RED'
-
-- name: Copy the kernel module customization for htcp congestion
-  copy: src=modules-ydbd.conf dest=/etc/modules-load.d/50-ydbd.conf
-
-- name: Copy the network sysctl adjustments
-  copy: src=sysctl-ydbd.conf dest=/etc/sysctl.d/50-ydbd.conf
-
-- name: Load the tcp_htcp module
-  command: "/sbin/modprobe tcp_htcp"
-
-- name: Refresh the current sysctl settings
-  command: "/sbin/sysctl --system"
