@@ -118,3 +118,21 @@
     enabled: true
     state: started
     name: ydb-hugepages
+
+- name: Ensure kernel-modules-extra is installed on RHEL variants
+  ansible.builtin.package:
+    name: kernel-modules-extra
+    state: present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RED'
+
+- name: Copy the kernel module customization for htcp congestion
+  copy: src=modules-ydbd.conf dest=/etc/modules-load.d/50-ydbd.conf
+
+- name: Copy the network sysctl adjustments
+  copy: src=sysctl-ydbd.conf dest=/etc/sysctl.d/50-ydbd.conf
+
+- name: Load the tcp_htcp module
+  command: "/sbin/modprobe tcp_htcp"
+
+- name: Refresh the current sysctl settings
+  command: "/sbin/sysctl --system"
