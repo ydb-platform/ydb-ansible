@@ -1,0 +1,74 @@
+---
+# YDB upgrade dynamic nodes on a single host
+
+- name: Create the YDB server binary directory
+  file: state=directory
+        path="{{ ydb_dir }}/release/{{ ydb_version }}"
+        recurse=true
+        group=bin
+        owner=root
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Install the YDB server binary package
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
+    dest: "{{ ydb_dir }}/release/{{ ydb_version }}"
+    group: bin
+    owner: root
+    src: "{{ ydb_archive }}"
+    extra_opts: "{{ ydb_unpack_options }}"
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Symlink the YDB binaries
+  file: path="{{ ydb_dir }}/bin"
+        src="./release/{{ ydb_version }}/bin"
+        state=link
+        force=yes
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Symlink the YDB libraries
+  file: path="{{ ydb_dir }}/lib"
+        src="./release/{{ ydb_version }}/lib"
+        state=link
+        force=yes
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Restart the dynamic nodes on {{ dynnode_name }}
+  ansible.builtin.systemd:
+    state: restarted
+    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
+  throttle: 1
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  loop: "{{ ydb_dynnodes }}"
+  any_errors_fatal: true
+
+- name: Transfer the secrets to {{ dynnode_name }}
+  copy: src=secret dest={{ ydb_dir }}/certs/secret
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Wait for the dynamic nodes to come up
+  command: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
+  become: true
+  become_user: ydb
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+  loop: "{{ ydb_dynnodes }}"
+
+- name: Cleanup the transferred secrets at {{ dynnode_name }}
+  file: state=absent path={{ ydb_dir }}/certs/secret
+  delegate_to: "{{ dynnode_name }}"
+  delegate_facts: true
+
+- name: Additional delay to settle the dynamic nodes
+  ansible.builtin.pause: seconds={{ dynnode_restart_sleep_seconds }}

@@ -1,0 +1,9 @@
+---
+# ydbd dynamic nodes rolling upgrade
+
+- name: YDB database nodes rolling upgrade
+  include_tasks: "upgrade_dynamic.yml"
+  loop: "{{ groups['ydbd_dynamic']|flatten(levels=1) }}"
+  loop_control:
+    loop_var: dynnode_name
+  run_once: true
