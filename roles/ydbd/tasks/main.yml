@@ -143,13 +143,13 @@
 
 - name: Symlink the YDB binaries
   file: path="{{ ydb_dir }}/bin"
-        src="{{ ydb_dir }}/release/{{ ydb_version }}/bin"
+        src="./release/{{ ydb_version }}/bin"
         state=link
         force=yes
 
 - name: Symlink the YDB libraries
   file: path="{{ ydb_dir }}/lib"
-        src="{{ ydb_dir }}/release/{{ ydb_version }}/lib"
+        src="./release/{{ ydb_version }}/lib"
         state=link
         force=yes
 
