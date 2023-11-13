@@ -1,0 +1,69 @@
+---
+# YDB single static node upgrade tasks
+
+- name: Create the YDB server binary directory
+  file: state=directory
+        path="{{ ydb_dir }}/release/{{ ydb_version }}"
+        recurse=true
+        group=bin
+        owner=root
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Install the YDB server binary package
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
+    dest: "{{ ydb_dir }}/release/{{ ydb_version }}"
+    group: bin
+    owner: root
+    src: "{{ ydb_archive }}"
+    extra_opts: "{{ ydb_unpack_options }}"
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Symlink the YDB binaries
+  file: path="{{ ydb_dir }}/bin"
+        src="./release/{{ ydb_version }}/bin"
+        state=link
+        force=yes
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Symlink the YDB libraries
+  file: path="{{ ydb_dir }}/lib"
+        src="./release/{{ ydb_version }}/lib"
+        state=link
+        force=yes
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Restart the storage node at {{ snode_name }}
+  ansible.builtin.systemd:
+    state: restarted
+    name: ydbd-storage
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Transfer the secrets
+  copy: src=secret dest={{ ydb_dir }}/certs/secret
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Wait for storage state recovery on {{ snode_name }}
+  command: "{{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
+  become: true
+  become_user: ydb
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
+  any_errors_fatal: true
+
+- name: Cleanup the transferred secrets
+  file: state=absent path={{ ydb_dir }}/certs/secret
+  delegate_to: "{{ snode_name }}"
+  delegate_facts: true
