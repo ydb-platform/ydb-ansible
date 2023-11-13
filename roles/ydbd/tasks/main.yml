@@ -110,14 +110,8 @@
     group: ydb
     owner: ydb
 
-- name: Install the YDB server binary package
-  ansible.builtin.unarchive:
-    creates: "{{ ydb_dir }}/bin/ydbd"
-    dest: "{{ ydb_dir }}"
-    group: bin
-    owner: root
-    src: "{{ ydb_archive }}"
-    extra_opts: "{{ ydb_unpack_options }}"
+- name: Create the YDB release directory
+  file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode=755
 
 - name: Create the YDB configuration directory
   file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode=755
@@ -130,6 +124,27 @@
 
 - name: Create the YDB configuration backup directory
   file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode=700
+
+- name: Install the YDB server binary package
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
+    dest: "{{ ydb_dir }}/release/{{ ydb_version }}"
+    group: bin
+    owner: root
+    src: "{{ ydb_archive }}"
+    extra_opts: "{{ ydb_unpack_options }}"
+
+- name: Symlink the YDB binaries
+  file: path="{{ ydb_dir }}/bin"
+        src="{{ ydb_dir }}/release/{{ ydb_version }}/bin"
+        state=link
+        force=yes
+
+- name: Symlink the YDB libraries
+  file: path="{{ ydb_dir }}/lib"
+        src="{{ ydb_dir }}/release/{{ ydb_version }}/lib"
+        state=link
+        force=yes
 
 - name: Create the YDB CLI default binary directory
   file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode=700

@@ -18,6 +18,9 @@ ydb_tls_dir: ./tls/CA/certs/2023-03-09_16-49-39
 # YDB server software archive
 ydb_archive: ydbd-23.1.26-linux-amd64.tar.gz
 
+# YDB server software release
+ydb_version: 23.1.26
+
 # Extra options passed to tar for unpack, typically "--strip-component=1"
 ydb_unpack_options: "--strip-component=1"
 
