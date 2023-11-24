@@ -17,6 +17,12 @@
     state: present
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RED'
 
+- name: Ensure acl is installed
+  ansible.builtin.package:
+    name: acl
+    state: present
+  when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian' or ansible_distribution == 'Astra Linux'
+
 - name: Ensure chrony is installed
   ansible.builtin.package:
     name: chrony
