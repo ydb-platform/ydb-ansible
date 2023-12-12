@@ -46,6 +46,7 @@
     home: "{{ ydb_dir }}/home"
     comment: "YDB Service Account"
 
+
 - name: install YDB server binary package from archive
   import_tasks:
     file: install_ydb_from_archive.yaml

@@ -14,9 +14,9 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.unbound
 
-    - name: configure unbound site zone
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.site_unbound_zone
+    # - name: configure unbound site zone
+    #   ansible.builtin.import_role:
+    #     name: ydb_platform.ydb.site_unbound_zone
 
     # set hostnames to site fqdn here
 

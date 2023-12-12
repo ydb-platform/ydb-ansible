@@ -136,7 +136,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "$ds"
       },
       "fieldConfig": {
         "defaults": {
@@ -213,10 +213,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "count(ydb_healthcheck{DATABASE=\"$database\", counter=\"healthcheck-dynamic\"}) by (MESSAGE,STATUS,TYPE)",
+          "expr": "count(ydb_healthcheck{DATABASE=\"$database\", counter=\"healthcheck\"}) by (MESSAGE,STATUS,TYPE)",
           "legendFormat": "{{STATUS}} ({{MESSAGE}})",
           "range": true,
           "refId": "A"

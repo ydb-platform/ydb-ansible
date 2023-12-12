@@ -23,7 +23,7 @@ Restart=always
 RestartSec=1
 SyslogIdentifier=ydbd
 SyslogFacility=daemon
-SyslogLevel=err
+SyslogLevel=info
 
 [Install]
 WantedBy=multi-user.target

@@ -48,13 +48,14 @@ def main():
 
         changed, label_path = drive.create_partition_if_not_exists(module, name, label)
         result['changed'] = changed
+        module.exit_json(**result)
 
-        if changed:
-            if allow_format:
-                module.log(f'filling first 1M of YDB disk {label_path} with zeros')
-                drive.prepare_partition_using_dd(module, label_path)
-            else:
-                module.log(f'filling first 1M of YDB disk {label_path} is disallowed: "allow_format" flag is False')
+        # if changed:
+        #     if allow_format:
+        #         module.log(f'filling first 1M of YDB disk {label_path} with zeros')
+        #         drive.prepare_partition_using_dd(module, label_path)
+        #     else:
+        #         module.log(f'filling first 1M of YDB disk {label_path} is disallowed: "allow_format" flag is False')
 
         ydbd_cli = cli.YDBD.from_module(module)
 

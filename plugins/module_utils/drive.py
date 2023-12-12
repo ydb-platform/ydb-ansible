@@ -31,8 +31,7 @@ def create_partition_if_not_exists(module, name, label):
 
 def create_partition_parted(module, name, label, parted_bin, partprobe_bin):
     module.run_command([parted_bin, '--script', name, 'mklabel', 'gpt'])
-    module.run_command([parted_bin, '--script', name, 'mkpart', 'primary', '0%', '100%', '--align', 'optimal'])
-    module.run_command([parted_bin, '--script', name, '1', label])
+    module.run_command([parted_bin, '--script', name, 'mkpart', label, '0%', '100%', '--align', 'optimal'])
     module.run_command([partprobe_bin, name])
 
 
