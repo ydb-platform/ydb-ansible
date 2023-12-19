@@ -2,14 +2,14 @@
 
 Ansible playbooks supporting the deployment of [YDB](https://ydb.tech) clusters into VM or baremetal servers.
 
-Currently the playbooks support the following scenarious:
+Currently, the playbooks support the following scenarios:
 * the initial deployment of YDB static (storage) nodes;
 * YDB database creation;
 * the initial deployment of YDB dynamic (database) nodes;
 * adding extra YDB dynamic nodes to the YDB cluster;
 * updating cluster configuration file and TLS certificates, with automatic rolling restart.
 
-The following scenarious are yet to be implemented (TODO):
+The following scenarios are yet to be implemented (TODO):
 * configuring extra storage devices within the existing YDB static nodes;
 * adding extra YDB static nodes to the existing cluster;
 * removing YDB dynamic nodes from the existing cluster.
@@ -30,11 +30,11 @@ Playbooks were specifically tested on the following Linux flavours:
 
 Default configuration settings are defined in the `group_vars/all` file as a set of Ansible variables. An example file is provided. Different playbook executions may require different variable values, which can be accomplished by specifying extra JSON-format files and passing those files [in the command line](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#vars-from-a-json-or-yaml-file).
 
-The meaning and format of the variables used is specified in the table below.
+The meaning and format of the variables used are specified in the table below.
 
 | Variable | Meaning |
 | --------- | ------- |
-| `ansible_python_interpreter` | The correct path to Python interpreter on the YDB cluster hosts. |
+| `ansible_python_interpreter` | The correct path to the Python interpreter on the YDB cluster hosts. |
 | `ydb_dir` | Path of the YDB software installation directory to be created on the hosts. |
 | `libidn_archive` | Enable the installation of custom-built libidn for RHEL, AlmaLinux or Rocky Linux. |
 | `ydb_archive` |  YDB server binary package in .tar.gz format |
@@ -67,9 +67,9 @@ Overall installation is performed according to the [official instruction](https:
 1. Prepare the cluster configuration file [according to the instructions in the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#config), and save it to the `files` subdirectory. Omit the `actor_system_config` section - it will be added automatically.
 1. Copy the `group_vars/all.example` file into `group_vars/all`, and customize it according to your environment.
 1. Copy the `files/secret.example` file to `files/secret`, and customize the desired initial administrative password, leaving the username `root` unchanged. Ansible Vault can be configured to protect this sensitive file (TODO document actions).
-1. Deploy the static nodes and initialize the cluster by running the `run-install-static.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
-1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on the single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_default_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
-1. Deploy the dynamic nodes running the `run-install-dynamic.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
+1. Deploy the static nodes and initialize the cluster by running the `run-install-static.sh` script. Ensure that the playbook has been completed successfully, and diagnose and fix execution errors if they happen.
+1. Create at least one database [according to the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#create-db). Multiple databases may run on a single cluster, each requiring the YDB dynamic node services to handle the requests. To create the database using the Ansible playbook, use the `run-create-database.sh` script. Use the `ydb_dbname` and `ydb_default_groups` variables to configure the desired database name and the initial number of storage groups in the new database.
+1. Deploy the dynamic nodes running the `run-install-dynamic.sh` script. Ensure that the playbook has been completed successfully, and diagnose and fix execution errors if they happen.
 1. Repeat steps 10-11 as necessary to create more databases, or step 11 to deploy more YDB dynamic nodes.
 
 ## Updating the cluster configuration files
@@ -78,7 +78,7 @@ To update the YDB cluster configuration files (`ydbd-config.yaml`, TLS certifica
 1. Ensure that the `hosts` file contains the current list of YDB cluster nodes, both static and dynamic.
 1. Ensure that the configuration variable `ydbd_config` in the `group_vars/all` file points to the desired YDB server configuration file.
 1. Ensure that the configuration variable `ydbd_tls_dir` points to the directory containing the desired TLS key and certificate files for all the nodes within the YDB cluster.
-1. Apply the updated configuration to the cluster by running the `run-update-config.sh` script. Ensure that the playbook has completed successfully, diagnose and fix execution errors if they happen.
+1. Apply the updated configuration to the cluster by running the `run-update-config.sh` script. Ensure that the playbook has been completed successfully, and diagnose and fix execution errors if they happen.
 
 Notes:
 1. Please take into account that rolling restart is performed node by node, and for a large cluster the process may consume a significant amount of time.
@@ -107,7 +107,7 @@ Notes:
 1. `ydbd-storage.service` is created and configured as the systemd service.
 1. `ydbd-storage.service` is started, and the playbook waits for static nodes to come up.
 1. YDB blobstorage configuration is applied with the `ydbd admin blobstorage init` command.
-1. The playbook waits for completion of YDB storage initialization.
+1. The playbook waits for the completion of YDB storage initialization.
 1. The initial password for the `root` user is configured according to contents of the `files/secret` file.
 
 ### Actions executed for YDB dynamic nodes deployment
