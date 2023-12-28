@@ -31,12 +31,4 @@
 
 - name: Copy cluster configuration file
   copy: src={{ ydb_config }} dest={{ ydb_dir }}/cfg/ydbd-config.yaml
-  when: ydb_config is defined and ydb_cores_static is defined
-
-- name: Build static node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-static.yaml STORAGE {{ ydb_cores_static }}"
-  when: ydb_cores_static is defined
-
-- name: Build dynamic node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
-  when: ydb_cores_dynamic is defined
+  when: ydb_config is defined

@@ -3,4 +3,5 @@
   roles:
   - role: ydbd
   - role: ydbd_config
+  - role: ydbd_config_dynamic
   - role: ydbd_dynamic
