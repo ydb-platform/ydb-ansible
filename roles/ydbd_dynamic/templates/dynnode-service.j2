@@ -1,3 +1,4 @@
+#jinja2: trim_blocks:False
 [Unit]
 Description=YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
 After=network-online.target rc-local.service
@@ -22,10 +23,14 @@ ExecStart={{ ydb_dir }}/bin/ydbd server --cluster-name "{{ ydb_cluster }}" \
     --ic-port {{ 19002 + item.offset }} --ca {{ ydb_dir }}/certs/ca.crt \
     --mon-port {{ 8766 + item.offset }} --mon-cert {{ ydb_dir }}/certs/web.pem \
     --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
-    --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }} \
     --node-broker grpcs://{{ ydb_brokers[0] }}:2135 \
+{% if ydb_brokers|length > 1 %}
     --node-broker grpcs://{{ ydb_brokers[1] }}:2135 \
-    --node-broker grpcs://{{ ydb_brokers[2] }}:2135
+{% endif %}
+{% if ydb_brokers|length > 2 %}
+    --node-broker grpcs://{{ ydb_brokers[2] }}:2135 \
+{% endif %}
+    --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }}
 LimitNOFILE=65536
 LimitCORE=0
 LimitMEMLOCK=32212254720
