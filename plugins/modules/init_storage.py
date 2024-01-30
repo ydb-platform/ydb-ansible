@@ -32,7 +32,7 @@ def main():
             result['stderr'] = stderr
             module.fail_json(**result)
 
-        initialized = stdout.strip() != STORAGE_NOT_INITIALIZED_STRING
+        initialized = 'HostConfig {' in stdout.strip()
         if initialized:
             result['msg'] = 'storage already initialized'
             result['stdout'] = stdout
