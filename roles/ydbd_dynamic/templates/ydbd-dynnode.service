@@ -17,7 +17,7 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --mon-port {{ 8766 + item.offset }} --mon-cert {{ ydb_dir }}/certs/web.pem \
     --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
 {% for ydb_broker in ydb_brokers %}
-    --node-broker grpcs://{{ ydb_broker }}:2135{% if not loop.last %} \{% endif %}
+    --node-broker grpcs://{{ ydb_broker }}:2135{% if not loop.last %} \{% endif +%}
 {% endfor %}
 
 LimitNOFILE=65536

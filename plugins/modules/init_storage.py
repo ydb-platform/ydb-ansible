@@ -5,14 +5,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
 
-STORAGE_NOT_INITIALIZED_STRING = '''
-Status {
-  Success: true
-}
-Success: true
-'''.strip()
-
-
 def main():
     argument_spec=dict(
         config_file=dict(type='str', required=True),
