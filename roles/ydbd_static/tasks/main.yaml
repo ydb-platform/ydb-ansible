@@ -89,6 +89,12 @@
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
 
+- name: install ydb-dstool
+  ansible.builtin.pip:
+    name: "ydb-dstool==0.0.11"
+    virtualenv: "{{ ydb_dir}}/virtualenv"
+  run_once: true
+
 - name: init YDB storage if not initialized
   ydb_platform.ydb.init_storage:
     config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"

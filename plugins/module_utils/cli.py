@@ -1,4 +1,5 @@
 import copy
+import os
 
 
 class CLI:
@@ -107,6 +108,33 @@ class YDB(CLI):
         elif user is not None and password is not None and password == '':
             self.common_options.extend(['--user', user])
             self.common_options.extend(['--no-password', token_file])
+
+    def __call__(self, cmd, env=None):
+        if not isinstance(cmd, list):
+            raise ValueError('cmd must be list')
+        cmd = self.common_options + cmd
+        environ_update = copy.deepcopy(self.common_environ)
+        if isinstance(env, dict):
+            environ_update.update(env)
+        self.module.log(f'calling command: {cmd}')
+        return self.module.run_command(cmd, environ_update=environ_update)
+
+class DsTool(CLI):
+    argument_spec = dict(
+        dstool_bin=dict(type='str', default='/opt/ydb/virtualenv/bin/ydb-dstool'),
+        dstool_endpoint=dict(type='str', default='http://localhost:8765')
+    )
+
+    def __init__(self, module, dstool_bin, dstool_endpoint):
+        self.module = module
+
+        self.common_options = [dstool_bin]
+        self.common_environ = {}
+
+        if dstool_endpoint is not None:
+            self.common_options.append(f'--endpoint={dstool_endpoint}')
+            if dstool_endpoint.startswith('http'):
+                self.common_options.append('--http')
 
     def __call__(self, cmd, env=None):
         if not isinstance(cmd, list):
