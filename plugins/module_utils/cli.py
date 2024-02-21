@@ -30,6 +30,16 @@ class CLI:
         params.update(params_override)
         return cls(**params)
 
+    def __call__(self, cmd, env=None):
+        if not isinstance(cmd, list):
+            raise ValueError('cmd must be list')
+        cmd = self.common_options + cmd
+        environ_update = copy.deepcopy(self.common_environ)
+        if isinstance(env, dict):
+            environ_update.update(env)
+        self.module.log(f'calling command: {cmd}')
+        return self.module.run_command(cmd, environ_update=environ_update)
+
 
 class YDBD(CLI):
     argument_spec = dict(
@@ -58,16 +68,6 @@ class YDBD(CLI):
             self.common_environ['YDB_TOKEN'] = token
         elif token_file is not None:
             self.common_options.extend(['--token-file', token_file])
-
-    def __call__(self, cmd, env=None):
-        if not isinstance(cmd, list):
-            raise ValueError('cmd must be list')
-        cmd = self.common_options + cmd
-        environ_update = copy.deepcopy(self.common_environ)
-        if isinstance(env, dict):
-            environ_update.update(env)
-        self.module.log(f'calling command: {cmd}')
-        return self.module.run_command(cmd, environ_update=environ_update)
 
 
 class YDB(CLI):
@@ -109,15 +109,6 @@ class YDB(CLI):
             self.common_options.extend(['--user', user])
             self.common_options.extend(['--no-password', token_file])
 
-    def __call__(self, cmd, env=None):
-        if not isinstance(cmd, list):
-            raise ValueError('cmd must be list')
-        cmd = self.common_options + cmd
-        environ_update = copy.deepcopy(self.common_environ)
-        if isinstance(env, dict):
-            environ_update.update(env)
-        self.module.log(f'calling command: {cmd}')
-        return self.module.run_command(cmd, environ_update=environ_update)
 
 class DsTool(CLI):
     argument_spec = dict(
@@ -135,13 +126,3 @@ class DsTool(CLI):
             self.common_options.append(f'--endpoint={dstool_endpoint}')
             if dstool_endpoint.startswith('http'):
                 self.common_options.append('--http')
-
-    def __call__(self, cmd, env=None):
-        if not isinstance(cmd, list):
-            raise ValueError('cmd must be list')
-        cmd = self.common_options + cmd
-        environ_update = copy.deepcopy(self.common_environ)
-        if isinstance(env, dict):
-            environ_update.update(env)
-        self.module.log(f'calling command: {cmd}')
-        return self.module.run_command(cmd, environ_update=environ_update)
