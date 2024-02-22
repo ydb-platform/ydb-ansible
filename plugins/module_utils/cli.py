@@ -1,5 +1,5 @@
 import copy
-import os
+import socket
 
 
 class CLI:
@@ -113,10 +113,13 @@ class YDB(CLI):
 class DsTool(CLI):
     argument_spec = dict(
         dstool_bin=dict(type='str', default='/opt/ydb/virtualenv/bin/ydb-dstool'),
-        dstool_endpoint=dict(type='str', default='http://localhost:8765')
+        dstool_endpoint=dict(type='str', default=f'http://{socket.getfqdn()}:8765'),
+        ca_file=dict(type='str', default=None),
+        token=dict(type='str', default=None, no_log=True),
+        token_file=dict(type='str', default=None)
     )
 
-    def __init__(self, module, dstool_bin, dstool_endpoint):
+    def __init__(self, module, dstool_bin, dstool_endpoint, ca_file=None, token=None, token_file=None):
         self.module = module
 
         self.common_options = [dstool_bin]
@@ -126,3 +129,9 @@ class DsTool(CLI):
             self.common_options.append(f'--endpoint={dstool_endpoint}')
             if dstool_endpoint.startswith('http'):
                 self.common_options.append('--http')
+        if ca_file is not None:
+            self.common_options.extend(['--ca-file', ca_file])
+        if token is not None:
+            self.common_environ['YDB_TOKEN'] = token
+        elif token_file is not None:
+            self.common_options.extend(['--token-file', token_file])
