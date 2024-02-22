@@ -1,6 +1,8 @@
 *.bak
 *.tmp
 *.tar.gz
+/*.json
+*.pyc
 *~
 ydb-token-file
 ydbd-token-file
