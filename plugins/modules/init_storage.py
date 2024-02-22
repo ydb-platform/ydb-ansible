@@ -17,19 +17,19 @@ def main():
     try:
         ydbd_cli = cli.YDBD.from_module(module)
         ydb_dstool = cli.DsTool.from_module(module)
-        rc, stdout, stderr = ydb_dstool(['cluster', 'list', '--format=json'])
+        rc, stdout, stderr = ydb_dstool(['box', 'list', '--format=json'])
         if rc != 0:
-            result['msg'] = 'dstool command cluster list failed'
+            result['msg'] = 'dstool command box list failed'
             result['stdout'] = stdout
             result['stderr'] = stderr
             module.fail_json(**result)
 
         try:
             dstool_result = json.loads(stdout)[0]
-            result_keys = ['Hosts', 'Nodes', 'Pools', 'Groups', 'PDisks', 'Boxes', 'VDisks']
+            result_keys = ['BoxId', 'PDisks_TOTAL']
             initialized = all([key in dstool_result and dstool_result[key] > 0 for key in result_keys])
         except Exception as e:
-            result['msg'] = f'unexpected dstool cluster list result, caught {type(e).__name__}: {e}'
+            result['msg'] = f'unexpected dstool box list result, caught {type(e).__name__}: {e}'
             result['stdout'] = stdout
             result['stderr'] = stderr
             module.fail_json(**result)
