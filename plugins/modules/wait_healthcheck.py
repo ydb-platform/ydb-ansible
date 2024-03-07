@@ -29,7 +29,7 @@ def main():
                 module.log(f'failed to parse healthcheck output {stdout}')
                 time.sleep(5)
                 continue
-            if self_check_result != "GOOD":
+            if self_check_result not in ("GOOD", "YELLOW"):
                 module.log(f'self check result: {self_check_result}')
                 time.sleep(5)
                 continue
