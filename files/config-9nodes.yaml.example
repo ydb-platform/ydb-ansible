@@ -92,6 +92,8 @@ domains_config:
     - "root"
     - "ADMINS"
     - "DATABASE-ADMINS"
+table_service_config:
+  sql_version: 1
 blob_storage_config:
   service_set:
     groups:
@@ -161,8 +163,6 @@ grpc_config:
     ca: "/opt/ydb/certs/ca.crt"
     services_enabled:
     - legacy
-table_service_config:
-  sql_version: 1
 bootstrap_config:
   shared_cache_config: {memory_limit: '4294967296'}
 audit_config:
