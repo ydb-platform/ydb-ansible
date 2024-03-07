@@ -1,0 +1,14 @@
+---
+- name: daemon reload
+  systemd:
+    daemon_reload: true
+
+- name: restart unbound
+  systemd:
+    name: unbound.service
+    state: restarted
+
+- name: restart dummy53
+  systemd:
+    name: dummy53.service
+    state: restarted

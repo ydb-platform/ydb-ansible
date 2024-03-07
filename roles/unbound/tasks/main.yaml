@@ -1,0 +1,125 @@
+- name: assert required variables are defined
+  ansible.builtin.assert:
+    that:
+      - system_dns_servers is defined
+      - system_dns_servers is iterable and (system_dns_servers is not string and system_dns_servers is not mapping)
+      - system_dns_servers|length >= 1
+      - system_dns_search is defined
+      - system_dns_search is iterable and (system_dns_servers is not string and system_dns_servers is not mapping)
+
+- name: setup dummy53 configuration unit
+  copy:
+    src: files/dummy53.service
+    dest: /etc/systemd/system/dummy53.service
+  notify:
+    - daemon reload
+    - restart dummy53
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: configure dummy53 interface
+  systemd:
+    name: dummy53.service
+    state: started
+    enabled: true
+
+- name: configure unbound env
+  copy:
+    content: |
+      RESOLVCONF="false"
+    dest: /etc/default/unbound
+
+- name: install unbound package
+  apt:
+    pkg: unbound
+    state: present
+    force: true
+    cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
+    update_cache: "{{ apt_update_cache | default(True) }}"
+
+- name: module config
+  copy:
+    content: |
+      server:
+          module-config: "validator iterator"
+
+    dest: /etc/unbound/unbound.conf.d/00-module.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart unbound
+
+- name: common config
+  copy:
+    content: |
+      server:
+          interface: 127.0.0.1
+          interface: ::1
+          interface: fd53::1
+          access-control: 127.0.0.0/8 allow_snoop
+          access-control: ::1/128 allow_snoop
+
+          prefetch: yes
+          so-reuseport: yes
+
+          ### serve stale data when the backend/upstreams fails
+          ### https://datatracker.ietf.org/doc/html/rfc8767.html
+          serve-expired: yes
+          serve-expired-ttl: 3600  # one hour, in seconds
+
+          val-permissive-mode: yes
+
+          cache-max-negative-ttl: 1
+          cache-max-ttl: 300
+
+    dest: /etc/unbound/unbound.conf.d/50-common.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart unbound
+
+- name: forward yandex config
+  copy:
+    content: |
+      forward-zone:
+          name: "."
+          {% for dns_server in system_dns_servers %}
+          forward-addr: {{ dns_server }}
+          {% endfor %}
+
+    dest: /etc/unbound/unbound.conf.d/70-forwarding.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart unbound
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: configure service
+  systemd:
+    name: unbound.service
+    state: started
+    enabled: true
+
+- name: configure /etc/resolv.conf
+  copy:
+    content: |
+      search {{ system_dns_search | join(" ") }}
+      nameserver 127.0.0.1
+      nameserver fd53::1
+      options trust-ad timeout:2 attempts:2
+    dest: /etc/resolv.conf
+    force: true
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: stop systemd-resolved
+  systemd:
+    name: systemd-resolved.service
+    state: stopped
+    enabled: false
+    masked: true
+  when: '"systemd-resolved.service" in ansible_facts.services'

@@ -1,0 +1,14 @@
+- name: install prometheus-node-exporter
+  ansible.builtin.apt:
+    pkg: prometheus-node-exporter
+    state: present
+    force: true
+    cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
+    update_cache: "{{ apt_update_cache | default(True) }}"
+  timeout: 300
+
+- name: start prometheus-node-exporter
+  ansible.builtin.systemd:
+    name: prometheus-node-exporter.service
+    state: started
+    enabled: true

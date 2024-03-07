@@ -1,0 +1,3 @@
+dependencies:
+  - ydb_platform.ydb.ydbd
+allow_duplicates: false

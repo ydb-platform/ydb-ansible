@@ -1,0 +1,4 @@
+dependencies:
+  - ydb_platform.ydb.preflight
+  - ydb_platform.ydb.transparent_hugepages
+allow_duplicates: false

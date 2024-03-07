@@ -1,0 +1,16 @@
+- name: create local-data unbound config
+  ansible.builtin.copy:
+    content: |
+      server:
+          local-zone: "{{ site_domain }}." transparent
+
+      {% for host in groups['ydb'] %}
+          local-data: "{{ hostvars[host].inventory_hostname }}. 10800 IN A {{ hostvars[host].ansible_host }}"
+          local-data-ptr: "{{ hostvars[host].ansible_host }} {{ hostvars[host].inventory_hostname }}"
+      {% endfor %}
+
+    dest: /etc/unbound/unbound.conf.d/60-site.conf
+  notify: restart unbound
+
+- name: flush handlers
+  meta: flush_handlers

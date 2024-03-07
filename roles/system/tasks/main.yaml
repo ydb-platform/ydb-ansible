@@ -1,0 +1,165 @@
+- name: configure clock
+  block:
+    - name: assert required variables are defined
+      ansible.builtin.assert:
+        that:
+          - system_timezone is defined
+
+    - name: set system timezone
+      community.general.timezone:
+        name: "{{ system_timezone }}"
+        hwclock: UTC
+      notify:
+        - restart cron
+
+    - name: flush handlers
+      meta: flush_handlers
+
+
+- name: configure systemd-timesyncd
+  block:
+    - name: assert required variables are defined
+      ansible.builtin.assert:
+        that:
+          - "{{ (system_ntp_servers|length) > 1 }}"
+      when: system_ntp_servers is defined
+
+    - name: create conf.d directory for timesyncd
+      ansible.builtin.file:
+        path: /etc/systemd/timesyncd.conf.d
+        state: directory
+      when: system_ntp_servers is defined
+
+    - name: configure systemd-timesyncd
+      ansible.builtin.copy:
+        content: |
+          [Time]
+          NTP={{ system_ntp_servers[0] }}
+          FallbackNTP={{ system_ntp_servers[1:] | join(" ") }}
+        dest:  /etc/systemd/timesyncd.conf.d/ydb.conf
+        owner: root
+        group: root
+        mode: '0644'
+      when: system_ntp_servers is defined
+      notify:
+        - restart timesyncd
+
+    - name: flush handlers
+      meta: flush_handlers
+
+    - name: start timesyncd
+      ansible.builtin.systemd:
+        name: systemd-timesyncd.service
+        state: started
+        enabled: true
+
+
+- name: configure systemd-journald
+  block:
+    - name: create conf.d directory for journald
+      file:
+        path: /etc/systemd/journald.conf.d
+        state: directory
+
+    - name: configure systemd-journald
+      copy:
+        content: |
+          [Journal]
+          ForwardToWall=no
+        dest: /etc/systemd/journald.conf.d/ydb.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - restart journald
+
+    - name: flush handlers
+      meta: flush_handlers
+
+    - name: start journald
+      ansible.builtin.systemd:
+        name: systemd-journald.service
+        state: started
+        enabled: true
+
+
+- name: configure kernel
+  block:
+    - name: configure /etc/modules-load.d dir
+      file:
+        path: /etc/modules-load.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: setup conntrack module
+      copy:
+        content: nf_conntrack
+        dest: /etc/modules-load.d/conntrack.conf
+
+    - name: load conntrack module
+      community.general.modprobe:
+        name: nf_conntrack
+        state: present
+
+    - name: setup sysctl files
+      template:
+        src: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0o644'
+        dest: /etc/sysctl.d/{{ item }}
+      with_items:
+        - 10-console-messages.conf
+        - 10-link-restrictions.conf
+        - 10-magic-sysrq.conf
+        - 10-network-security.conf
+        - 10-ptrace.conf
+        - 10-zeropage.conf
+        - 30-fs.conf
+        - 30-inotify.conf
+        - 30-kernel.conf
+        - 30-net.conf
+        - 30-netfilter.conf
+        - 30-vm.conf
+      notify: apply kernel settings
+
+    - name: flush handlers
+      meta: flush_handlers
+
+
+- name: configure cpu governor
+  block:
+    - name: install cpufrequtils
+      ansible.builtin.apt:
+        pkg: cpufrequtils
+        state: present
+        force: true
+        cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
+        update_cache: "{{ apt_update_cache | default(True) }}"
+      timeout: 300
+
+    - name: use performance cpu governor
+      copy:
+        content: "GOVERNOR=performance"
+        dest: /etc/default/cpufrequtils
+      notify: restart cpufrequtils
+
+    - name: disable ondemand.service
+      ansible.builtin.systemd:
+        name: ondemand.service
+        state: stopped
+        enabled: false
+        masked: true
+      when: '"ondemand.service" in ansible_facts.services'
+      notify: restart cpufrequtils
+
+    - name: flush handlers
+      meta: flush_handlers
+
+    - name: start cpufrequtils
+      ansible.builtin.systemd:
+        name: cpufrequtils.service
+        state: started
+        enabled: true

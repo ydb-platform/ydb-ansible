@@ -1,0 +1,18 @@
+- name: create local-data unbound config
+  ansible.builtin.copy:
+    content: |
+      server:
+          local-zone: "{{ factory_domain }}." static
+
+      {% for host in groups['ydb'] %}
+          local-data: "{{ hostvars[host].inventory_hostname }}. 10800 IN A {{ hostvars[host].factory_ipv4_connectivity_address }}"
+          local-data: "{{ hostvars[host].inventory_hostname }}. 10800 IN AAAA {{ hostvars[host].factory_ipv6_connectivity_address }}"
+          local-data-ptr: "{{ hostvars[host].factory_ipv4_connectivity_address }} {{ hostvars[host].inventory_hostname }}"
+          local-data-ptr: "{{ hostvars[host].factory_ipv6_connectivity_address }} {{ hostvars[host].inventory_hostname }}"
+      {% endfor %}
+
+    dest: /etc/unbound/unbound.conf.d/60-factory.conf
+  notify: restart unbound
+
+- name: flush handlers
+  meta: flush_handlers

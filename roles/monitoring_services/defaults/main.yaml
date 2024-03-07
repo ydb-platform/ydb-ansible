@@ -1,0 +1,24 @@
+ydb_prometheus_version: 2.46.0
+
+ydb_prometheus_storage_retention_size: 500GB
+
+ydb_prometheus_ca_file: '{{ ydb_dir }}/certs/ca.crt'
+ydb_prometheus_cert_file: '{{ ydb_dir }}/certs/node.crt'
+ydb_prometheus_cert_key: '{{ ydb_dir }}/certs/node.key'
+
+ydb_prometheus_web_config:
+  tls_server_config:
+    cert_file: '{{ ydb_prometheus_cert_file }}'
+    key_file: '{{ ydb_prometheus_cert_key }}'
+    client_auth_type: NoClientCert
+
+
+ydb_prometheus_password: '{{ ydb_password }}'
+
+ydb_grafana_port: 3000
+
+ydb_grafana_ca_file: '{{ ydb_dir }}/certs/ca.crt'
+ydb_grafana_cert_file: '{{ ydb_dir }}/certs/node.crt'
+ydb_grafana_cert_key: '{{ ydb_dir }}/certs/node.key'
+
+ydb_grafana_password: '{{ ydb_password }}'

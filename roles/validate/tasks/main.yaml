@@ -1,0 +1,4 @@
+# TODO: add warning if vm.overcommit_memory != 1
+# TODO: add warning if not configured transparent hugepage
+# TODO: check forward and reverse dns resolution
+# TODO: check clock synchronization

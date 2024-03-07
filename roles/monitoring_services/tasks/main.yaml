@@ -1,0 +1,152 @@
+- name: setup prometheus
+  block:
+    - name: install and configure prometheus
+      import_role:
+        name: prometheus.prometheus.prometheus
+      vars:
+        prometheus_config_file: '{{ ydb_prometheus_config_file }}'
+        prometheus_config_dir: '{{ ydb_prometheus_config_dir }}'
+        prometheus_web_config: '{{ ydb_prometheus_web_config }}'
+
+    - name: add prometheus user to certs group
+      ansible.builtin.user:
+        name: prometheus
+        groups: [certs]
+        append: true
+
+    - name: create node exporter file_sd targets
+      ansible.builtin.template:
+        src: "file-sd-node-exporter.yml"
+        dest: "{{ ydb_prometheus_config_dir }}/file_sd/node-exporter.yml"
+        force: true
+        owner: root
+        group: prometheus
+        mode: 0640
+
+    - name: create storage file_sd targets
+      ansible.builtin.template:
+        src: "file-sd-ydbd-storage.yml"
+        dest: "{{ ydb_prometheus_config_dir }}/file_sd/ydbd-storage.yml"
+        force: true
+        owner: root
+        group: prometheus
+        mode: 0640
+
+    - name: create database file_sd targets
+      ansible.builtin.template:
+        src: "file-sd-ydbd-database.yml"
+        dest: "{{ ydb_prometheus_config_dir }}/file_sd/ydbd-database-{{ ydb_dbname }}.yml"
+        force: true
+        owner: root
+        group: prometheus
+        mode: 0640
+
+    - name: create /etc/systemd/system/prometheus.service.d/ directory
+      file:
+        path: /etc/systemd/system/prometheus.service.d/
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: create prometheus.service override for astra linux
+      copy:
+        content: |
+          [Service]
+          PrivateUsers=no
+        dest: /etc/systemd/system/prometheus.service.d/50-override-private-users.conf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - daemon reload
+        - restart prometheus
+
+    - name: flush_handlers
+      meta: flush_handlers
+
+    - name: start prometheus
+      ansible.builtin.systemd:
+        name: prometheus.service
+        state: started
+        enabled: true
+
+- name: setup grafana
+  block:
+    - name: install grafana
+      ansible.builtin.apt:
+        deb: https://dl.grafana.com/oss/release/grafana_10.2.2_amd64.deb
+
+    - name: add grafana user to certs group
+      ansible.builtin.user:
+        name: grafana
+        groups: [certs]
+        append: true
+
+    - name: create config file
+      ansible.builtin.template:
+        src: "grafana-config.ini"
+        dest: "{{ ydb_grafana_config_dir }}/grafana.ini"
+        force: true
+        owner: root
+        group: grafana
+        mode: 0640
+      notify:
+        - restart grafana
+
+    - name: create datasources provisioning file
+      ansible.builtin.template:
+        src: "grafana-datasources-ydb.yml"
+        dest: "{{ ydb_grafana_config_dir }}/provisioning/datasources/ydb.yml"
+        force: true
+        owner: root
+        group: grafana
+        mode: 0640
+      notify:
+        - restart grafana
+
+    - name: create dashboards provisioning file
+      ansible.builtin.template:
+        src: "grafana-dashboards-ydb.yml"
+        dest: "{{ ydb_grafana_config_dir }}/provisioning/dashboards/ydb.yml"
+        force: true
+        owner: root
+        group: grafana
+        mode: 0640
+      notify:
+        - restart grafana
+
+    - name: create dashboard data dir
+      ansible.builtin.file:
+        path: '{{ ydb_grafana_data_dir }}/dashboards'
+        state: directory
+        owner: grafana
+        group: grafana
+        mode: 0750
+
+    - name: list dashboards
+      ansible.builtin.find:
+        paths: '{{ role_path }}/files/dashboards'
+      delegate_to: localhost
+      run_once: true
+      register: dashboards
+
+    - name: setup dashboards
+      copy:
+        src: '{{ item.path }}'
+        dest: '{{ ydb_grafana_data_dir }}/dashboards/{{ item.path | basename }}'
+        owner: grafana
+        group: grafana
+        mode: 0640
+      with_items: '{{ dashboards.files }}'
+      notify:
+        - restart grafana
+
+    - name: flush_handlers
+      meta: flush_handlers
+
+    - name: start grafana
+      ansible.builtin.systemd:
+        name: grafana-server.service
+        state: started
+        enabled: true

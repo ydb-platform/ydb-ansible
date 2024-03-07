@@ -1,0 +1,11 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+- labels:
+    container: ydb-dynamic
+  targets:
+  {% for host in ydb_monitoring_target_hosts %}
+  {% for item in ydb_dynnodes %}
+  - "{{ host }}:{{ 8766 + item.offset }}"
+  {% endfor %}
+  {% endfor %}

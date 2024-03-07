@@ -1,0 +1,7 @@
+- name: update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  register: result
+  until: "'cache_updated' in result and result.cache_updated"
+  retries: 10
+  delay: 10

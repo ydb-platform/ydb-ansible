@@ -1,0 +1,33 @@
+[Unit]
+Description=YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
+StartLimitInterval=10
+StartLimitBurst=15
+After=network-online.target rc-local.service ydb-transparent-hugepages.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ydb
+PermissionsStartOnly=true
+Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
+ExecStart={{ ydb_dir }}/bin/ydbd server \
+    --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
+    --grpcs-port {{ 2136 + item.offset }} --grpc-ca {{ ydb_dir }}/certs/ca.crt \
+    --ic-port {{ 19002 + item.offset }} --ca {{ ydb_dir }}/certs/ca.crt \
+    --mon-port {{ 8766 + item.offset }} --mon-cert {{ ydb_dir }}/certs/web.pem \
+    --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
+{% for ydb_broker in ydb_brokers %}
+    --node-broker grpcs://{{ ydb_broker }}:2135{% if not loop.last %} \{% endif +%}
+{% endfor %}
+
+LimitNOFILE=65536
+LimitCORE=0
+LimitMEMLOCK=32212254720
+Restart=always
+RestartSec=1
+SyslogIdentifier=ydbd
+SyslogFacility=daemon
+SyslogLevel=info
+
+[Install]
+WantedBy=multi-user.target

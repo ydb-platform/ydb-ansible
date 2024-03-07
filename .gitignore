@@ -1,13 +1,8 @@
-hosts
-hosts-*
-group_vars/all
-group_vars/ydbd_static
-group_vars/ydbd_dynamic
-files/config*.yaml
-files/secret
 *.bak
 *.tmp
 *.tar.gz
+/*.json
+*.pyc
 *~
 ydb-token-file
 ydbd-token-file

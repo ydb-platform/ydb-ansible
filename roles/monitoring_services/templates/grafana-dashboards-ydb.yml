@@ -1,0 +1,17 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+apiVersion: 1
+
+providers:
+  - name: 'ydb'
+    type: file
+    orgId: 1
+    folder: ''
+    folderUid: ''
+    disableDeletion: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: {{ ydb_grafana_data_dir }}/dashboards
+      foldersFromFilesStructure: true

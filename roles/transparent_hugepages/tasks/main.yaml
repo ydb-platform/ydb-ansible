@@ -1,0 +1,54 @@
+- name: configure transparent hugepages
+  when: ydb_transparent_hugepages_enable is defined and ydb_transparent_hugepages_enable
+  block:
+    - name: copy ydb-transparent-hugepages.sh script
+      copy:
+        src: ydb-transparent-hugepages.sh
+        dest: /usr/local/bin/ydb-transparent-hugepages.sh
+      notify:
+        - restart ydb-transparent-hugepages.service
+
+    - name: copy ydb-transparent-hugepages.service systemd unit
+      copy:
+        src: ydb-transparent-hugepages.service
+        dest: "/etc/systemd/system/ydb-transparent-hugepages.service"
+      notify:
+        - daemon reload
+        - restart ydb-transparent-hugepages.service
+
+    - name: flush handlers
+      meta: flush_handlers
+
+    - name: start ydb-transparent-hugepages.service
+      ansible.builtin.systemd:
+        name: ydb-transparent-hugepages.service
+        state: started
+        enabled: true
+
+- name: unconfigure transparent hugepages
+  when: ydb_transparent_hugepages_enable is defined and not ydb_transparent_hugepages_enable
+  block:
+    - name: remove ydb-transparent-hugepages.sh script
+      file:
+        path: /usr/local/bin/ydb-transparent-hugepages.sh
+        state: absent
+
+    - name: remove ydb-transparent-hugepages.service systemd unit
+      file:
+        path: "/etc/systemd/system/ydb-transparent-hugepages.service"
+        state: absent
+      notify:
+        - daemon reload
+
+    - name: configure ydb-transparent-hugepages.service
+      ansible.builtin.systemd:
+        name: ydb-transparent-hugepages.service
+        state: stopped
+        enabled: false
+
+    - name: flush handlers
+      meta: flush_handlers
+
+    - name: print message
+      debug:
+        msg: transparent hugepages role artifacts was removed, restart or manual reconfiguration is required in /sys/kernel/mm/transparent_hugepage

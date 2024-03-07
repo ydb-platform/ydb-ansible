@@ -1,0 +1,4 @@
+- name: restart unbound
+  systemd:
+    name: unbound.service
+    state: restarted

@@ -1,0 +1,17 @@
+[Unit]
+Description=Configure dummy53 interface
+After=network.target
+Before=unbound.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/ip link add dev dummy53 type dummy
+ExecStart=/bin/ip link set dev dummy53 up
+ExecStart=/bin/ip -6 addr add fd53::1/128 dev dummy53
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=unbound.service

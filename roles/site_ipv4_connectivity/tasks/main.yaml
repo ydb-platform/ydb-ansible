@@ -1,0 +1,15 @@
+- name: assert required variables are defined
+  ansible.builtin.assert:
+    that:
+      - connectivity_interface is defined
+      - site_ipv4_connectivity_address is defined
+      - site_ipv4_connectivity_prefix is defined
+      - site_ipv4_connectivity_gateway is defined
+
+- name: configure interfaces
+  ansible.builtin.template:
+    src: interfaces
+    dest: /etc/network/interfaces
+    mode: 0644
+    owner: root
+    group: root

@@ -1,0 +1,12 @@
+[Unit]
+Description=Configure Transparent Huge Pages (THP)
+DefaultDependencies=no
+After=sysinit.target local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh /usr/local/bin/ydb-transparent-hugepages.sh
+
+[Install]
+WantedBy=basic.target
