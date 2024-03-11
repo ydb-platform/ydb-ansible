@@ -29,11 +29,11 @@ def main():
                 module.log(f'failed to parse healthcheck output {stdout}')
                 time.sleep(5)
                 continue
-            if self_check_result not in ("GOOD", "YELLOW"):
-                module.log(f'self check result: {self_check_result}')
+            if self_check_result not in ("GOOD", "DEGRADED"):
+                module.log(f'self check result: {self_check_result}: {data}')
                 time.sleep(5)
                 continue
-            result['msg'] = 'ydb healthcheck result "GOOD"'
+            result['msg'] = f'ydb healthcheck result "{self_check_result}": {data}'
             module.exit_json(**result)
 
         else:
