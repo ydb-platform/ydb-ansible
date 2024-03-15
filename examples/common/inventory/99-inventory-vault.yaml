@@ -1,5 +1,0 @@
-all:
-  children:
-    ydb:
-      vars:
-        ydb_password: password

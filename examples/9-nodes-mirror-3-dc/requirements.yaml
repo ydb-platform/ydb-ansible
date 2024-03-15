@@ -1,6 +1,0 @@
-roles: []
-
-collections:
-  - name: git+https://github.com/ydb-platform/ydb-ansible
-    type: git
-    version: 0a02d89addc8c3faa491ec97cefb58940a80a83b
