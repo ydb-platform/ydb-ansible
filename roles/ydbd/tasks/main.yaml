@@ -4,7 +4,7 @@
       - "{{ item }} is defined"
     fail_msg: "{{ item }} variable is required"
   loop:
-    - ydb_archive
+    - {ydb_archive | ydbd_binary}
     - ydb_config
     - ydb_tls_dir
 
@@ -46,11 +46,17 @@
     home: "{{ ydb_dir }}/home"
     comment: "YDB Service Account"
 
+- name: install YDB server and cli binaries
+  block:
+  - name: install YDB server binary package from archive
+    import_tasks:
+      file: install_ydb_from_archive.yaml
+    when: ydb_archive is defined
 
-- name: install YDB server binary package from archive
-  import_tasks:
-    file: install_ydb_from_archive.yaml
-  when: ydb_archive is defined
+  - name: install YDB binaries from files
+    import_tasks:
+      file: install_ydb_using_binary.yaml
+    when: ydbd_binary is defined and ydb_cli_binary is defined
 
 - name: create YDB configuration directory
   file:
