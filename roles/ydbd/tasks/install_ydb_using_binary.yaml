@@ -1,0 +1,33 @@
+- name: check if ydbd present
+  stat:
+    path: "{{ ydb_dir }}/bin/ydbd"
+  register: ydbd_stat
+
+- name: check if ydb cli present
+  stat:
+    path: "{{ ydb_dir }}/bin/ydb"
+  register: ydb_cli_stat
+
+- name: create YDB bin directory
+  file:
+    path: "{{ ydb_dir }}/bin"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: copy YDB server binary file
+  copy:
+    src: "{{ ydbd_binary }}"
+    dest: "{{ ydb_dir }}/bin/ydbd"
+    attributes: +x
+    mode: 0755
+  when: not ydbd_stat.stat.exists or ydb_binary_force_install
+
+- name: copy YDB cli binary file
+  copy:
+    src: "{{ ydb_cli_binary }}"
+    dest: "{{ ydb_dir }}/bin/ydb"
+    attributes: +x
+    mode: 0755
+  when: not ydb_cli_stat.stat.exists or ydb_binary_force_install
