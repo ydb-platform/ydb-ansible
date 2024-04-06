@@ -19,17 +19,21 @@ fi
 
 set -e
 
-if [ -f ${YDB_DIR}/certs/ca.crt ]; then
-  mkdir -pv ${BACKUP_DIR}
-  chmod 700 ${BACKUP_DIR}
-  cp -v ${YDB_DIR}/certs/ca.crt               ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/certs/node.crt             ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/certs/node.key             ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/certs/web.pem              ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/certs/web.pem              ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/cfg/ydbd-config.yaml       ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/cfg/ydbd-static.yaml       ${BACKUP_DIR}/
-  cp -v ${YDB_DIR}/cfg/ydbd-dynamic.yaml      ${BACKUP_DIR}/
-fi
+preserve() {
+  if [ -f "$1" ]; then
+    cp -v "$1" ${BACKUP_DIR}/
+  fi
+}
+
+mkdir -pv ${BACKUP_DIR}
+chmod 700 ${BACKUP_DIR}
+preserve ${YDB_DIR}/certs/ca.crt
+preserve ${YDB_DIR}/certs/node.crt
+preserve ${YDB_DIR}/certs/node.key
+preserve ${YDB_DIR}/certs/web.pem
+preserve ${YDB_DIR}/certs/web.pem
+preserve ${YDB_DIR}/cfg/ydbd-config.yaml
+preserve ${YDB_DIR}/cfg/ydbd-static.yaml
+preserve ${YDB_DIR}/cfg/ydbd-dynamic.yaml
 
 # End Of File
