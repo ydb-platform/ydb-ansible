@@ -1,7 +1,7 @@
 ---
 # YDB single static node restart tasks
 
-- name: Restart the storage node at {{ snode_name }}
+- name: restart the storage node at {{ snode_name }}
   ansible.builtin.systemd:
     state: restarted
     name: ydbd-storage
@@ -9,19 +9,24 @@
   delegate_facts: true
   any_errors_fatal: true
 
-- name: Transfer the secrets
-  copy: src=secret dest={{ ydb_dir }}/certs/secret
+- name: wait for ydb discovery to start working locally
+  ydb_platform.ydb.wait_discovery:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    token: "{{ ydb_credentials.token }}"
   delegate_to: "{{ snode_name }}"
   delegate_facts: true
   any_errors_fatal: true
 
-- name: Wait for storage state recovery on {{ snode_name }}
-  command: "sudo -u ydb {{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
-  delegate_to: "{{ snode_name }}"
-  delegate_facts: true
-  any_errors_fatal: true
-
-- name: Cleanup the transferred secrets
-  file: state=absent path={{ ydb_dir }}/certs/secret
-  delegate_to: "{{ snode_name }}"
-  delegate_facts: true
+- name: wait for ydb healthcheck switch to "GOOD" status
+  ydb_platform.ydb.wait_healthcheck:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    token: "{{ ydb_credentials.token }}"
+  run_once: true

@@ -1,9 +1,24 @@
 ---
 # ydbd storage rolling restart
 
-- name: YDB storage rolling restart
-  include_tasks: "restart_static.yml"
-  loop: "{{ groups['ydbd_static']|flatten(levels=1) }}"
+- name: get ydb token
+  ydb_platform.ydb.get_token:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
+  run_once: true
+  register: ydb_credentials
+  until: "'token' in ydb_credentials"
+  retries: 10
+  delay: 10
+
+- name: ydb storage rolling restart
+  include_tasks: "restart_static.yaml"
+  loop: "{{ groups['ydb']|flatten(levels=1) }}"
   loop_control:
     loop_var: snode_name
   run_once: true
