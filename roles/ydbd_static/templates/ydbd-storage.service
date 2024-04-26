@@ -12,9 +12,9 @@ PermissionsStartOnly=true
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-static.yaml \
-    --grpcs-port 2135 \
-    --ic-port 19001 \
-    --mon-port 8765 \
+    --grpcs-port 2135 --grpc-ca {{ ydb_dir }}/certs/ca.crt \
+    --ic-port 19001 --ca {{ ydb_dir }}/certs/ca.crt \
+    --mon-port 8765 --mon-cert {{ ydb_dir }}/certs/web.pem \
     --node static
 LimitNOFILE=65536
 LimitCORE=0
