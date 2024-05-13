@@ -1,0 +1,28 @@
+---
+- name: Get logs of YDB nodes
+  hosts: ydb
+  tasks:
+    - name: Fetch storage nodes logs
+      shell: journalctl -u ydbd-storage
+      register: storage
+      no_log: true
+      tags:
+        - storage
+        - static
+    - name: Fetch database nodes logs
+      shell: "systemctl list-units | grep ydbd-database | awk '{args=args\" -u \"$1} END {print(\"journalctl\" args)}' | sh"
+      register: database
+      no_log: true
+      tags:
+        - database
+        - dynamic
+    - name: Show storage nodes logs
+      debug: var=storage.stdout_lines
+      tags:
+        - storage
+        - static
+    - name: Show database nodes logs
+      debug: var=database.stdout_lines
+      tags:
+        - database
+        - dynamic
