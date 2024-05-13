@@ -67,7 +67,7 @@ Overall installation is performed according to the [official instruction](https:
 1. Install the required YDB Ansible collections from Github:
 
     ```bash
-    ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git,refactor-use-collections
+    ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git
     ```
 
     Alternatively, download the current releases of Ansible collections for [YDB](https://github.com/ydb-platform/ydb-ansible/releases), [community.general](https://github.com/ansible-collections/community.general/releases) and [Prometheus](https://github.com/prometheus-community/ansible/releases), and install the collections from the archives:
