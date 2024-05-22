@@ -1,5 +1,5 @@
 - name: setup YDB connectivity on site
-  hosts: ydb
+  hosts: {{ playbook_hosts | default('ydb') }}
   become: true
   tasks:
     - name: setup ipv4 connectivity
