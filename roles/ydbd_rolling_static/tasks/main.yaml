@@ -27,7 +27,7 @@
   delegate_to: 127.0.0.1
   run_once: true
   ansible.builtin.get_url:
-    url: https://storage.yandexcloud.net/blinkov-tmp/ydbops # TODO: release with a release URL
+    url: https://storage.yandexcloud.net/blinkov-tmp/ydbops # TODO: replace with a release URL
     dest: "{{ ansible_config_file | dirname }}/bin/"
     mode: 0755
 
