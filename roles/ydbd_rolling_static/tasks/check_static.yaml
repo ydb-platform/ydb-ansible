@@ -1,13 +1,5 @@
 ---
-# YDB single static node restart tasks
-
-- name: restart the storage node at {{ snode_name }}
-  ansible.builtin.systemd:
-    state: restarted
-    name: ydbd-storage
-  delegate_to: "{{ snode_name }}"
-  delegate_facts: true
-  any_errors_fatal: true
+# YDB check static node tasks
 
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
