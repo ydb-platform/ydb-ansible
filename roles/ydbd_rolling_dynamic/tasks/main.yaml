@@ -2,8 +2,8 @@
 # ydbd dynamic nodes rolling restart
 
 - name: YDB database nodes rolling restart
-  include_tasks: "restart_dynamic.yml"
-  loop: "{{ groups['ydbd_dynamic']|flatten(levels=1) }}"
+  include_tasks: "restart_dynamic.yaml"
+  loop: "{{ groups['ydbd_dynamic'] | default(groups['all']) | flatten(levels=1) }}"
   loop_control:
     loop_var: dynnode_name
   run_once: true

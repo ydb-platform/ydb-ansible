@@ -1,0 +1,10 @@
+- hosts: "{{ playbook_hosts | default('ydb') }}"
+  roles:
+  - role: ydbd_rolling_static
+    tags:
+      - storage
+      - static
+  - role: ydbd_rolling_dynamic
+    tags:
+      - database
+      - dynamic

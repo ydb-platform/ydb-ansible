@@ -16,9 +16,34 @@
   retries: 10
   delay: 10
 
-- name: ydb storage rolling restart
-  include_tasks: "restart_static.yaml"
-  loop: "{{ groups['ydb']|flatten(levels=1) }}"
+- name: create bin directory
+  delegate_to: 127.0.0.1
+  run_once: true
+  ansible.builtin.file:
+    path: "{{ ansible_config_file | dirname }}/bin/"
+    state: directory
+
+- name: install ydbops
+  delegate_to: 127.0.0.1
+  run_once: true
+  ansible.builtin.get_url:
+    url: https://storage.yandexcloud.net/blinkov-tmp/ydbops # TODO: replace with a release URL
+    dest: "{{ ansible_config_file | dirname }}/bin/"
+    mode: 0755
+
+- name: "run ydbops to gracefully restart the cluster, it takes a long time"
+  delegate_to: 127.0.0.1
+  run_once: true
+  ydb_platform.ydb.restart_storage:
+    ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
+    ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}.:2135"
+    ssh_args: "ssh -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }} -o StrictHostKeyChecking=no -o ProxyCommand=\\\"ssh -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user }}@{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}\\\""
+    ca_file: "{{ ansible_config_file | dirname }}/../TLS/CA/certs/ca.crt"
+    token: "{{ ydb_credentials.token }}"
+
+- name: ydb storage check
+  include_tasks: "check_static.yaml"
+  loop: "{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) }}"
   loop_control:
     loop_var: snode_name
   run_once: true

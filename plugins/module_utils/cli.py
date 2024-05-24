@@ -135,3 +135,38 @@ class DsTool(CLI):
             self.common_environ['YDB_TOKEN'] = token
         elif token_file is not None:
             self.common_options.extend(['--token-file', token_file])
+
+
+class YdbOps(CLI):
+    argument_spec = dict(
+        ydbops_bin=dict(type='str', default=None),
+        ydbops_endpoint=dict(type='str', default=None),
+        ydbops_systemd_unit=dict(type='str', default='ydbd-storage'),
+        ca_file=dict(type='str', default=None),
+        ssh_args=dict(type='str', default=None),
+        availability_mode=dict(type='str', default='strong'),
+        token=dict(type='str', default=None, no_log=True),
+        token_file=dict(type='str', default=None)
+    )
+
+    def __init__(self, module, ydbops_bin, ydbops_endpoint, ydbops_systemd_unit=None,
+                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None):
+        self.module = module
+
+        self.common_options = [ydbops_bin, 'restart', '--storage']
+        self.common_environ = {}
+
+        if ydbops_endpoint is not None:
+            self.common_options.extend(['--endpoint', ydbops_endpoint])
+        if ca_file is not None:
+            self.common_options.extend(['--ca-file', ca_file])
+        if ssh_args is not None:
+            self.common_options.extend(['--ssh-args', ssh_args])
+        if ydbops_systemd_unit is not None:
+            self.common_options.extend(['--systemd-unit', ydbops_systemd_unit])
+        if availability_mode is not None:
+            self.common_options.extend(['--availability-mode', availability_mode])
+        if token is not None:
+            self.common_environ['YDB_TOKEN'] = token
+        elif token_file is not None:
+            self.common_options.extend(['--token-file', token_file])
