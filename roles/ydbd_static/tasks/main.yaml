@@ -93,7 +93,6 @@
   ansible.builtin.pip:
     name: "ydb-dstool==0.0.11"
     virtualenv: "{{ ydb_dir}}/virtualenv"
-  run_once: true
 
 - name: init YDB storage if not initialized
   ydb_platform.ydb.init_storage:
