@@ -8,9 +8,21 @@
     loop:
       - ydb_cores_static
       - ydb_cores_dynamic
+  tags:
+    - storage
+    - static
+    - database
+    - dynamic
+    - no_restart
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   roles:
   - role: preflight
+  tags:
+    - storage
+    - static
+    - database
+    - dynamic
+    - no_restart
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   tasks:
   - name: copy original configuration file
