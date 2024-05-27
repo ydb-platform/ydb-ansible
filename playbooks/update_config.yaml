@@ -1,11 +1,62 @@
-- hosts: all
+- name: check if required variables are defined
+  hosts: "{{ playbook_hosts | default('ydb') }}"
+  tasks:
+  - ansible.builtin.assert:
+      that:
+        - "{{ item }} is defined"
+      fail_msg: "{{ item }} variable is required"
+    loop:
+      - ydb_cores_static
+      - ydb_cores_dynamic
+  tags:
+    - storage
+    - static
+    - database
+    - dynamic
+    - no_restart
+- hosts: "{{ playbook_hosts | default('ydb') }}"
   roles:
-  - role: ydbd_config
-
-- hosts: ydbd_static
-  roles:
-  - role: ydbd_rolling_static
-
-- hosts: ydbd_dynamic
-  roles:
-  - role: ydbd_rolling_dynamic
+  - role: preflight
+  tags:
+    - storage
+    - static
+    - database
+    - dynamic
+    - no_restart
+- hosts: "{{ playbook_hosts | default('ydb') }}"
+  tasks:
+  - name: copy original configuration file
+    copy:
+      src: "{{ ydb_config }}"
+      dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
+    tags:
+      - storage
+      - static
+      - database
+      - dynamic
+      - no_restart
+    become: true
+    become_method: sudo
+    become_user: root
+  - name: update static node configuration file
+    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
+    changed_when: false
+    tags:
+      - storage
+      - static
+      - no_restart
+    become: true
+    become_method: sudo
+    become_user: root
+  - name: create dynamic node configuration file
+    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml COMPUTE {{ ydb_cores_dynamic }}"
+    changed_when: false
+    tags:
+      - database
+      - dynamic
+      - no_restart
+    become: true
+    become_method: sudo
+    become_user: root
+- name: Restart YDB cluster
+  ansible.builtin.import_playbook: restart.yaml
