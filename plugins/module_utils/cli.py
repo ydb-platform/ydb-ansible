@@ -113,7 +113,7 @@ class YDB(CLI):
 class DsTool(CLI):
     argument_spec = dict(
         dstool_bin=dict(type='str', default='/opt/ydb/virtualenv/bin/ydb-dstool'),
-        dstool_endpoint=dict(type='str', default=f'http://{socket.getfqdn()}:8765'),
+        dstool_endpoint=dict(type='str', default=f'https://{socket.getfqdn()}:8765'),
         ca_file=dict(type='str', default=None),
         token=dict(type='str', default=None, no_log=True),
         token_file=dict(type='str', default=None)
