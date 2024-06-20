@@ -5,3 +5,5 @@ ydb_archive_force_install: false
 ydb_binary_force_install: false
 
 ydb_transparent_hugepages_enable: true
+
+ydb_repo_url: https://github.com/ydb-platform/ydb.git

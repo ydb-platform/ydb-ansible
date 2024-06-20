@@ -25,3 +25,7 @@
 - name: set collection level constants
   set_fact:
     ydb_dir: /opt/ydb
+
+- name: Check current user
+  ansible.builtin.command: whoami
+  register: current_user

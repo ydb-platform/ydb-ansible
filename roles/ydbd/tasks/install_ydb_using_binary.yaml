@@ -22,7 +22,7 @@
     dest: "{{ ydb_dir }}/bin/ydbd"
     attributes: +x
     mode: 0755
-  when: not ydbd_stat.stat.exists or ydb_binary_force_install
+    follow: true
 
 - name: copy YDB cli binary file
   copy:
@@ -30,4 +30,4 @@
     dest: "{{ ydb_dir }}/bin/ydb"
     attributes: +x
     mode: 0755
-  when: not ydb_cli_stat.stat.exists or ydb_binary_force_install
+    follow: true

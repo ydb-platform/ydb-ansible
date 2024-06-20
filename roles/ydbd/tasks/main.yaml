@@ -58,6 +58,16 @@
       file: install_ydb_using_binary.yaml
     when: ydbd_binary is defined and ydb_cli_binary is defined
 
+  - name: download and install YDB server binary package from a release version number
+    import_tasks:
+      file: install_ydb_from_version.yaml
+    when: ydb_version is defined
+
+  - name: install YDB server binary package from source code
+    import_tasks:
+      file: install_ydb_from_source.yaml
+    when: ydb_git_version is defined
+
 - name: create YDB configuration directory
   file:
     path: "{{ ydb_dir }}/cfg"
