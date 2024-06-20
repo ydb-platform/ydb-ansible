@@ -1,0 +1,17 @@
+- name: Set local path to ydb_archive_dest variable
+  set_fact:
+    ydb_archive_dest: "{{ ansible_config_file | dirname }}/files/"
+
+- name: Set local path to ydb_archive variable
+  set_fact:
+    ydb_archive: "{{ ydb_archive_dest }}ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
+
+- name: Download YDB release archive
+  delegate_to: 127.0.0.1
+  ansible.builtin.get_url:
+    url: "https://binaries.ydb.tech/release/{{ ydb_version }}/ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
+    dest: "{{ ydb_archive_dest }}"
+
+- name: install YDB server binary package from a downloaded archive
+  import_tasks:
+    file: install_ydb_from_archive.yaml

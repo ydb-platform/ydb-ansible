@@ -1,0 +1,38 @@
+- name: Set local path to ydb_git_path variable
+  ansible.builtin.set_fact:
+    ydb_git_path: "{{ ansible_config_file | dirname }}/files/ydb-git"
+
+- name: Set local path to ydb_git_dest variable
+  ansible.builtin.set_fact:
+    ydb_ya_path: "{{ ydb_git_path }}/ya"
+
+- name: Set local path to ydbd executable
+  ansible.builtin.set_fact:
+    ydbd_binary: "{{ ydb_git_path }}/ydb/apps/ydbd/ydbd"
+
+- name: Set local path to ydb cli executable
+  ansible.builtin.set_fact:
+    ydb_cli_binary: "{{ ydb_git_path }}/ydb/apps/ydb/ydb"
+
+- name: Prepare binaries
+  delegate_to: 127.0.0.1
+  become: false
+  run_once: true
+  block:
+    - name: Clone the YDB repository
+      ansible.builtin.git:
+        repo: "{{ ydb_repo_url }}"
+        dest: "{{ ydb_git_path }}"
+        version: "{{ ydb_branch }}"
+        force: true
+        single_branch: true
+
+    - name: Build YDB server from source code (it might take a long time)
+      ansible.builtin.shell: "{{ ydb_ya_path }} make {{ ydb_git_path }}/ydb/apps/ydbd --build relwithdebinfo"
+
+    - name: Build YDB CLI from source code (it might take a long time)
+      ansible.builtin.shell: "{{ ydb_ya_path }} make {{ ydb_git_path }}/ydb/apps/ydb --build relwithdebinfo"
+
+- name: install YDB server binary package from compiled binaries
+  import_tasks:
+    file: install_ydb_using_binary.yaml
