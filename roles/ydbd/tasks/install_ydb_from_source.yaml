@@ -23,9 +23,10 @@
       ansible.builtin.git:
         repo: "{{ ydb_repo_url }}"
         dest: "{{ ydb_git_path }}"
-        version: "{{ ydb_branch }}"
+        version: "{{ ydb_git_version }}"
         force: true
         single_branch: true
+        depth: 1
 
     - name: Build YDB server from source code (it might take a long time)
       ansible.builtin.shell: "{{ ydb_ya_path }} make {{ ydb_git_path }}/ydb/apps/ydbd --build relwithdebinfo"
