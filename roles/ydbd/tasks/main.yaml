@@ -6,7 +6,6 @@
   loop:
     - {ydb_archive | ydbd_binary}
     - ydb_config
-    - ydb_tls_dir
 
 - name: set vars_for_distribution variables
   ansible.builtin.include_vars:
@@ -83,6 +82,22 @@
     owner: ydb
     group: ydb
     mode: 0700
+
+- name: generate certificates
+  when: ydb_tls_dir is not defined
+  delegate_to: 127.0.0.1
+  become: false
+  block:
+    - name: get current time
+      run_once: true
+      set_fact:
+        current_time: "{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}"
+    - name: run gen_tls_certs.py
+      throttle: 1
+      ansible.builtin.shell: "{{ role_path }}/templates/gen_tls_certs.py --fqdn {{ inventory_hostname }} --folder={{ ansible_config_file | dirname }}/files/TLS --dest={{ current_time }}"
+    - name: set ydb_tls_dir
+      set_fact:
+        ydb_tls_dir: "{{ ansible_config_file | dirname }}/files/TLS/certs/{{ current_time }}"
 
 - name: setup certificates
   block:
