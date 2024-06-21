@@ -60,7 +60,7 @@ Overall installation is performed according to the [official instruction](https:
 1. Download the [YDB server distribution](https://ydb.tech/en/docs/downloads/#ydb-server). It is better to use the latest binary version available.
 1. Clone the [Github repository](https://github.com/ydb-platform/ydb-ansible) containing the YDB Ansible playbooks:
     ```bash
-    git clone https://github.com/ydb-platform/ydb-ansible
+    git clone -b pre-collections https://github.com/ydb-platform/ydb-ansible
     cd ydb-ansible
     ```
 1. Prepare the list of hosts to deploy the YDB static and dynamic nodes, as sections `[ydbd_static]` and `[ydbd_dynamic]` in the `hosts` file. An example file is provided.
