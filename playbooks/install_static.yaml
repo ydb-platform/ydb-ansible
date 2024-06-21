@@ -1,3 +1,6 @@
+- hosts: localhost
+  roles:
+  - role: inventory_hosts
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   tasks:
     - name: setup ydb static nodes

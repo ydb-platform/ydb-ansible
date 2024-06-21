@@ -1,4 +1,7 @@
-- hosts: ydb
+- hosts: localhost
+  roles:
+  - role: inventory_hosts
+- hosts: "{{ playbook_hosts | default('ydb') }}"
   become: true
   tasks:
     - name: setup packages

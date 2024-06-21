@@ -1,0 +1,8 @@
+- name: Import extra inventory hosts from ydb_hosts_list is defined
+  when: ydb_hosts_list is defined
+  block:
+  - name: Add each hostname to inventory
+    ansible.builtin.add_host:
+      name: "{{ item }}"
+      group: "{{ playbook_hosts | default('ydb') }}"
+    loop: "{{ lookup('file', ydb_hosts_list).splitlines() }}"
