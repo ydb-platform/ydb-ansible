@@ -2,6 +2,7 @@
 import argparse
 import os
 import subprocess
+import sys
 
 
 def run_command(command):
@@ -59,46 +60,32 @@ def create_directory(directory):
         os.makedirs(directory)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Generate TLS certificates")
-
-    parser.add_argument("--fqdn", metavar="fqdn", type=str, help="node FQDN")
-    parser.add_argument(
-        "--folder", metavar="folder", type=str, help="path to the working directory"
-    )
-    parser.add_argument(
-        "--dest", metavar="dest", type=str, help="name of the destination directory"
-    )
-
-    args = parser.parse_args()
-    fqdn = args.fqdn
-    ca_dir = args.folder
-
+def gen_tls_certs(fqdn, folder, dest, debug_info):
     key_bits = 4096
-    secure_dir = os.path.join(ca_dir, "secure")
-    certs_dir = os.path.join(ca_dir, "certs")
-    nodes_dir = os.path.join(ca_dir, "nodes")
-    ca_cnf = os.path.join(ca_dir, "ca.cnf")
+    secure_dir = os.path.join(folder, "secure")
+    certs_dir = os.path.join(folder, "certs")
+    nodes_dir = os.path.join(folder, "nodes")
+    ca_cnf = os.path.join(folder, "ca.cnf")
 
-    create_directory(ca_dir)
-    os.chdir(ca_dir)
+    create_directory(folder)
+    os.chdir(folder)
 
     create_directory(secure_dir)
     create_directory(certs_dir)
     create_directory(nodes_dir)
 
     if not os.path.isfile(ca_cnf):
-        print("** Generating CA configuration file")
+        print("** Generating CA configuration file", file=debug_info)
         generate_ca_config(ca_cnf)
 
     if not os.path.isfile(os.path.join(secure_dir, "ca.key")):
-        print("** Generating CA key")
+        print("** Generating CA key", file=debug_info)
         run_command(
             f'openssl genrsa -out {os.path.join(secure_dir, "ca.key")} {key_bits}'
         )
 
     if not os.path.isfile(os.path.join(certs_dir, "ca.crt")):
-        print("** Generating CA certificate")
+        print("** Generating CA certificate", file=debug_info)
         run_command(
             f'openssl req -new -x509 -config {ca_cnf} -key {os.path.join(secure_dir, "ca.key")} -out {os.path.join(certs_dir, "ca.crt")} -days 1830 -batch'
         )
@@ -115,7 +102,7 @@ def main():
         create_directory(node_dir)
         cfile = os.path.join(node_dir, "options.cnf")
         if not os.path.isfile(cfile):
-            print(f"** Creating node configuration file for {node}...")
+            print(f"** Creating node configuration file for {node}...", file=debug_info)
             node_config_content = f"""# OpenSSL node configuration file
 [ req ]
 prompt=no
@@ -140,13 +127,13 @@ DNS.1={node}
     def make_node_key(safe_node, node):
         key_path = os.path.join(nodes_dir, safe_node, "node.key")
         if not os.path.isfile(key_path):
-            print(f"** Generating key for node {node}...")
+            print(f"** Generating key for node {node}...", file=debug_info)
             run_command(f"openssl genrsa -out {key_path} {key_bits}")
 
     def make_node_csr(safe_node, node):
         csr_path = os.path.join(nodes_dir, safe_node, "node.csr")
         if not os.path.isfile(csr_path):
-            print(f"** Generating CSR for node {node}...")
+            print(f"** Generating CSR for node {node}...", file=debug_info)
             run_command(
                 f'openssl req -new -sha256 -config {os.path.join(nodes_dir, safe_node, "options.cnf")} -key {os.path.join(nodes_dir, safe_node, "node.key")} -out {csr_path} -batch'
             )
@@ -154,7 +141,7 @@ DNS.1={node}
     def make_node_cert(safe_node, node):
         crt_path = os.path.join(nodes_dir, safe_node, "node.crt")
         if not os.path.isfile(crt_path):
-            print(f"** Generating certificate for node {node}...")
+            print(f"** Generating certificate for node {node}...", file=debug_info)
             run_command(
                 f'openssl ca -config {ca_cnf} -keyfile {os.path.join(secure_dir, "ca.key")} -cert {os.path.join(certs_dir, "ca.crt")} -policy signing_policy -extensions signing_node_req -out {crt_path} -outdir {os.path.join(nodes_dir, safe_node)} -in {os.path.join(nodes_dir, safe_node, "node.csr")} -batch'
             )
@@ -178,7 +165,7 @@ DNS.1={node}
         dest_node_dir = os.path.join(dest_dir, safe_node)
         os.rename(node_dir, dest_node_dir)
 
-    dest_name = args.dest
+    dest_name = dest
     dest_dir = os.path.join(certs_dir, dest_name)
     create_directory(dest_dir)
     run_command(f'cp -v {os.path.join(certs_dir, "ca.crt")} {dest_dir}/')
@@ -192,8 +179,21 @@ DNS.1={node}
     make_node_cert(safe_node, short_node)
     move_node_files(safe_node)
 
-    print(f"All done. Certificates are in {dest_dir}")
+    print(f"All done. Certificates are in {dest_dir}", file=debug_info)
 
+def main():
+    parser = argparse.ArgumentParser(description="Generate TLS certificates")
+
+    parser.add_argument("--fqdn", metavar="fqdn", type=str, help="node FQDN")
+    parser.add_argument(
+        "--folder", metavar="folder", type=str, help="path to the working directory"
+    )
+    parser.add_argument(
+        "--dest", metavar="dest", type=str, help="name of the destination directory"
+    )
+
+    args = parser.parse_args()
+    gen_tls_certs(args.fqdn, args.folder, args.dest, debug_info=sys.stdout)
 
 if __name__ == "__main__":
     main()

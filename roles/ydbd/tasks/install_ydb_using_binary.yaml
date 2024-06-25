@@ -1,13 +1,3 @@
-- name: check if ydbd present
-  stat:
-    path: "{{ ydb_dir }}/bin/ydbd"
-  register: ydbd_stat
-
-- name: check if ydb cli present
-  stat:
-    path: "{{ ydb_dir }}/bin/ydb"
-  register: ydb_cli_stat
-
 - name: create YDB bin directory
   file:
     path: "{{ ydb_dir }}/bin"
