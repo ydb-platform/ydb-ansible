@@ -1,5 +1,5 @@
 - name: setup YDB on site
-  hosts: ydb
+  hosts: {{ playbook_hosts | default('ydb') }}
   become: true
   tasks:
     - name: setup packages
