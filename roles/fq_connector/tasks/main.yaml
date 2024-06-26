@@ -7,7 +7,6 @@
     - {connector_archive | connector_binary}
     - {connector_archive | connector_config}
     - connector_dir
-    - connector_port
     - ydb_dynnodes
 
 - name: create fq-connector directory
@@ -48,6 +47,15 @@
     dest: "{{ connector_dir }}/fq-connector-go.yaml"
     mode: 0644
   when: connector_config is defined
+
+- name: Get final config from host
+  ansible.builtin.slurp:
+    src: "{{ connector_dir }}/fq-connector-go.yaml"
+  register: connector_config_text
+
+- name: Parse connector config
+  ansible.builtin.set_fact:
+    connector_config: '{{ connector_config_text.content | b64decode | from_yaml }}'
 
 - name: create instance systemd units
   template:

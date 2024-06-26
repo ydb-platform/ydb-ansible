@@ -9,9 +9,9 @@ Wants=network-online.target
 Type=simple
 User=connector
 ExecStart={{ connector_dir }}/fq-connector-go server -c {{ connector_dir }}/fq-connector-go.yaml \
-    --connector-port {{ connector_port + item.offset }}{% if connector_metrics_port is defined %} \
-    --metrics-port {{ connector_metrics_port + item.offset }}{% endif %}{% if connector_pprof_port is defined %} \
-    --pprof-port {{ connector_pprof_port + item.offset }}{% endif %}
+    --connector-port {{ connector_config.connector_server.endpoint.port + item.offset }}{% if connector_config.metrics_server is defined %} \
+    --metrics-port {{ connector_config.metrics_server.endpoint.port + item.offset }}{% endif %}{% if connector_config.pprof_server is defined %} \
+    --pprof-port {{ connector_config.pprof_server.endpoint.port + item.offset }}{% endif %}
 
 Restart=always
 RestartSec=1
