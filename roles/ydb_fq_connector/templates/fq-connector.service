@@ -1,5 +1,5 @@
 [Unit]
-Description=FQ connector for YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
+Description=YDB FQ connector for YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
 StartLimitInterval=10
 StartLimitBurst=15
 After=network-online.target
@@ -7,7 +7,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=connector
+User={{ ydb-fq-connector }}
 ExecStart={{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }} server -c {{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml \
     --connector-port {{ ydb_fq_connector_config_obj.connector_server.endpoint.port + item.offset }}{% if ydb_fq_connector_config_obj.metrics_server is defined %} \
     --metrics-port {{ ydb_fq_connector_config_obj.metrics_server.endpoint.port + item.offset }}{% endif %}{% if ydb_fq_connector_config_obj.pprof_server is defined %} \
@@ -15,7 +15,7 @@ ExecStart={{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }} serve
 
 Restart=always
 RestartSec=1
-SyslogIdentifier=fq-conector
+SyslogIdentifier=ydb-fq-connector
 SyslogFacility=daemon
 SyslogLevel=info
 
