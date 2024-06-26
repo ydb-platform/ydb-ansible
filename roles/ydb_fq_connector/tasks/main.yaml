@@ -72,7 +72,7 @@
     src: ydb-fq-connector.service
     dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
   loop: "{{ ydb_dynnodes }}"
-  when: item.use_connector | default(false)
+  when: item.use_ydb_fq_connector | default(false)
   notify:
     - daemon reload
 
