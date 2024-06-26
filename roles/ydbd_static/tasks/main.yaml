@@ -90,10 +90,9 @@
   any_errors_fatal: true
 
 - name: install ydb-dstool
-  ansible.builtin.get_url:
-    url: https://storage.yandexcloud.net/blinkov-tmp/ydb-dstool # TODO: replace with a release URL
-    dest: "{{ ydb_dir }}/bin/"
-    mode: 0755
+  ansible.builtin.pip:
+    name: "ydb-dstool==0.0.11"
+    virtualenv: "{{ ydb_dir}}/virtualenv"
 
 - name: init YDB storage if not initialized
   ydb_platform.ydb.init_storage:
