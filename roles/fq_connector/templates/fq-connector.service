@@ -12,6 +12,7 @@ ExecStart={{ connector_dir }}/fq-connector-go server -c {{ connector_dir }}/fq-c
     --connector-port {{ connector_port + item.offset }}{% if connector_metrics_port is defined %} \
     --metrics-port {{ connector_metrics_port + item.offset }}{% endif %}{% if connector_pprof_port is defined %} \
     --pprof-port {{ connector_pprof_port + item.offset }}{% endif %}
+
 Restart=always
 RestartSec=1
 SyslogIdentifier=fq-conector
