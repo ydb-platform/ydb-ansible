@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import shutil
 import subprocess
 import sys
-
-
-def run_command(command):
-    subprocess.run(command, shell=True, check=True)
-
-
-def write_file(path, content):
-    with open(path, "w") as file:
-        file.write(content)
 
 
 def generate_ca_config(ca_cnf):
@@ -60,7 +52,7 @@ def create_directory(directory):
         os.makedirs(directory)
 
 
-def gen_tls_certs(fqdn, folder, dest, debug_info):
+def gen_tls_certs(fqdn, folder, dest, run_command, write_file, debug_info):
     key_bits = 4096
     secure_dir = os.path.join(folder, "secure")
     certs_dir = os.path.join(folder, "certs")
@@ -181,6 +173,13 @@ DNS.1={node}
 
     print(f"All done. Certificates are in {dest_dir}", file=debug_info)
 
+def run_command(command):
+    subprocess.run(command, shell=True, check=True)
+
+def write_file(path, content):
+    with open(path, "w") as file:
+        file.write(content)
+
 def main():
     parser = argparse.ArgumentParser(description="Generate TLS certificates")
 
@@ -193,7 +192,12 @@ def main():
     )
 
     args = parser.parse_args()
-    gen_tls_certs(args.fqdn, args.folder, args.dest, debug_info=sys.stdout)
+    gen_tls_certs(
+        args.fqdn, args.folder, args.dest,
+        run_command=run_command,
+        write_file=write_file,
+        debug_info=sys.stdout
+    )
 
 if __name__ == "__main__":
     main()
