@@ -2,4 +2,4 @@
   tasks:
     - name: setup fq-connector
       ansible.builtin.import_role:
-        name: ydb_platform.ydb.fq_connector
+        name: ydb_platform.ydb.ydb_fq_connector

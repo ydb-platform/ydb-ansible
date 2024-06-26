@@ -4,58 +4,68 @@
       - "{{ item }} is defined"
     fail_msg: "{{ item }} variable is required"
   loop:
-    - {connector_archive | connector_binary}
-    - {connector_archive | connector_config}
-    - connector_dir
+    - {ydb_fq_connector_archive | ydb_fq_connector_binary}
+    - ydb_fq_connector_config
+    - ydb_fq_connector_dir
     - ydb_dynnodes
 
 - name: create fq-connector directory
   file:
-    path: "{{ connector_dir }}"
+    path: "{{ ydb_fq_connector_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: create fq-connector bin directory
+  file:
+    path: "{{ ydb_fq_connector_dir }}/bin"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: create fq-connector cfg directory
+  file:
+    path: "{{ ydb_fq_connector_dir }}/cfg"
     state: directory
     owner: root
     group: root
     mode: 0755
   
-- name: create connector group
+- name: create fq-connector group
   group:
-    name: connector
+    name: ydb-fq-connector
     system: true
 
-- name: create connector user
+- name: create fq-connector user
   user:
-    name: connector
-    group: connector
+    name: ydb-fq-connector
+    group: ydb-fq-connector
     system: true
-    comment: "FQ connector Service Account"
+    comment: "YDB FQ connector Service Account"
 
-- name: install connector and cli binaries
+- name: install fq-connector and cli binaries
   block:
-  - name: install connector binary from archive
+  - name: install fq-connector binary from archive
     import_tasks:
       file: install_connector_from_archive.yaml
-    when: connector_archive is defined
+    when: ydb_fq_connector_archive is defined
 
-  - name: install connector binary from file
+  - name: install fq-connector binary from file
     import_tasks:
       file: install_connector_using_binary.yaml
-    when: connector_binary is defined
+    when: ydb_fq_connector_binary is defined
 
 - name: install connector config
   copy:
-    src: "{{ connector_config }}"
-    dest: "{{ connector_dir }}/fq-connector-go.yaml"
+    src: "{{ ydb_fq_connector_config }}"
+    dest: "{{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml"
     mode: 0644
-  when: connector_config is defined
-
-- name: Get final config from host
-  ansible.builtin.slurp:
-    src: "{{ connector_dir }}/fq-connector-go.yaml"
-  register: connector_config_text
 
 - name: Parse connector config
   ansible.builtin.set_fact:
-    connector_config: '{{ connector_config_text.content | b64decode | from_yaml }}'
+    ydb_fq_connector_config_obj: "{{ lookup('file', ydb_fq_connector_config) | from_yaml }}"
 
 - name: create instance systemd units
   template:

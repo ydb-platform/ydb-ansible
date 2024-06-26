@@ -1,0 +1,4 @@
+ydb_fq_connector_archive_unpack_options: []
+ydb_fq_connector_archive_force_install: false
+ydb_fq_connector_binary_force_install: false
+ydb_fq_connector_executable: "fq-connector-go"
