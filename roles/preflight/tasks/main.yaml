@@ -1,3 +1,11 @@
+- name: wait for multi-user.target
+  shell: systemctl -q is-active multi-user.target
+  register: result
+  until: result.rc == 0
+  retries: 60
+  delay: 10
+  changed_when: false
+
 - name: gather information using ansible setup module
   ansible.builtin.setup:
     gather_subset:
