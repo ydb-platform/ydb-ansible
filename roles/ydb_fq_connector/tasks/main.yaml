@@ -9,7 +9,7 @@
     - ydb_fq_connector_dir
     - ydb_dynnodes
 
-- name: create fq-connector directory
+- name: create ydb-fq-connector directory
   file:
     path: "{{ ydb_fq_connector_dir }}"
     state: directory
@@ -17,7 +17,7 @@
     group: root
     mode: 0755
 
-- name: create fq-connector bin directory
+- name: create ydb-fq-connector bin directory
   file:
     path: "{{ ydb_fq_connector_dir }}/bin"
     state: directory
@@ -25,7 +25,7 @@
     group: root
     mode: 0755
 
-- name: create fq-connector cfg directory
+- name: create ydb-fq-connector cfg directory
   file:
     path: "{{ ydb_fq_connector_dir }}/cfg"
     state: directory
@@ -33,44 +33,44 @@
     group: root
     mode: 0755
   
-- name: create fq-connector group
+- name: create ydb-fq-connector group
   group:
     name: ydb-fq-connector
     system: true
 
-- name: create fq-connector user
+- name: create ydb-fq-connector user
   user:
     name: ydb-fq-connector
     group: ydb-fq-connector
     system: true
     comment: "YDB FQ connector Service Account"
 
-- name: install fq-connector and cli binaries
+- name: install ydb-fq-connector and cli binaries
   block:
-  - name: install fq-connector binary from archive
+  - name: install ydb-fq-connector binary from archive
     import_tasks:
       file: install_connector_from_archive.yaml
     when: ydb_fq_connector_archive is defined
 
-  - name: install fq-connector binary from file
+  - name: install ydb-fq-connector binary from file
     import_tasks:
       file: install_connector_using_binary.yaml
     when: ydb_fq_connector_binary is defined
 
-- name: install connector config
+- name: install ydb-fq-connector config
   copy:
     src: "{{ ydb_fq_connector_config }}"
     dest: "{{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml"
     mode: 0644
 
-- name: Parse connector config
+- name: parse ydb-fq-connector config
   ansible.builtin.set_fact:
     ydb_fq_connector_config_obj: "{{ lookup('file', ydb_fq_connector_config) | from_yaml }}"
 
-- name: create instance systemd units
+- name: create ydb-fq-connector instance systemd units
   template:
     src: fq-connector.service
-    dest: "/etc/systemd/system/fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
   loop: "{{ ydb_dynnodes }}"
   when: item.use_connector | default(false)
   notify:
@@ -79,10 +79,10 @@
 - name: flush handlers
   meta: flush_handlers
 
-- name: start fq-connector instances
+- name: start ydb-fq-connector instances
   ansible.builtin.systemd:
-    name: "fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    name: "ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
     state: started
     enabled: true
   loop: "{{ ydb_dynnodes }}"
-  when: item.use_connector | default(false)
+  when: item.use_ydb_fq_connector | default(false)

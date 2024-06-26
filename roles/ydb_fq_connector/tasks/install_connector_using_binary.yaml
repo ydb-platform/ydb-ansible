@@ -1,12 +1,12 @@
-- name: check if fq-connector-go present
+- name: check if ydb-fq-connector-go present
   stat:
-    path: "{{ connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
+    path: "{{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
   register: ydb_fq_connector_stat
 
-- name: copy fq-connector binary file
+- name: copy ydb-fq-connector binary file
   copy:
-    src: "{{ connector_binary }}"
-    dest: "{{ connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
+    src: "{{ ydb_fq_connector_binary }}"
+    dest: "{{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
     attributes: +x
     mode: 0755
   when: not ydb_fq_connector_stat.stat.exists or ydb_fq_connector_binary_force_install
