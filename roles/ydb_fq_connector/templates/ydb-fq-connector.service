@@ -7,7 +7,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User={{ ydb-fq-connector }}
+User=ydb-fq-connector
 ExecStart={{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }} server -c {{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml \
     --connector-port {{ ydb_fq_connector_config_obj.connector_server.endpoint.port + item.offset }}{% if ydb_fq_connector_config_obj.metrics_server is defined %} \
     --metrics-port {{ ydb_fq_connector_config_obj.metrics_server.endpoint.port + item.offset }}{% endif %}{% if ydb_fq_connector_config_obj.pprof_server is defined %} \
