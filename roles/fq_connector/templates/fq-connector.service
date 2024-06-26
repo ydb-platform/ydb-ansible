@@ -1,0 +1,22 @@
+[Unit]
+Description=FQ connector for YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
+StartLimitInterval=10
+StartLimitBurst=15
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=connector
+ExecStart={{ connector_dir }}/fq-connector-go server -c {{ connector_dir }}/fq-connector-go.yaml \
+    --connector-port {{ connector_port + item.offset }}{% if connector_metrics_port is defined %} \
+    --metrics-port {{ connector_metrics_port + item.offset }}{% endif %}{% if connector_pprof_port is defined %} \
+    --pprof-port {{ connector_pprof_port + item.offset }}{% endif %}
+Restart=always
+RestartSec=1
+SyslogIdentifier=fq-conector
+SyslogFacility=daemon
+SyslogLevel=info
+
+[Install]
+WantedBy=multi-user.target

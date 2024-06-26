@@ -1,0 +1,3 @@
+connector_archive_unpack_options: ['--strip-component=1']
+connector_archive_force_install: false
+connector_binary_force_install: false

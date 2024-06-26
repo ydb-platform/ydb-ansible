@@ -1,0 +1,70 @@
+- name: check if required variables are defined
+  ansible.builtin.assert:
+    that:
+      - "{{ item }} is defined"
+    fail_msg: "{{ item }} variable is required"
+  loop:
+    - {connector_archive | connector_binary}
+    - {connector_archive | connector_config}
+    - connector_dir
+    - connector_port
+    - ydb_dynnodes
+
+- name: create fq-connector directory
+  file:
+    path: "{{ connector_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  
+- name: create connector group
+  group:
+    name: connector
+    system: true
+
+- name: create connector user
+  user:
+    name: connector
+    group: connector
+    system: true
+    comment: "FQ connector Service Account"
+
+- name: install connector and cli binaries
+  block:
+  - name: install connector binary from archive
+    import_tasks:
+      file: install_connector_from_archive.yaml
+    when: connector_archive is defined
+
+  - name: install connector binary from file
+    import_tasks:
+      file: install_connector_using_binary.yaml
+    when: connector_binary is defined
+
+- name: install connector config
+  copy:
+    src: "{{ connector_config }}"
+    dest: "{{ connector_dir }}/fq-connector-go.yaml"
+    mode: 0644
+  when: connector_config is defined
+
+- name: create instance systemd units
+  template:
+    src: fq-connector.service
+    dest: "/etc/systemd/system/fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+  loop: "{{ ydb_dynnodes }}"
+  when: item.use_connector | default(false)
+  notify:
+    - daemon reload
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: start fq-connector instances
+  ansible.builtin.systemd:
+    name: "fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    state: started
+    enabled: true
+  loop: "{{ ydb_dynnodes }}"
+  when: item.use_connector | default(false)
