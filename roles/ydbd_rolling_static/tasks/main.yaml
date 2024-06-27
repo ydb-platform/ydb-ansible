@@ -38,7 +38,7 @@
     ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
     ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}.:2135"
     ssh_args: "ssh -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }} -o StrictHostKeyChecking=no -o ProxyCommand=\\\"ssh -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user }}@{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}\\\""
-    ca_file: "{{ ansible_config_file | dirname }}/../TLS/CA/certs/ca.crt"
+    ca_file: "{{ ansible_config_file | dirname }}/files/TLS/certs/ca.crt"
     token: "{{ ydb_credentials.token }}"
 
 - name: ydb storage check
