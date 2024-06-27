@@ -30,12 +30,12 @@ def main():
         for query in test_queries:
             rc, stdout, stderr = ydb_cli(['yql', '-s', query, '--format', 'json-unicode'])
             if rc != 0:
-                result['msg'] = f'test query failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}'
+                result['msg'] = f'test query "{query}" failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}'
                 module.fail_json(**result)
                 return
             elif query.startswith('SELECT'):
                 details = stdout
-        result['msg'] = f'all test queries were successful, details:\n{details}'
+        result['msg'] = f'all test queries were successful, details: {details}'
         module.exit_json(**result)
 
     except Exception as e:
