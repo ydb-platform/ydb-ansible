@@ -81,4 +81,3 @@
     password: "{{ ydb_password }}"
   loop: "{{ ydb_dynnodes }}"
   throttle: 1
-  tags: run_this
