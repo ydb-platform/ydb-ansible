@@ -1,0 +1,13 @@
+- name: check if fq-connector-go present
+  stat:
+    path: "{{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
+  register: ydb_fq_connector_stat
+
+- name: unpack fq-connector archive
+  ansible.builtin.unarchive:
+    src: "{{ ydb_fq_connector_archive }}"
+    dest: "{{ ydb_fq_connector_dir }}/bin"
+    owner: root
+    group: root
+    extra_opts: "{{ ydb_fq_connector_archive_unpack_options }}"
+  when: not ydb_fq_connector_stat.stat.exists or ydb_fq_connector_archive_force_install

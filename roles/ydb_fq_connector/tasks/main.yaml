@@ -1,0 +1,88 @@
+- name: check if required variables are defined
+  ansible.builtin.assert:
+    that:
+      - "{{ item }} is defined"
+    fail_msg: "{{ item }} variable is required"
+  loop:
+    - {ydb_fq_connector_archive | ydb_fq_connector_binary}
+    - ydb_fq_connector_config
+    - ydb_fq_connector_dir
+    - ydb_dynnodes
+
+- name: create ydb-fq-connector directory
+  file:
+    path: "{{ ydb_fq_connector_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: create ydb-fq-connector bin directory
+  file:
+    path: "{{ ydb_fq_connector_dir }}/bin"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: create ydb-fq-connector cfg directory
+  file:
+    path: "{{ ydb_fq_connector_dir }}/cfg"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  
+- name: create ydb-fq-connector group
+  group:
+    name: ydb-fq-connector
+    system: true
+
+- name: create ydb-fq-connector user
+  user:
+    name: ydb-fq-connector
+    group: ydb-fq-connector
+    system: true
+    comment: "YDB FQ connector Service Account"
+
+- name: install ydb-fq-connector and cli binaries
+  block:
+  - name: install ydb-fq-connector binary from archive
+    import_tasks:
+      file: install_connector_from_archive.yaml
+    when: ydb_fq_connector_archive is defined
+
+  - name: install ydb-fq-connector binary from file
+    import_tasks:
+      file: install_connector_using_binary.yaml
+    when: ydb_fq_connector_binary is defined
+
+- name: install ydb-fq-connector config
+  copy:
+    src: "{{ ydb_fq_connector_config }}"
+    dest: "{{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml"
+    mode: 0644
+
+- name: parse ydb-fq-connector config
+  ansible.builtin.set_fact:
+    ydb_fq_connector_config_obj: "{{ lookup('file', ydb_fq_connector_config) | from_yaml }}"
+
+- name: create ydb-fq-connector instance systemd units
+  template:
+    src: ydb-fq-connector.service
+    dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+  loop: "{{ ydb_dynnodes }}"
+  when: item.use_ydb_fq_connector | default(false)
+  notify:
+    - daemon reload
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: start ydb-fq-connector instances
+  ansible.builtin.systemd:
+    name: "ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    state: started
+    enabled: true
+  loop: "{{ ydb_dynnodes }}"
+  when: item.use_ydb_fq_connector | default(false)
