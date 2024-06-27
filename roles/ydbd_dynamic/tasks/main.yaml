@@ -69,3 +69,15 @@
     database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
     token: "{{ ydb_credentials.token }}"
   loop: "{{ ydb_dynnodes }}"
+
+- name: run test queries
+  ydb_platform.ydb.run_test_queries:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:{{ 2136 + item.offset }}"
+    database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
+  loop: "{{ ydb_dynnodes }}"
+  throttle: 1
