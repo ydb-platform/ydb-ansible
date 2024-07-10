@@ -68,5 +68,8 @@ ydb_dynnodes:
   - { instance: 'e', offset: 4, affinity='96-111' }
   - { instance: 'f', offset: 5, affinity='112-127' }
 
+# Optional parameter defining the CPU affinity of static nodes' services
+ydb_affinity_static: '0-31'
+
 # Extra sleep time to allow dynamic nodes to settle up
 dynnode_restart_sleep_seconds: 30

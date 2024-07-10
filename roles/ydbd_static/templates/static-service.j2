@@ -21,6 +21,9 @@ LimitNOFILE=65536
 LimitCORE=0
 #LimitCORE=infinity
 LimitMEMLOCK=3221225472
+{%- if ydb_affinity_static is defined %}
+CPUAffinity={{ ydb_affinity_static }}
+{%- endif %}
 
 [Install]
 WantedBy=multi-user.target
