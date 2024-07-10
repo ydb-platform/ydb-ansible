@@ -19,10 +19,10 @@ ydb_dir: /opt/ydb
 ydb_tls_dir: ./tls/CA/certs/2023-03-09_16-49-39
 
 # YDB server software archive
-ydb_archive: ydbd-23.1.26-linux-amd64.tar.gz
+ydb_archive: yasubd-24.1.18.1-linux-amd64.tar.gz
 
 # YDB server software release
-ydb_version: 23.1.26
+ydb_version: 24.1.18.1
 
 # Extra options passed to tar for unpack, typically "--strip-component=1"
 ydb_unpack_options: "--strip-component=1"
@@ -41,8 +41,8 @@ ydb_default_groups: 9
 ydb_config: config.yaml
 
 # Number of cores for static and dynamic nodes
-ydb_cores_static: 7
-ydb_cores_dynamic: 7
+ydb_cores_static: 31
+ydb_cores_dynamic: 14
 
 # YDB physical disk device names and labels for static nodes
 ydb_disks:
@@ -57,11 +57,20 @@ ydb_brokers:
   - ycydb-s3
 
 # The list of dynnodes to run on each host
+#  instance is the service suffix
+#  offset is the integer added to base port numbers
+#  affinity is optional, and is the vCPU mask to run the service
+# To check: for pid in `pgrep ydbd`; do sudo taskset -cp $pid; done
 ydb_dynnodes:
-  - { instance: 'alfa', offset: 0 }
-  - { instance: 'bravo', offset: 1 }
-  - { instance: 'charlie', offset: 2 }
-  - { instance: 'delta', offset: 3 }
+  - { instance: 'a', offset: 0, affinity: '32-47' }
+  - { instance: 'b', offset: 1, affinity: '48-63' }
+  - { instance: 'c', offset: 2, affinity: '64-79' }
+  - { instance: 'd', offset: 3, affinity: '80-95' }
+  - { instance: 'e', offset: 4, affinity: '96-111' }
+  - { instance: 'f', offset: 5, affinity: '112-127' }
+
+# Optional parameter defining the CPU affinity of static nodes' services
+ydb_affinity_static: '0-31'
 
 # Extra sleep time to allow dynamic nodes to settle up
 dynnode_restart_sleep_seconds: 30
