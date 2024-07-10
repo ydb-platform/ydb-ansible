@@ -60,13 +60,14 @@ ydb_brokers:
 #  instance is the service suffix
 #  offset is the integer added to base port numbers
 #  affinity is optional, and is the vCPU mask to run the service
+# To check: for pid in `pgrep ydbd`; do sudo taskset -cp $pid; done
 ydb_dynnodes:
-  - { instance: 'a', offset: 0, affinity='32-47' }
-  - { instance: 'b', offset: 1, affinity='48-63' }
-  - { instance: 'c', offset: 2, affinity='64-79' }
-  - { instance: 'd', offset: 3, affinity='80-95' }
-  - { instance: 'e', offset: 4, affinity='96-111' }
-  - { instance: 'f', offset: 5, affinity='112-127' }
+  - { instance: 'a', offset: 0, affinity: '32-47' }
+  - { instance: 'b', offset: 1, affinity: '48-63' }
+  - { instance: 'c', offset: 2, affinity: '64-79' }
+  - { instance: 'd', offset: 3, affinity: '80-95' }
+  - { instance: 'e', offset: 4, affinity: '96-111' }
+  - { instance: 'f', offset: 5, affinity: '112-127' }
 
 # Optional parameter defining the CPU affinity of static nodes' services
 ydb_affinity_static: '0-31'
