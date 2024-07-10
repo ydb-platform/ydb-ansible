@@ -18,22 +18,26 @@ SyslogFacility=daemon
 SyslogLevel=err
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server --cluster-name "{{ ydb_cluster }}" \
-    --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml \
-    --grpcs-port {{ 2136 + item.offset }} --grpc-ca {{ ydb_dir }}/certs/ca.crt \
-    --ic-port {{ 19002 + item.offset }} --ca {{ ydb_dir }}/certs/ca.crt \
-    --mon-port {{ 8766 + item.offset }} --mon-cert {{ ydb_dir }}/certs/web.pem \
-    --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
-    --node-broker grpcs://{{ ydb_brokers[0] }}:2135 \
-{% if ydb_brokers|length > 1 %}
-    --node-broker grpcs://{{ ydb_brokers[1] }}:2135 \
-{% endif %}
-{% if ydb_brokers|length > 2 %}
-    --node-broker grpcs://{{ ydb_brokers[2] }}:2135 \
-{% endif %}
+    --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml --ca {{ ydb_dir }}/certs/ca.crt \
+    --grpc-ca {{ ydb_dir }}/certs/ca.crt --mon-cert {{ ydb_dir }}/certs/web.pem \
+{%- if 'offset' in item %}
+    --grpcs-port {{ 2136 + item.offset }}  --ic-port {{ 19002 + item.offset }} --mon-port {{ 8766 + item.offset }}  \
+{%- else %}
+    --grpcs-port 2136 --ic-port 19002 --mon-port 8766  \
+{%- endif %}
+{%- for brk in ydb_brokers %}
+    --node-broker grpcs://{{ brk }}:2135 \
+{%- endfor %}
+{%- if ydb_node_dc is defined %}
     --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }}
+{%- endif %}
+    --tenant /{{ ydb_domain }}/{{ ydb_dbname }}
 LimitNOFILE=65536
 LimitCORE=0
 LimitMEMLOCK=32212254720
+{%- if 'affinity' in item %}
+CPUAffinity={{ item.affinity }}
+{%- endif %}
 
 [Install]
 WantedBy=multi-user.target
