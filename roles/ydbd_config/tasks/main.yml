@@ -30,10 +30,7 @@
   copy: src={{ ydb_tls_dir }}/ca.crt dest={{ ydb_dir }}/cfg/ca.crt
 
 - name: Copy cluster configuration file
-  copy: src={{ ydb_config }} dest={{ ydb_dir }}/cfg/ydbd-config.yaml
-  group: ydb
-  owner: root
-  mode: 440
+  copy: src={{ ydb_config }} dest={{ ydb_dir }}/cfg/ydbd-config.yaml group=ydb owner=root mode=440
   when: ydb_config is defined
 
 - name: Build dynamic node configuration file
