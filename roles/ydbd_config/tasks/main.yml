@@ -30,5 +30,13 @@
   copy: src={{ ydb_tls_dir }}/ca.crt dest={{ ydb_dir }}/cfg/ca.crt
 
 - name: Copy cluster configuration file
-  copy: src={{ ydb_config }} dest={{ ydb_dir }}/cfg/ydbd-config.yaml
+  copy: src={{ ydb_config }} dest={{ ydb_dir }}/cfg/ydbd-config.yaml group=ydb owner=root mode=440
   when: ydb_config is defined
+
+- name: Build dynamic node configuration file
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
+  when: ydb_config is defined and ydb_cores_dynamic is defined
+
+- name: Build static node configuration file
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-static.yaml STORAGE {{ ydb_cores_static }}"
+  when: ydb_config is defined and ydb_cores_static is defined
