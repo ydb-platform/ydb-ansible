@@ -17,7 +17,8 @@ SyslogIdentifier=ydbd
 SyslogFacility=daemon
 SyslogLevel=err
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
-ExecStart={{ ydb_dir }}/bin/ydbd server --cluster-name "{{ ydb_cluster }}" \
+ExecStart={{ ydb_dir }}/bin/ydbd server --cluster-name "{{ ydb_cluster }}" --tcp \
+    --label type=database --label database={{ ydb_dbname }} --label instance={{ item.instance }} \
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml --ca {{ ydb_dir }}/certs/ca.crt \
     --grpc-ca {{ ydb_dir }}/certs/ca.crt --mon-cert {{ ydb_dir }}/certs/web.pem \
 {%- if 'offset' in item %}
