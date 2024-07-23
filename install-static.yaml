@@ -4,3 +4,4 @@
   - role: ydbd
   - role: ydbd_config
   - role: ydbd_static
+  - role: ydbd_init

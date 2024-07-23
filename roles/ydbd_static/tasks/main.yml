@@ -24,43 +24,6 @@
 - name: Add the database creation script
   template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode=755
 
-- name: Execute disk formatting
-  command: "{{ ydb_dir }}/home/safe_format.sh {{ item['name'] }} {{ item['label'] }}"
-  with_items: "{{ ydb_disks }}"
-
 - name: Refresh systemd services configuration
   ansible.builtin.systemd:
     daemon_reload: true
-
-- name: Start the storage node
-  ansible.builtin.systemd:
-    state: started
-    name: ydbd-storage
-  any_errors_fatal: true
-
-- name: Wait for storage node startup
-  command: "{{ ydb_dir }}/home/wait_initial.sh {{ inventory_hostname }}"
-  become: true
-  become_user: ydb
-  any_errors_fatal: true
-
-- name: Initial YDB cluster setup
-  block:
-    - name: Initialize the YDB storage
-      command: "{{ ydb_dir }}/home/init_storage.sh {{ inventory_hostname }}"
-      become: true
-      become_user: ydb
-    - name: Wait for storage bootstrap to complete
-      command: "{{ ydb_dir }}/home/wait_normal.sh {{ inventory_hostname }}"
-      become: true
-      become_user: ydb
-    - name: Transfer the secrets
-      copy: src=secret dest={{ ydb_dir }}/certs/secret
-    - name: Set the initial cluster password
-      command: "{{ ydb_dir }}/home/init_password.sh {{ inventory_hostname }}"
-      become: true
-      become_user: ydb
-  run_once: true
-
-- name: Cleanup the transferred secrets
-  file: state=absent path={{ ydb_dir }}/certs/secret
