@@ -23,6 +23,11 @@
     src: unified-agent-config.j2
     dest: "{{ unified_agent_home }}/unified_agent.yaml"
 
+- name: Generate the log rotation configuration
+  template:
+    src: ydb-logs-rotation.j2
+    dest: "{{ unified_agent_home }}/ydb-logs-rotation.conf"
+
 - name: Refresh systemd services configuration
   ansible.builtin.systemd:
     daemon_reload: true
