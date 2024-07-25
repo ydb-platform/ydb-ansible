@@ -26,7 +26,7 @@
 - name: Generate the log rotation configuration
   template:
     src: ydb-logs-rotation.j2
-    dest: "{{ unified_agent_home }}/ydb-logs-rotation.conf"
+    dest: /etc/logrotate.d/ydbd
 
 - name: Refresh systemd services configuration
   ansible.builtin.systemd:
