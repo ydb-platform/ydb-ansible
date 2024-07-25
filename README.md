@@ -120,3 +120,9 @@ Notes:
 1. YDB cluster configuration file is copied to each server.
 1. Rolling restart is performed for YDB storage nodes, node by node, checking for the YDB storage cluster to become healthy after the restart of each node.
 1. Rolling restart is performed for YDB database nodes, server by server, restarting all nodes sitting in the single server at a time, and waiting for the specified number of seconds after each server's nodes restart.
+
+# Log setup and rotation
+
+(a) Unified Agent
+
+(b) `curl -s http://localhost:16301/output_main/reopen_file`
