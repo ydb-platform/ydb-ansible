@@ -2,10 +2,10 @@
 # ydbd configuration
 
 - name: Add the configuration backup script
-  template: src=backup_config.j2 dest={{ ydb_dir }}/home/backup_config.sh mode=755
+  template: src=backup_config.j2 dest={{ ydb_dir }}/home/backup_config.sh mode='755'
 
 - name: Add the configuration file updater script
-  template: src=update_config_file.j2 dest={{ ydb_dir }}/home/update_config_file.sh mode=755
+  template: src=update_config_file.j2 dest={{ ydb_dir }}/home/update_config_file.sh mode='755'
 
 # ydb_config_backup is passed via extra vars, generated as "date '+%Y-%m-%d_%H-%M-%S'"
 - name: Backup the existing configuration files
@@ -15,22 +15,54 @@
   when: ydb_config_backup is defined
 
 - name: Copy the TLS ca.crt
-  copy: src={{ ydb_tls_dir }}/ca.crt dest={{ ydb_dir }}/certs/ca.crt
-
-- name: Copy the TLS node.crt
-  copy: src={{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.crt dest={{ ydb_dir }}/certs/node.crt
-
-- name: Copy the TLS node.key
-  copy: src={{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.key dest={{ ydb_dir }}/certs/node.key
-
-- name: Copy the TLS web.pem
-  copy: src={{ ydb_tls_dir }}/{{ inventory_hostname_short }}/web.pem dest={{ ydb_dir }}/certs/web.pem
+  copy:
+    src: "{{ ydb_tls_dir }}/ca.crt"
+    dest: "{{ ydb_dir }}/certs/ca.crt"
+    group: ydb
+    owner: root
+    mode: '440'
 
 - name: Public copy of ca.crt
-  copy: src={{ ydb_tls_dir }}/ca.crt dest={{ ydb_dir }}/cfg/ca.crt
+  copy:
+    src: "{{ ydb_tls_dir }}/ca.crt"
+    dest: "{{ ydb_dir }}/cfg/ca.crt"
+    group: root
+    owner: ydb
+    mode: '444'
+
+- name: Identify if short hostnames should be used
+  set_fact:
+    ydb_tls_host: "{{ inventory_hostname_short if lookup('fileglob', ydb_tls_dir+'/'+inventory_hostname_short+'/node.crt', errors='warn') else inventory_hostname }}"
+
+- name: Copy the TLS node.crt
+  copy:
+    src: "{{ ydb_tls_dir }}/{{ ydb_tls_host }}/node.crt"
+    dest: "{{ ydb_dir }}/certs/node.crt"
+    group: ydb
+    owner: root
+    mode: '440'
+- name: Copy the TLS node.key
+  copy:
+    src: "{{ ydb_tls_dir }}/{{ ydb_tls_host }}/node.key"
+    dest: "{{ ydb_dir }}/certs/node.key"
+    group: ydb
+    owner: root
+    mode: '440'
+- name: Copy the TLS web.pem
+  copy:
+    src: "{{ ydb_tls_dir }}/{{ ydb_tls_host }}/web.pem"
+    dest: "{{ ydb_dir }}/certs/web.pem"
+    group: ydb
+    owner: root
+    mode: '440'
 
 - name: Copy cluster configuration file
-  copy: src={{ ydb_config }} dest={{ ydb_dir }}/cfg/ydbd-config.yaml group=ydb owner=root mode=440
+  copy:
+    src: "{{ ydb_config }}"
+    dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
+    group: ydb
+    owner: root
+    mode: '440'
   when: ydb_config is defined
 
 - name: Build dynamic node configuration file

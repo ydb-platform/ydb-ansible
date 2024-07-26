@@ -2,16 +2,16 @@
 # unified agent installation
 
 - name: Create the unified agent base directory
-  file: state=directory path={{ unified_agent_home }} group=bin owner=root mode=755
+  file: state=directory path={{ unified_agent_home }} group=bin owner=root mode='755'
 
 - name: Create the unified agent storage directory
-  file: state=directory path={{ unified_agent_home }}/storage group=ydb owner=ydb mode=700
+  file: state=directory path={{ unified_agent_home }}/storage group=ydb owner=ydb mode='700'
 
 - name: Create the technical logs directory
-  file: state=directory path={{ ydb_dir }}/logs group=ydb owner=ydb mode=750
+  file: state=directory path={{ ydb_dir }}/logs group=ydb owner=ydb mode='750'
 
 - name: Copy the unified agent binary
-  copy: src={{ unified_agent_binary }} dest={{ unified_agent_home }}/unified_agent group=bin owner=root mode=555
+  copy: src={{ unified_agent_binary }} dest={{ unified_agent_home }}/unified_agent group=bin owner=root mode='555'
 
 - name: Generate the unified agent service files
   template:

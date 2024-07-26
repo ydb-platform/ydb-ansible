@@ -117,19 +117,19 @@
     owner: ydb
 
 - name: Create the YDB release directory
-  file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode=755
+  file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode='755'
 
 - name: Create the YDB configuration directory
-  file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode=755
+  file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode='755'
 
 - name: Create the YDB audit directory
-  file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode=700
+  file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode='700'
 
 - name: Create the YDB certs directory
-  file: state=directory path={{ ydb_dir }}/certs group=ydb owner=ydb mode=700
+  file: state=directory path={{ ydb_dir }}/certs group=ydb owner=ydb mode='700'
 
 - name: Create the YDB configuration backup directory
-  file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode=700
+  file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode='700'
 
 - name: Create the YDB server binary directory
   file: state=directory
@@ -160,7 +160,7 @@
         force=yes
 
 - name: Create the YDB CLI default binary directory
-  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode=700
+  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='700'
 
 - name: Disable YDB CLI version checks
   copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb
