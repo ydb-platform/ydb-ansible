@@ -1,0 +1,28 @@
+- name: check if required variables are defined
+  hosts: "{{ playbook_hosts | default('ydb') }}"
+  tasks:
+  - ansible.builtin.assert:
+      that:
+        - "{{ item }} is defined"
+      fail_msg: "{{ item }} variable is required"
+    loop:
+      - ydb_cores_static
+      - ydb_cores_dynamic
+  tags:
+    - storage
+    - static
+    - database
+    - dynamic
+    - no_restart
+- hosts: "{{ playbook_hosts | default('ydb') }}"
+  roles:
+  - role: preflight
+  - role: install_ydbd
+  tags:
+    - storage
+    - static
+    - database
+    - dynamic
+    - no_restart
+- name: Restart YDB cluster
+  ansible.builtin.import_playbook: restart.yaml
