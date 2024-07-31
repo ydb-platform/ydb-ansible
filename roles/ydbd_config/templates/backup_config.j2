@@ -35,5 +35,7 @@ preserve ${YDB_DIR}/certs/web.pem
 preserve ${YDB_DIR}/cfg/ydbd-config.yaml
 preserve ${YDB_DIR}/cfg/ydbd-static.yaml
 preserve ${YDB_DIR}/cfg/ydbd-dynamic.yaml
+chown ydb:ydb ${BACKUP_DIR}/*
+chmod 400 ${BACKUP_DIR}/*
 
 # End Of File

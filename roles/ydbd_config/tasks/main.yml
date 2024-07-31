@@ -11,7 +11,7 @@
 - name: Backup the existing configuration files
   command: "{{ ydb_dir }}/home/backup_config.sh {{ ydb_config_backup }}"
   become: true
-  become_user: ydb
+  become_user: root
   when: ydb_config_backup is defined
 
 - name: Copy the TLS ca.crt
