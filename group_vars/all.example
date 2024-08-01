@@ -2,15 +2,8 @@
 
 ansible_python_interpreter: /usr/bin/python3
 
-# libidn compiled code.
-# Required for RHEL 8, RHEL 9 and similar (AlmaLinux, etc)
-# libidn_archive: libidn.tar.gz
-
 # YDB cluster domain (aka cluster identifier), Root in the documentation
 ydb_domain: Domain0
-
-# YDB cluster name
-ydb_cluster: cluster1
 
 # YDB software installation directory
 ydb_dir: /opt/ydb

@@ -39,33 +39,6 @@
     name: jq
     state: present
 
-- name: Deploy custom libidn
-  block:
-    - name: Unpacking custom libidn
-      unarchive: creates=/usr/local/lib/libidn.so.11 dest=/usr/local/lib group=bin owner=root src={{ libidn_archive }}
-    - name: Symlinking libidn.so.11 to /lib64
-      ansible.builtin.file:
-        src: /usr/local/lib/libidn.so.11
-        dest: /lib64/libidn.so.11
-        owner: root
-        group: bin
-        state: link
-    - name: Symlinking libidn.so.11 to /usr/lib
-      ansible.builtin.file:
-        src: /usr/local/lib/libidn.so.11
-        dest: /usr/lib/libidn.so.11
-        owner: root
-        group: bin
-        state: link
-    - name: Symlinking libidn.so.12 to /usr/lib
-      ansible.builtin.file:
-        src: /usr/local/lib/libidn.so.12
-        dest: /usr/lib/libidn.so.12
-        owner: root
-        group: bin
-        state: link
-  when: libidn_archive is defined
-
 - name: Copy the thp-config.sh script
   copy: src=thp-config.sh dest=/usr/local/bin/ydbd-thp-config.sh
 
