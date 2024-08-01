@@ -147,7 +147,7 @@ bootstrap_config:
 audit_config:
   file_backend:
     format: JSON
-    file_path: "/opt/ydb/audit/ydb-audit.log"
+    file_path: "ydb-audit.log"
 # Actor system config is appended to the configuration file by Ansible task.
 # Provided here in the commented form for reference
 #actor_system_config:
