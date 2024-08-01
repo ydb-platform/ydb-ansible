@@ -12,10 +12,10 @@ ydb_dir: /opt/ydb
 ydb_tls_dir: ./tls/CA/certs/2023-03-09_16-49-39
 
 # YDB server software archive
-ydb_archive: yasubd-24.1.18.1-linux-amd64.tar.gz
+ydb_archive: yasubd-24.1.18.2-linux-amd64.tar.gz
 
 # YDB server software release
-ydb_version: 24.1.18.1
+ydb_version: 24.1.18.2
 
 # Extra options passed to tar for unpack, typically "--strip-component=1"
 ydb_unpack_options: "--strip-component=1"
@@ -41,7 +41,8 @@ ydb_cores_dynamic: 14
 ydb_disks:
     - name: /dev/vdb
       label: ydb_disk_1
-# Configuration settings for dynamic YDB cluster nodes
+    - name: /dev/vdc
+      label: ydb_disk_2
 
 # The list of exactly three node brokers (static nodes)
 ydb_brokers:
@@ -66,4 +67,14 @@ ydb_dynnodes:
 ydb_affinity_static: '0-31'
 
 # Extra sleep time to allow dynamic nodes to settle up
-dynnode_restart_sleep_seconds: 30
+dynnode_restart_sleep_seconds: 10
+
+# Source path to Unified Agent binary
+unified_agent_binary: ../unified_agent
+# Unified Agent installation root
+unified_agent_home: /opt/ydb/unified_agent
+
+# Optional network congestion control setting, htcp recommended
+ydb_congestion_setting = htcp
+# Optional module to load the congestion control algorithm
+ydb_congestion_module = tcp_htcp
