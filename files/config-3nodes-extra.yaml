@@ -170,6 +170,7 @@ bootstrap_config:
 feature_flags:
   enable_grpc_audit: false
   enable_get_node_labels: true
+  enable_views: true
 
 log_config:
   default_level: 4

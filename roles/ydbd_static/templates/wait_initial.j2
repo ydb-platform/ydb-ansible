@@ -4,7 +4,11 @@
 set +e
 set +u
 
-DB_ENDPOINT=grpcs://"$1":2135
+if [ -z "$1" ]; then
+  DB_ENDPOINT=grpcs://`hostname -f`:2135
+else
+  DB_ENDPOINT=grpcs://"$1":2135
+fi
 DB_DOMAIN=/{{ ydb_domain }}
 CAFILE={{ ydb_dir }}/certs/ca.crt
 PASSFILE={{ ydb_dir }}/certs/secret
