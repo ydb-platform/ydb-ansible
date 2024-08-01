@@ -14,11 +14,10 @@ PermissionsStartOnly=true
 SyslogIdentifier=ydbd
 SyslogFacility=daemon
 SyslogLevel=err
+WorkingDirectory={{ ydb_dir }}/audit/{{ ydb_dbname }}-{{ item.instance }}
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
-ExecStart={{ ydb_dir }}/bin/ydbd server --cluster-name "{{ ydb_cluster }}" --tcp \
-    --label type=database --label database={{ ydb_dbname }} --label instance={{ item.instance }} \
-    --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml --ca {{ ydb_dir }}/certs/ca.crt \
-    --grpc-ca {{ ydb_dir }}/certs/ca.crt --mon-cert {{ ydb_dir }}/certs/web.pem \
+ExecStart={{ ydb_dir }}/bin/ydbd server --tenant /{{ ydb_domain }}/{{ ydb_dbname }} --tcp \
+    --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml  \
 {%- if 'offset' in item %}
     --grpcs-port {{ 2136 + item.offset }}  --ic-port {{ 19002 + item.offset }} --mon-port {{ 8766 + item.offset }}  \
 {%- else %}
@@ -28,9 +27,10 @@ ExecStart={{ ydb_dir }}/bin/ydbd server --cluster-name "{{ ydb_cluster }}" --tcp
     --node-broker grpcs://{{ brk }}:2135 \
 {%- endfor %}
 {%- if ydb_node_dc is defined %}
-    --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }}
+    --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }} \
 {%- endif %}
-    --tenant /{{ ydb_domain }}/{{ ydb_dbname }}
+    --ca {{ ydb_dir }}/certs/ca.crt --grpc-ca {{ ydb_dir }}/certs/ca.crt \
+    --mon-cert {{ ydb_dir }}/certs/web.pem
 LimitNOFILE=65536
 LimitCORE=0
 LimitMEMLOCK=32212254720

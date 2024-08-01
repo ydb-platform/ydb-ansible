@@ -122,7 +122,7 @@
 - name: Create the YDB configuration directory
   file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode='755'
 
-- name: Create the YDB audit directory
+- name: Create the YDB audit base directory
   file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode='700'
 
 - name: Create the YDB certs directory

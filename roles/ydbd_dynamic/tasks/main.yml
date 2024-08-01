@@ -4,6 +4,10 @@
 - name: Create the dynamic node startup script
   template: src=wait_dynamic.j2 dest={{ ydb_dir }}/home/wait_dynamic.sh mode='755'
 
+- name: Create the YDB audit directories for database nodes
+  file: state=directory path={{ ydb_dir }}/audit/{{ ydb_dbname }}-{{ item.instance }} group=ydb owner=ydb mode='700'
+  loop: "{{ ydb_dynnodes }}"
+
 - name: Generate the dynamic node service files
   template:
     src: dynnode-service.j2

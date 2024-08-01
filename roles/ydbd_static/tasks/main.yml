@@ -1,6 +1,9 @@
 ---
 # ydbd static node deployment
 
+- name: Create the YDB audit directory for the storage node
+  file: state=directory path={{ ydb_dir }}/audit/storage group=ydb owner=ydb mode='700'
+
 - name: Generate the static node service files
   template:
     src: static-service.j2
