@@ -1,5 +1,5 @@
 - name: create YDB bin directory
-  file:
+  ansible.builtin.file:
     path: "{{ ydb_dir }}/bin"
     state: directory
     owner: root
@@ -7,17 +7,19 @@
     mode: 0755
 
 - name: copy YDB server binary file
-  copy:
+  ansible.builtin.copy:
     src: "{{ ydbd_binary }}"
     dest: "{{ ydb_dir }}/bin/ydbd"
     attributes: +x
     mode: 0755
     follow: true
+    checksum: no
 
 - name: copy YDB cli binary file
-  copy:
+  ansible.builtin.copy:
     src: "{{ ydb_cli_binary }}"
     dest: "{{ ydb_dir }}/bin/ydb"
     attributes: +x
     mode: 0755
     follow: true
+    checksum: no
