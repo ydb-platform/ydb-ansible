@@ -35,3 +35,9 @@
 
 - name: Cleanup the transferred secrets
   file: state=absent path={{ ydb_dir }}/certs/secret
+
+- name: Enable the dynamic nodes for automatic startup
+  ansible.builtin.systemd:
+    enabled: true
+    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
+  loop: "{{ ydb_dynnodes }}"
