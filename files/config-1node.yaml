@@ -1,0 +1,129 @@
+# Not for production! Running without redundancy, no HA
+static_erasure: none
+
+# Update for proper disk layout
+host_configs:
+- drive:
+  - path: /dev/disk/by-partlabel/ydb_disk_1
+    type: SSD
+  - path: /dev/disk/by-partlabel/ydb_disk_2
+    type: SSD
+  - path: /dev/disk/by-partlabel/ydb_disk_3
+    type: SSD
+  host_config_id: 1
+
+# Update for proper host name
+hosts:
+- host: testhost
+  host_config_id: 1
+  port: 19001
+  walle_location:
+    body: 1
+    data_center: '1'
+    rack: '1'
+
+domains_config:
+  domain:
+  - name: Domain0
+    storage_pool_types:
+    - kind: ssd
+      pool_config:
+        box_id: 1
+        erasure_species: none
+        kind: ssd
+        pdisk_filter:
+        - property:
+          - type: SSD
+        vdisk_kind: Default
+  state_storage:
+  - ring:
+      node:
+      - 1
+      nto_select: 1
+    ssid: 1
+  security_config:
+    enforce_user_token_requirement: true      # User 'root' with the empty password out of box
+    monitoring_allowed_sids:
+    - "root"
+    - "ADMINS"
+    - "DATABASE-ADMINS"
+    administration_allowed_sids:
+    - "root"
+    - "ADMINS"
+    - "DATABASE-ADMINS"
+    viewer_allowed_sids:
+    - "root"
+    - "ADMINS"
+    - "DATABASE-ADMINS"
+
+# Update disk path, if changed above
+blob_storage_config:
+  service_set:
+    groups:
+    - erasure_species: none
+      rings:
+      - fail_domains:
+        - vdisk_locations:
+          - node_id: 1
+            path: /dev/disk/by-partlabel/ydb_disk_1
+            pdisk_category: SSD
+
+channel_profile_config:
+  profile:
+  - channel:
+    - erasure_species: none
+      pdisk_category: 0
+      storage_pool_kind: ssd
+    - erasure_species: none
+      pdisk_category: 0
+      storage_pool_kind: ssd
+    - erasure_species: none
+      pdisk_category: 0
+      storage_pool_kind: ssd
+    profile_id: 0
+
+interconnect_config:
+    start_tcp: true
+    encryption_mode: OPTIONAL
+    path_to_certificate_file: "/opt/ydb/certs/node.crt"
+    path_to_private_key_file: "/opt/ydb/certs/node.key"
+    path_to_ca_file: "/opt/ydb/certs/ca.crt"
+
+grpc_config:
+    cert: "/opt/ydb/certs/node.crt"
+    key: "/opt/ydb/certs/node.key"
+    ca: "/opt/ydb/certs/ca.crt"
+    services_enabled:
+    - legacy
+
+# The amount of cache memory, for each database node process.
+bootstrap_config:
+  shared_cache_config: {memory_limit: '17179869184'}
+
+# Available flags depend on YDB release. Use with care.
+table_service_config:
+  sql_version: 1
+  index_auto_choose_mode: MAX_USED_PREFIX
+  enable_kqp_data_query_stream_lookup: true
+
+feature_flags:
+  enable_grpc_audit: false
+  enable_get_node_labels: true
+  enable_views: true
+
+log_config:
+  default_level: 4
+
+audit_config:
+  file_backend:
+    format: JSON
+    file_path: "ydb-audit.log"
+
+# *************************
+# Actor system config is appended to the configuration file by Ansible task.
+# Provided here in the commented form for reference
+#actor_system_config:
+#  use_auto_config: true
+#  node_type: STORAGE # STORAGE or COMPUTE
+#  cpu_count: 6
+# *************************
