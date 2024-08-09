@@ -5,11 +5,17 @@
   ansible.builtin.debug:
     var: ansible_distribution
 
+- name: Ensure libaio1t64 is installed
+  ansible.builtin.package:
+    name: libaio1t64
+    state: present
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '>=')
+
 - name: Ensure libaio1 is installed
   ansible.builtin.package:
     name: libaio1
     state: present
-  when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian' or ansible_distribution == 'Astra Linux'
+  when: (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('24.04', '<')) or ansible_distribution == 'Debian' or ansible_distribution == 'Astra Linux'
 
 - name: Ensure libaio is installed
   ansible.builtin.package:
