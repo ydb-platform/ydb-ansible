@@ -12,6 +12,11 @@
     - name: setup ydb
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd
+    
+    - name: setup fq-connector
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydb_fq_connector
+      when: ydb_install_fq_connector | default(false)
 
     - name: setup ydb static nodes
       ansible.builtin.import_role:
@@ -20,8 +25,3 @@
     - name: setup ydb dynamic nodes
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic
-    
-    - name: setup fq-connector
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.ydb_fq_connector
-      when: ydb_install_fq_connector | default(false)
