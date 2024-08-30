@@ -7,13 +7,7 @@
     - {ydb_fq_connector_archive | ydb_fq_connector_binary}
     - ydb_fq_connector_config
     - ydb_fq_connector_dir
-
-- name: check if required variables are defined
-  ansible.builtin.assert:
-    that:
-      - "ydb_dynnodes is defined"
-    fail_msg: "ydb_dynnodes variable is required"
-  when: ydb_fq_connector_multislot | default(false)
+    - ydb_dynnodes
 
 - name: create ydb-fq-connector directory
   file:
@@ -69,46 +63,36 @@
     dest: "{{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml"
     mode: 0644
 
-- name: install and start ydb-fq-connector systemd units
-  when: not (ydb_fq_connector_multislot | default(false))
-  block:
-  - name: install ydb-fq-connector systemd units
-    template:
-      src: ydb-fq-connector.service
-      dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}.service"
-    notify:
-      - daemon reload
-  
-  - name: flush handlers
-    meta: flush_handlers
-  
-  - name: start ydb-fq-connector
-    ansible.builtin.systemd:
-      name: "ydb-fq-connector-{{ ydb_dbname }}.service"
-      state: started
-      enabled: true
+- name: set ydb-fq-connector instance list
+  ansible.builtin.set_fact:
+    ydb_fq_connectors_list: 
+      - instance: ydb_dynnodes[0].instance
+        offset: 0
+  when: not ydb_fq_connector_multislot
 
-- name: install and start ydb-fq-connector multislot systemd units
-  when: ydb_fq_connector_multislot | default(false)
-  block:
-  - name: parse ydb-fq-connector config
-    ansible.builtin.set_fact:
-      ydb_fq_connector_config_obj: "{{ lookup('file', ydb_fq_connector_config) | from_yaml }}"
+- name: set ydb-fq-connector instance list
+  ansible.builtin.set_fact:
+    ydb_fq_connectors_list: ydb_dynnodes
+  when: ydb_fq_connector_multislot
 
-  - name: create ydb-fq-connector instance systemd units
-    template:
-      src: ydb-fq-connector-multislot.service
-      dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
-    loop: "{{ ydb_dynnodes }}"
-    notify:
-      - daemon reload
+- name: parse ydb-fq-connector config
+  ansible.builtin.set_fact:
+    ydb_fq_connector_config_obj: "{{ lookup('file', ydb_fq_connector_config) | from_yaml }}"
 
-  - name: flush handlers
-    meta: flush_handlers
+- name: create ydb-fq-connector instance systemd units
+  template:
+    src: ydb-fq-connector.service
+    dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+  loop: "{{ ydb_fq_connectors_list }}"
+  notify:
+    - daemon reload
 
-  - name: start ydb-fq-connector instances
-    ansible.builtin.systemd:
-      name: "ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
-      state: started
-      enabled: true
-    loop: "{{ ydb_dynnodes }}"
+- name: flush handlers
+  meta: flush_handlers
+
+- name: start ydb-fq-connector instances
+  ansible.builtin.systemd:
+    name: "ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    state: started
+    enabled: true
+  loop: "{{ ydb_fq_connectors_list }}"
