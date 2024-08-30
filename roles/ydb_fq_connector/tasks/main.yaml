@@ -72,7 +72,7 @@
 
 - name: set ydb-fq-connector instance list
   ansible.builtin.set_fact:
-    ydb_fq_connectors_list: ydb_dynnodes
+    ydb_fq_connectors_list: "{{ ydb_dynnodes }}"
   when: ydb_fq_connector_multislot
 
 - name: parse ydb-fq-connector config
