@@ -45,7 +45,7 @@
     system: true
     comment: "YDB FQ connector Service Account"
 
-- name: install ydb-fq-connector and cli binaries
+- name: install ydb-fq-connector binary
   block:
   - name: install ydb-fq-connector binary from archive
     import_tasks:
@@ -63,6 +63,18 @@
     dest: "{{ ydb_fq_connector_dir }}/cfg/ydb-fq-connector.yaml"
     mode: 0644
 
+- name: set ydb-fq-connector instance list
+  ansible.builtin.set_fact:
+    ydb_fq_connectors_list: 
+      - instance: "{{ ydb_dynnodes[0].instance }}"
+        offset: 0
+  when: not ydb_fq_connector_multislot
+
+- name: set ydb-fq-connector instance list
+  ansible.builtin.set_fact:
+    ydb_fq_connectors_list: "{{ ydb_dynnodes }}"
+  when: ydb_fq_connector_multislot
+
 - name: parse ydb-fq-connector config
   ansible.builtin.set_fact:
     ydb_fq_connector_config_obj: "{{ lookup('file', ydb_fq_connector_config) | from_yaml }}"
@@ -71,8 +83,7 @@
   template:
     src: ydb-fq-connector.service
     dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
-  loop: "{{ ydb_dynnodes }}"
-  when: item.use_ydb_fq_connector | default(false)
+  loop: "{{ ydb_fq_connectors_list }}"
   notify:
     - daemon reload
 
@@ -84,5 +95,4 @@
     name: "ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
     state: started
     enabled: true
-  loop: "{{ ydb_dynnodes }}"
-  when: item.use_ydb_fq_connector | default(false)
+  loop: "{{ ydb_fq_connectors_list }}"
