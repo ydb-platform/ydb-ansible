@@ -38,6 +38,7 @@
       command: "{{ ydb_dir }}/home/init_password.sh {{ inventory_hostname }}"
       become: true
       become_user: ydb
+      when: ydb_cluster_extension is undefined
   run_once: true
 
 - name: Cleanup the transferred secrets
