@@ -78,3 +78,7 @@ unified_agent_home: /opt/ydb/unified_agent
 ydb_congestion_setting: htcp
 # Optional module to load the congestion control algorithm
 ydb_congestion_module: tcp_htcp
+
+# Should only be defined when YDB cluster extension is performed.
+# Must not be defined during the initial cluster setup.
+# ydb_cluster_extension: true

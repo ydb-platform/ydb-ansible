@@ -11,6 +11,10 @@
     name: ydbd-storage
   any_errors_fatal: true
 
+- name: Transfer the secrets
+  copy: src=secret dest={{ ydb_dir }}/certs/secret
+  when: ydb_cluster_extension is defined
+
 - name: Wait for storage node startup
   command: "{{ ydb_dir }}/home/wait_initial.sh {{ inventory_hostname }}"
   become: true
@@ -29,6 +33,7 @@
       become_user: ydb
     - name: Transfer the secrets
       copy: src=secret dest={{ ydb_dir }}/certs/secret
+      when: ydb_cluster_extension is undefined
     - name: Set the initial cluster password
       command: "{{ ydb_dir }}/home/init_password.sh {{ inventory_hostname }}"
       become: true
