@@ -4,7 +4,12 @@
 - name: YDB database creation
   block:
     - name: Transfer the secrets
-      copy: src=secret dest={{ ydb_dir }}/certs/secret
+      copy:
+        src: secret
+        dest: "{{ ydb_dir }}/certs/secret"
+        group: ydb
+        owner: ydb
+        mode: '0700'
     - name: Run the database creation script
       command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_dbname }} {{ ydb_default_groups }}"
       become: true

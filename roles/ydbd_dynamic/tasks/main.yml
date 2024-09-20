@@ -25,7 +25,12 @@
   loop: "{{ ydb_dynnodes }}"
 
 - name: Transfer the secrets
-  copy: src=secret dest={{ ydb_dir }}/certs/secret
+  copy:
+    src: secret
+    dest: "{{ ydb_dir }}/certs/secret"
+    group: ydb
+    owner: ydb
+    mode: '0700'
 
 - name: Wait for the dynamic nodes availability
   command: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
