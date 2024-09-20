@@ -1,6 +1,14 @@
 ---
 # ydbd storage initialization
 
+- name: Add the disk formatting script
+  template:
+    src: safe_format.j2
+    dest: "{{ ydb_dir }}/home/safe_format.sh"
+    group: ydb
+    owner: ydb
+    mode: '0755'
+
 - name: Execute disk formatting
   command: "{{ ydb_dir }}/home/safe_format.sh {{ item['name'] }} {{ item['label'] }}"
   with_items: "{{ ydb_disks }}"
@@ -28,6 +36,21 @@
 
 - name: Initial YDB cluster setup
   block:
+    - name: Add the storage initialization script
+      template:
+        src: init_storage.j2
+        dest: "{{ ydb_dir }}/home/init_storage.sh"
+        group: ydb
+        owner: ydb
+        mode: '0755'
+    - name: Add the password initialization script
+      template:
+        src: init_password.j2
+        dest: "{{ ydb_dir }}/home/init_password.sh"
+        group: ydb
+        owner: ydb
+        mode: '0755'
+      when: ydb_cluster_extension is undefined
     - name: Initialize the YDB storage
       command: "{{ ydb_dir }}/home/init_storage.sh {{ inventory_hostname }}"
       become: true

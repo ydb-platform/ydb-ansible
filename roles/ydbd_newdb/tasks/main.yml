@@ -3,6 +3,13 @@
 
 - name: YDB database creation
   block:
+    - name: Add the database creation script
+      template:
+        src: create_database.j2
+        dest: "{{ ydb_dir }}/home/create_database.sh"
+        group: ydb
+        owner: ydb
+        mode: '0755'
     - name: Transfer the secrets
       copy:
         src: secret
@@ -11,7 +18,7 @@
         owner: ydb
         mode: '0700'
     - name: Run the database creation script
-      command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_dbname }} {{ ydb_default_groups }}"
+      command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_dbname }} {{ ydb_pool_kind }} {{ ydb_default_groups }}"
       become: true
       become_user: ydb
     - name: Cleanup the transferred secrets
