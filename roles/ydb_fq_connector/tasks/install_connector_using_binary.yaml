@@ -1,9 +1,9 @@
-- name: check if ydb-fq-connector-go present
+- name: check if fq-connector-go present
   stat:
     path: "{{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
   register: ydb_fq_connector_stat
 
-- name: copy ydb-fq-connector binary file
+- name: copy fq-connector-go binary file
   copy:
     src: "{{ ydb_fq_connector_binary }}"
     dest: "{{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }}"

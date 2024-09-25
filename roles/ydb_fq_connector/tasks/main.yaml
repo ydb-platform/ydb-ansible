@@ -1,13 +1,28 @@
-- name: check if required variables are defined
+- name: check if install method is defined
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
-    fail_msg: "{{ item }} variable is required"
-  loop:
-    - {ydb_fq_connector_archive | ydb_fq_connector_binary}
-    - ydb_fq_connector_config
-    - ydb_fq_connector_dir
-    - ydb_dynnodes
+      - (ydb_fq_connector_version is defined) or
+        (ydb_fq_connector_git_version is defined) or
+        (ydb_fq_connector_archive is defined) or
+        (ydb_fq_connector_binary is defined)
+    fail_msg: |
+      fq-connector-go install method not defined: use one of:
+        - ydb_fq_connector_version
+        - ydb_fq_connector_git_version
+        - ydb_fq_connector_archive
+        - ydb_fq_connector_binary
+
+- name: check if ydb_fq_connector_config is defined
+  ansible.builtin.assert:
+    that:
+      - ydb_fq_connector_config is defined
+    fail_msg: "ydb_fq_connector_config variable with local fq-connector-go config path is required"
+
+- name: check if ydb_dynnodes is defined
+  ansible.builtin.assert:
+    that:
+      - ydb_dynnodes is defined
+    fail_msg: "ydb_dynnodes variable with ydb dynnode instances list is required"
 
 - name: create ydb-fq-connector directory
   file:
@@ -47,6 +62,16 @@
 
 - name: install ydb-fq-connector binary
   block:
+  - name: download fq-connector-go archive
+    import_tasks:
+      file: download_connector.yaml
+    when: ydb_fq_connector_version is defined
+
+  - name: build fq-connector-go
+    import_tasks:
+      file: build_connector.yaml
+    when: ydb_fq_connector_git_version is defined
+
   - name: install ydb-fq-connector binary from archive
     import_tasks:
       file: install_connector_from_archive.yaml

@@ -3,7 +3,7 @@
     path: "{{ ydb_fq_connector_dir }}/bin/{{ ydb_fq_connector_executable }}"
   register: ydb_fq_connector_stat
 
-- name: unpack fq-connector archive
+- name: unpack fq-connector-go archive
   ansible.builtin.unarchive:
     src: "{{ ydb_fq_connector_archive }}"
     dest: "{{ ydb_fq_connector_dir }}/bin"
