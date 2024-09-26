@@ -25,6 +25,11 @@
         force: true
         single_branch: true
         depth: 1
+    
+    - name: create build directory
+      file:
+        path: "{{ ydb_fq_connector_build_binary_dest }}"
+        state: directory
 
     - name: build fq-connector-go from source code
       ansible.builtin.shell:
