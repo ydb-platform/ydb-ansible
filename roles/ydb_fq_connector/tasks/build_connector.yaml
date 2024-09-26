@@ -28,7 +28,7 @@
 
     - name: build fq-connector-go from source code
       ansible.builtin.shell:
-        chdir: "{{ ydb_fq_connector_build_source_dest }}"
+        chdir: "{{ ydb_fq_connector_build_binary_dest }}"
         cmd: "{{ ydb_fq_connector_build_go_binary }} build -o {{ ydb_fq_connector_executable }} {{ ydb_fq_connector_build_binary_dest }}"
 
 - name: set local path to ydb_fq_connector_binary variable
