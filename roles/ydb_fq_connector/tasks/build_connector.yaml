@@ -3,7 +3,12 @@
   ansible.builtin.get_url:
     url: "{{ ydb_fq_connector_build_go_download_url }}"
     dest: "{{ ydb_fq_connector_build_go_download_dest }}"
-  
+
+- name: create go directory
+  file:
+    path: "{{ ydb_fq_connector_build_go_unpack_dest }}"
+    state: directory
+
 - name: unpack go archive
   delegate_to: 127.0.0.1
   ansible.builtin.unarchive:
