@@ -1,5 +1,28 @@
+ydb_fq_connector_download_dest: "{{ ansible_config_file | dirname }}/files/fq-connector-go"
+ydb_fq_connector_download_name: "fq-connector-go-{{ ydb_fq_connector_version }}-linux-amd64.tar.gz"
+ydb_fq_connector_download_url: "https://github.com/ydb-platform/fq-connector-go/releases/download/{{ ydb_fq_connector_version }}/{{ ydb_fq_connector_download_name }}"
+
 ydb_fq_connector_archive_unpack_options: []
 ydb_fq_connector_archive_force_install: false
-ydb_fq_connector_binary_force_install: false
+
+ydb_fq_connector_build_dir: "{{ ansible_config_file | dirname }}/files/fq-connector-go"
+ydb_fq_connector_build_go_version: "1.22.7"
+ydb_fq_connector_build_go_name: "go{{ ydb_fq_connector_build_go_version }}.linux-amd64.tar.gz"
+ydb_fq_connector_build_go_download_url: "https://go.dev/dl/{{ ydb_fq_connector_build_go_name }}"
+ydb_fq_connector_build_go_download_dest: "{{ ydb_fq_connector_build_dir }}/{{ ydb_fq_connector_build_go_name }}"
+ydb_fq_connector_build_go_unpack_dest: "{{ ydb_fq_connector_build_dir }}"
+ydb_fq_connector_build_go_binary: "{{ ydb_fq_connector_build_go_unpack_dest }}/go/bin/go"
+ydb_fq_connector_build_source_url: "https://github.com/ydb-platform/fq-connector-go.git"
+ydb_fq_connector_build_source_dest: "{{ ydb_fq_connector_build_dir }}/source"
+ydb_fq_connector_build_binary_dest: "{{ ydb_fq_connector_build_source_dest }}/app"
+
 ydb_fq_connector_executable: "fq-connector-go"
+
+ydb_fq_connector_dir: "/opt/ydb_fq_connector"
+
+ydb_fq_connector_binary_force_install: false
+
 ydb_fq_connector_multislot: false
+
+
+

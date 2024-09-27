@@ -1,0 +1,36 @@
+- name: download go release archive
+  delegate_to: 127.0.0.1
+  run_once: true
+  ansible.builtin.get_url:
+    url: "{{ ydb_fq_connector_build_go_download_url }}"
+    dest: "{{ ydb_fq_connector_build_go_download_dest }}"
+
+- name: unpack go archive
+  delegate_to: 127.0.0.1
+  run_once: true
+  ansible.builtin.unarchive:
+    src: "{{ ydb_fq_connector_build_go_download_dest }}"
+    dest: "{{ ydb_fq_connector_build_go_unpack_dest }}"
+
+- name: prepare binaries
+  delegate_to: 127.0.0.1
+  become: false
+  run_once: true
+  block:
+    - name: clone the fq-connector-go repository
+      ansible.builtin.git:
+        repo: "{{ ydb_fq_connector_build_source_url }}"
+        dest: "{{ ydb_fq_connector_build_source_dest }}"
+        version: "{{ ydb_fq_connector_git_version }}"
+        force: true
+        single_branch: true
+        depth: 1
+
+    - name: build fq-connector-go from source code
+      ansible.builtin.shell:
+        chdir: "{{ ydb_fq_connector_build_binary_dest }}"
+        cmd: "{{ ydb_fq_connector_build_go_binary }} build -o {{ ydb_fq_connector_executable }} {{ ydb_fq_connector_build_binary_dest }}"
+
+- name: set local path to ydb_fq_connector_binary variable
+  set_fact:
+    ydb_fq_connector_binary: "{{ ydb_fq_connector_build_binary_dest }}/{{ ydb_fq_connector_executable }}"

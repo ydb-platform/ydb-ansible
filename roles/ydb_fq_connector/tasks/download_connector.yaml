@@ -1,0 +1,10 @@
+- name: download fq-connector-go release archive
+  delegate_to: 127.0.0.1
+  run_once: true
+  ansible.builtin.get_url:
+    url: "{{ ydb_fq_connector_download_url }}"
+    dest: "{{ ydb_fq_connector_download_dest }}/{{ ydb_fq_connector_download_name }}"
+
+- name: set local path to ydb_fq_connector_archive variable
+  set_fact:
+    ydb_fq_connector_archive: "{{ ydb_fq_connector_download_dest }}/{{ ydb_fq_connector_download_name }}"
