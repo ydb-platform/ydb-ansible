@@ -10,3 +10,4 @@
     owner: root
     group: root
     extra_opts: "{{ ydb_archive_unpack_options }}"
+  when: not ydbd_stat.stat.exists|bool or ydb_force_update|bool

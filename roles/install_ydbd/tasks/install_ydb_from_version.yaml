@@ -1,3 +1,8 @@
+- name: check if ydbd present
+  stat:
+    path: "{{ ydb_dir }}/bin/ydbd"
+  register: ydbd_stat
+
 - name: Set local path to ydb_archive_dest variable
   set_fact:
     ydb_archive_dest: "{{ ansible_config_file | dirname }}/files/"
@@ -11,7 +16,9 @@
   ansible.builtin.get_url:
     url: "https://binaries.ydb.tech/release/{{ ydb_version }}/ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
     dest: "{{ ydb_archive_dest }}"
+  when: not ydbd_stat.stat.exists|bool or ydb_force_update|bool
 
 - name: install YDB server binary package from a downloaded archive
   import_tasks:
     file: install_ydb_from_archive.yaml
+  when: not ydbd_stat.stat.exists|bool or ydb_force_update|bool
