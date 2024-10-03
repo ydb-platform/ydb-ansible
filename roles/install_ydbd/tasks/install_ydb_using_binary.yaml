@@ -6,6 +6,11 @@
     group: root
     mode: 0755
 
+- name: check if ydbd present
+  stat:
+    path: "{{ ydb_dir }}/bin/ydbd"
+  register: ydbd_stat
+
 - name: copy YDB server binary file
   ansible.builtin.copy:
     src: "{{ ydbd_binary }}"
@@ -14,6 +19,7 @@
     mode: 0755
     follow: true
     checksum: no
+  when: not ydbd_stat.stat.exists|bool or ydb_force_update|bool
 
 - name: copy YDB cli binary file
   ansible.builtin.copy:

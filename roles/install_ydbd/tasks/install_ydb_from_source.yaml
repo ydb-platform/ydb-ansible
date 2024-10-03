@@ -14,6 +14,11 @@
   ansible.builtin.set_fact:
     ydb_cli_binary: "{{ ydb_git_path }}/ydb/apps/ydb/ydb"
 
+- name: check if ydbd present
+  stat:
+    path: "{{ ydb_dir }}/bin/ydbd"
+  register: ydbd_stat
+
 - name: Prepare binaries
   delegate_to: 127.0.0.1
   become: false
@@ -33,3 +38,4 @@
 
     - name: Build YDB CLI from source code (it might take a long time)
       ansible.builtin.shell: "{{ ydb_ya_path }} make {{ ydb_git_path }}/ydb/apps/ydb --build release"
+  when: not ydbd_stat.stat.exists|bool or ydb_force_update|bool
