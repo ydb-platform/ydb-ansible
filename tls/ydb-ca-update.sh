@@ -20,7 +20,7 @@ cat >ca.cnf <<EOF
 default_ca = CA_default
 
 [ CA_default ]
-default_days = 365
+default_days = 731
 database = index.txt
 serial = serial.txt
 default_md = sha256
@@ -62,7 +62,7 @@ fi
 
 if [ ! -f certs/ca.crt ]; then
     echo "** Generating CA certificate"
-    openssl req -new -x509 -config ca.cnf -key secure/ca.key -out certs/ca.crt -days 1830 -batch
+    openssl req -new -x509 -config ca.cnf -key secure/ca.key -out certs/ca.crt -days 3660 -batch
 fi
 
 [ -f index.txt ] || touch index.txt
@@ -87,7 +87,7 @@ distinguished_name = distinguished_name
 req_extensions = extensions
 
 [ distinguished_name ]
-organizationName = YDB
+organizationName = YDB Self-Signed Authority
 
 [ extensions ]
 subjectAltName = @alt_names
