@@ -19,6 +19,11 @@
     name: ydbd-storage
   any_errors_fatal: true
 
+- name: Cleanup the secrets
+  file:
+    path: "{{ ydb_dir }}/certs/secret"
+    state: absent
+
 - name: Transfer the secrets
   copy:
     src: secret
