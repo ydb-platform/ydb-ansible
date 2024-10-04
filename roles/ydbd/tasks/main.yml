@@ -46,12 +46,20 @@
     state: present
 
 - name: Copy the thp-config.sh script
-  copy: src=thp-config.sh dest=/usr/local/bin/ydbd-thp-config.sh
+  copy:
+    src: thp-config.sh
+    dest: /usr/local/bin/ydbd-thp-config.sh
+    owner: root
+    group: bin
+    mode: '0755'
 
 - name: Generate the THP service files
   template:
     src: thp-service.j2
     dest: "/etc/systemd/system/ydb-hugepages.service"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Refresh systemd services configuration
   ansible.builtin.systemd:
@@ -74,6 +82,9 @@
       template:
         src: network-modules.j2
         dest: /etc/modules-load.d/50-ydbd.conf
+        owner: root
+        group: root
+        mode: '0644'
     - name: Load the {{ ydb_congestion_module }} module
       command: "/sbin/modprobe {{ ydb_congestion_module }}"
   when: ydb_congestion_module is defined
@@ -82,9 +93,15 @@
   template:
     src: kernel-settings.j2
     dest: /etc/sysctl.d/50-ydbd.conf
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Refresh the current sysctl settings
   command: "/sbin/sysctl --system"
+
+- name: Create the YDB base directory
+  file: state=directory path={{ ydb_dir }} group=bin owner=root mode='0755'
 
 - name: Create the ydb group
   group: name=ydb system=true
@@ -101,19 +118,19 @@
     owner: ydb
 
 - name: Create the YDB release directory
-  file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode='755'
+  file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode='0755'
 
 - name: Create the YDB configuration directory
-  file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode='755'
+  file: state=directory path={{ ydb_dir }}/cfg group=bin owner=root mode='0755'
 
 - name: Create the YDB audit base directory
-  file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode='700'
+  file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode='0700'
 
 - name: Create the YDB certs directory
-  file: state=directory path={{ ydb_dir }}/certs group=ydb owner=ydb mode='700'
+  file: state=directory path={{ ydb_dir }}/certs group=ydb owner=ydb mode='0700'
 
 - name: Create the YDB configuration backup directory
-  file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode='700'
+  file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode='0700'
 
 - name: Create the YDB server binary directory
   file: state=directory
@@ -121,6 +138,7 @@
         recurse=true
         group=bin
         owner=root
+        mode='0755'
 
 - name: Install the YDB server binary package
   ansible.builtin.unarchive:
@@ -144,7 +162,7 @@
         force=yes
 
 - name: Create the YDB CLI default binary directory
-  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='700'
+  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='0700'
 
 - name: Disable YDB CLI version checks
-  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb
+  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb mode='0644'

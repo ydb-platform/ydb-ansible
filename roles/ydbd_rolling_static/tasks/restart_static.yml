@@ -10,7 +10,12 @@
   any_errors_fatal: true
 
 - name: Transfer the secrets
-  copy: src=secret dest={{ ydb_dir }}/certs/secret
+  copy:
+    src: secret
+    dest: "{{ ydb_dir }}/certs/secret"
+    group: ydb
+    owner: ydb
+    mode: '0700'
   delegate_to: "{{ snode_name }}"
   delegate_facts: true
   any_errors_fatal: true

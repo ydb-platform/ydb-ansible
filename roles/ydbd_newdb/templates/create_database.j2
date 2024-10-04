@@ -3,6 +3,7 @@
 # Parameters:
 # * static node fqdn
 # * database name
+# * storage pool name
 # * initial number of storage groups
 
 set +e
@@ -10,12 +11,12 @@ set +u
 
 DB_ENDPOINT=grpcs://"$1":2135
 DB_DOMAIN=/{{ ydb_domain }}
-DB_POOL={{ ydb_pool_kind }}
 CAFILE={{ ydb_dir }}/certs/ca.crt
 TOKEN={{ ydb_dir }}/home/ydbd-token-file
 PASSFILE={{ ydb_dir }}/certs/secret
 DB_NAME="$2"
-DB_GROUPS="$3"
+DB_POOL="$3"
+DB_GROUPS="$4"
 
 LD_LIBRARY_PATH={{ ydb_dir }}/lib
 export LD_LIBRARY_PATH

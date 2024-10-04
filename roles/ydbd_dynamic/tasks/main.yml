@@ -1,17 +1,38 @@
 ---
 # ydbd dynamic node deployment
 
-- name: Create the dynamic node startup script
-  template: src=wait_dynamic.j2 dest={{ ydb_dir }}/home/wait_dynamic.sh mode='755'
+- name: Create the YDB audit base directory
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/audit"
+    group: ydb
+    owner: ydb
+    mode: '0700'
 
 - name: Create the YDB audit directories for database nodes
-  file: state=directory path={{ ydb_dir }}/audit/{{ ydb_dbname }}-{{ item.instance }} group=ydb owner=ydb mode='700'
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/audit/{{ ydb_dbname }}-{{ item.instance }}"
+    group: ydb
+    owner: ydb
+    mode: '0700'
   loop: "{{ ydb_dynnodes }}"
+
+- name: Create the dynamic node startup wait script
+  template:
+    src: wait_dynamic.j2
+    dest: "{{ ydb_dir }}/home/wait_dynamic.sh"
+    group: ydb
+    owner: ydb
+    mode: '0755'
 
 - name: Generate the dynamic node service files
   template:
     src: dynnode-service.j2
     dest: "/etc/systemd/system/ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
+    owner: root
+    group: root
+    mode: '0644'
   loop: "{{ ydb_dynnodes }}"
 
 - name: Refresh systemd services configuration
@@ -25,7 +46,12 @@
   loop: "{{ ydb_dynnodes }}"
 
 - name: Transfer the secrets
-  copy: src=secret dest={{ ydb_dir }}/certs/secret
+  copy:
+    src: secret
+    dest: "{{ ydb_dir }}/certs/secret"
+    group: ydb
+    owner: ydb
+    mode: '0700'
 
 - name: Wait for the dynamic nodes availability
   command: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
