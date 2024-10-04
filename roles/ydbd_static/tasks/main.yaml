@@ -29,6 +29,13 @@
   notify:
     - daemon reload
 
+- name: stop storage node
+  ansible.builtin.systemd:
+    name: ydbd-storage
+    state: stopped
+    enabled: false
+  any_errors_fatal: true
+
 - name: flush handlers
   meta: flush_handlers
 
