@@ -1,5 +1,5 @@
 - name: configure unconfigured packages
-  when: ydb_dpkg_configure
+  when: ydb_dpkg_configure|bool and ansible_distribution != "AlmaLinux"
   block:
     - name: check dpkg audit
       shell: dpkg --audit
@@ -32,7 +32,7 @@
     state: present
     update_cache: no
   loop: "{{ vars_for_distribution_version.repositories }}"
-  when: vars_for_distribution_version.repositories
+  when: vars_for_distribution_version.repositories and ansible_distribution != "AlmaLinux"
   notify:
     - update apt cache
 
@@ -42,7 +42,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.preferences }}"
-  when: vars_for_distribution_version.preferences
+  when: vars_for_distribution_version.preferences and ansible_distribution != "AlmaLinux"
   notify:
     - update apt cache
 
@@ -52,14 +52,14 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.configs }}"
-  when: vars_for_distribution_version.configs
+  when: vars_for_distribution_version.configs and ansible_distribution != "AlmaLinux"
   notify:
     - update apt cache
 
 - name: flush handlers
   meta: flush_handlers
 
-- name: install packages
+- name: install packages by APT
   ansible.builtin.apt:
     pkg: "{{ vars_for_distribution_version.packages }}"
     state: present
@@ -67,3 +67,11 @@
     cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
     update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 900
+  when: ansible_distribution != "AlmaLinux"
+
+- name: install packages by DNF
+  ansible.builtin.dnf:
+    pkg: "{{ vars_for_distribution_version.packages }}"
+    state: present
+  timeout: 900
+  when: ansible_distribution == "AlmaLinux"
