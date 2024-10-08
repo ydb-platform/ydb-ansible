@@ -176,3 +176,4 @@
         name: cpufrequtils.service
         state: started
         enabled: true
+  when: ansible_distribution != 'AlmaLinux'
