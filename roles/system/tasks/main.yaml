@@ -52,7 +52,21 @@
         name: systemd-timesyncd.service
         state: started
         enabled: true
+  when: ansible_distribution != 'AlmaLinux'
 
+- name:
+  block:
+    - name: Ensure chrony is installed
+      ansible.builtin.package:
+        name: chrony
+        state: present
+
+    - name: Ensure chrony is running
+      ansible.builtin.systemd:
+        enabled: true
+        state: started
+        name: chronyd
+  when: ansible_distribution == 'AlmaLinux'
 
 - name: configure systemd-journald
   block:
@@ -81,7 +95,6 @@
         name: systemd-journald.service
         state: started
         enabled: true
-
 
 - name: configure kernel
   block:
