@@ -52,7 +52,7 @@
         name: systemd-timesyncd.service
         state: started
         enabled: true
-  when: ansible_distribution != 'AlmaLinux'
+  when: ansible_os_family == 'Debian'
 
 - name:
   block:
@@ -66,7 +66,7 @@
         enabled: true
         state: started
         name: chronyd
-  when: ansible_distribution == 'AlmaLinux'
+  when: ansible_os_family != 'Debian'
 
 - name: configure systemd-journald
   block:
@@ -176,4 +176,4 @@
         name: cpufrequtils.service
         state: started
         enabled: true
-  when: ansible_distribution != 'AlmaLinux'
+  when: ansible_os_family == 'Debian'

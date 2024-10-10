@@ -19,14 +19,14 @@
     cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
     update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 300
-  when: ansible_distribution != 'AlmaLinux'
+  when: ansible_os_family == 'Debian'
 
 - name: ensure libaio is installed
   ansible.builtin.package:
     name: "{{ vars_for_distribution.libaio_package }}"
     state: present
   timeout: 300
-  when: ansible_distribution == 'AlmaLinux'
+  when: ansible_os_family != 'Debian'
 
 - name: create certs group
   group:
