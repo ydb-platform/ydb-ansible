@@ -1,7 +1,10 @@
+- 
+
 - name: restart timesyncd
   ansible.builtin.systemd:
     name: systemd-timesyncd.service
     state: restarted
+  when: "'systemd-timesyncd' in services"
 
 - name: restart journald
   ansible.builtin.systemd:

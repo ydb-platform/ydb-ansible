@@ -46,6 +46,13 @@
         msg: "aborting playbook execution"
       when: prompt.user_input != "yes"
 
+    - name: stop storage node
+      ansible.builtin.systemd:
+        name: ydbd-storage
+        state: stopped
+        enabled: false
+      any_errors_fatal: true
+
 - name: prepare drives
   ydb_platform.ydb.drive_prepare:
     name: "{{ item['name'] }}"
