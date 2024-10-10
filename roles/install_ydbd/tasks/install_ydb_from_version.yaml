@@ -15,3 +15,4 @@
 - name: install YDB server binary package from a downloaded archive
   import_tasks:
     file: install_ydb_from_archive.yaml
+  register: ydb_is_installed

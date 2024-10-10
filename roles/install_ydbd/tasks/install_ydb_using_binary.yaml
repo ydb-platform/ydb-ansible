@@ -1,25 +1,44 @@
-- name: create YDB bin directory
-  ansible.builtin.file:
-    path: "{{ ydb_dir }}/bin"
-    state: directory
+- name: Create the YDB server binary directory
+  file: state=directory
+        path="{{ ydb_dir }}/release/{{ ydb_version }}"
+        recurse=true
+        group=bin
+        owner=root
+        mode='0755'
+
+- name: Install the YDB server binary package
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
+    dest: "{{ ydb_dir }}/release/{{ ydb_version }}"
+    group: bin
     owner: root
-    group: root
-    mode: 0755
-
-- name: copy YDB server binary file
-  ansible.builtin.copy:
     src: "{{ ydbd_binary }}"
-    dest: "{{ ydb_dir }}/bin/ydbd"
-    attributes: +x
-    mode: 0755
-    follow: true
-    checksum: no
+    extra_opts: "{{ ydb_unpack_options }}"
 
-- name: copy YDB cli binary file
-  ansible.builtin.copy:
-    src: "{{ ydb_cli_binary }}"
-    dest: "{{ ydb_dir }}/bin/ydb"
-    attributes: +x
-    mode: 0755
-    follow: true
-    checksum: no
+- name: Install the YDB CLI binary package
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydb"
+    dest: "{{ ydb_dir }}/release/{{ ydb_version }}"
+    group: bin
+    owner: root
+    src: "{{ ydbd_cli_binary }}"
+    extra_opts: "{{ ydb_unpack_options }}"
+
+- name: Symlink the YDB binaries
+  file: path="{{ ydb_dir }}/bin"
+        src="./release/{{ ydb_version }}/bin"
+        state=link
+        force=yes
+
+- name: Symlink the YDB libraries
+  file: path="{{ ydb_dir }}/lib"
+        src="./release/{{ ydb_version }}/lib"
+        state=link
+        force=yes
+
+- name: Create the YDB CLI default binary directory
+  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='0700'
+
+- name: Disable YDB CLI version checks
+  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb mode='0644'
+

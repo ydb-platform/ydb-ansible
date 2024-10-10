@@ -1,0 +1,6 @@
+---
+
+# Source path to Unified Agent binary
+unified_agent_binary: ../unified_agent
+# Unified Agent installation root
+unified_agent_home: /opt/ydb/unified_agent
