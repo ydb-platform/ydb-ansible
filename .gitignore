@@ -4,5 +4,6 @@
 /*.json
 *.pyc
 *~
+.vscode/*
 ydb-token-file
 ydbd-token-file

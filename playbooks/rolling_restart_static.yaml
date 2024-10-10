@@ -1,0 +1,4 @@
+- hosts: "{{ playbook_hosts | default('ydb') }}[0]"
+  serial: 1
+  roles:
+  - role: ydbd_rolling_static

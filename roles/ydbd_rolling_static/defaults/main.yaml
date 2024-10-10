@@ -1,0 +1,14 @@
+---
+
+# ydbops_local - control cluster from localhost
+# values: false - use any static host for cluster control
+#         true  - use localhost for cluster control
+# Default value: false
+ydbops_local: false
+
+# ydbops_source_bin - binary for ydbops
+# values: ydbops - Linux x86_64
+#         ydbops_darwin_arm64 - MacOS Silicon M1/..
+#         ydbops_darwin_amd64 - MacOS Intel
+# Default value: ydbops
+ydbops_source_bin: ydbops
