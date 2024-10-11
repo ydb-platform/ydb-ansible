@@ -18,7 +18,6 @@
     owner: root
     group: root
     extra_opts: "{{ ydb_archive_unpack_options }}"
-  register: ydb_is_installed
 
 - name: Symlink the YDB binaries
   file: path="{{ ydb_dir }}/bin"
@@ -31,3 +30,4 @@
         src="./release/{{ ydb_version }}/lib"
         state=link
         force=yes
+  register: ydb_is_installed

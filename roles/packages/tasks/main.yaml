@@ -1,5 +1,5 @@
 - name: configure unconfigured packages
-  when: ydb_dpkg_configure
+  when: ydb_dpkg_configure and ansible_os_family == 'Debian'
   block:
     - name: check dpkg audit
       shell: dpkg --audit
@@ -42,7 +42,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.preferences }}"
-  when: vars_for_distribution_version.preferences
+  when: vars_for_distribution_version.preferences and ansible_os_family == 'Debian'
   notify:
     - update apt cache
 
@@ -52,7 +52,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.configs }}"
-  when: vars_for_distribution_version.configs
+  when: vars_for_distribution_version.configs and ansible_os_family == 'Debian'
   notify:
     - update apt cache
 
@@ -60,10 +60,7 @@
   meta: flush_handlers
 
 - name: install packages
-  ansible.builtin.apt:
+  ansible.builtin.package:
     pkg: "{{ vars_for_distribution_version.packages }}"
     state: present
-    force: true
-    cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
-    update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 900

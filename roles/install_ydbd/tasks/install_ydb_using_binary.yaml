@@ -41,4 +41,5 @@
 
 - name: Disable YDB CLI version checks
   copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb mode='0644'
+  register: ydb_is_installed
 

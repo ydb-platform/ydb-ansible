@@ -30,7 +30,7 @@
 
     - name: Build YDB server from source code (it might take a long time)
       ansible.builtin.shell: "{{ ydb_ya_path }} make {{ ydb_git_path }}/ydb/apps/ydbd --build release"
-      register: ydb_is_installed
 
     - name: Build YDB CLI from source code (it might take a long time)
       ansible.builtin.shell: "{{ ydb_ya_path }} make {{ ydb_git_path }}/ydb/apps/ydb --build release"
+      register: ydb_is_installed
