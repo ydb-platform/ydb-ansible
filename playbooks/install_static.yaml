@@ -1,4 +1,5 @@
 - hosts: "{{ playbook_hosts | default('ydb') }}"
+  become: true
   tasks:
     - name: setup ydb static nodes
       ansible.builtin.import_role:

@@ -1,4 +1,5 @@
 - hosts: "{{ playbook_hosts | default('ydb') }}[0]"
-  serial: 1
+  become: true
   roles:
   - role: ydbd_rolling_static
+    availability_mode: force

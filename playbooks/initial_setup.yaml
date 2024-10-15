@@ -4,6 +4,7 @@
     - name: setup packages
       ansible.builtin.import_role:
         name: ydb_platform.ydb.packages
+      when: ydb_tools_install|bool
 
     - name: configure system
       ansible.builtin.import_role:

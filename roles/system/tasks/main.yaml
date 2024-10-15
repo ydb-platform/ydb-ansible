@@ -58,7 +58,7 @@
       ansible.builtin.package:
         name: kernel-modules-extra
         state: present
-      when: ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux'
+      when: ansible_os_family != 'Debian'
     - name: Build the kernel module customization for congestion control
       template:
         src: network-modules.j2
@@ -109,7 +109,6 @@
         state: started
         enabled: true
 
-
 - name: configure kernel
   block:
     - name: configure /etc/modules-load.d dir
@@ -138,9 +137,7 @@
         mode: '0o644'
         dest: /etc/sysctl.d/{{ item }}
       with_items:
-        - 10-console-messages.conf
         - 10-link-restrictions.conf
-        - 10-magic-sysrq.conf
         - 10-network-security.conf
         - 10-ptrace.conf
         - 10-zeropage.conf

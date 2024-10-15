@@ -16,16 +16,15 @@
   retries: 10
   delay: 10
 
-- name: create bin directory
-  delegate_to: 127.0.0.1
-  run_once: true
-  ansible.builtin.file:
-    path: "{{ ansible_config_file | dirname }}/bin/"
-    state: directory
-
 - name: Restart from localhost
   when: ydbops_local|bool
   block:
+    - name: create bin directory
+      delegate_to: 127.0.0.1
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ ansible_config_file | dirname }}/bin/"
+        state: directory
     - name: install ydbops
       delegate_to: 127.0.0.1
       run_once: true
@@ -62,6 +61,7 @@
         ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}:2135"
         ca_file: "{{ ydb_dir }}/certs/ca.crt"
         token: "{{ ydb_credentials.token }}"
+        availability_mode: "{{ availability_mode }}"
 
 - name: ydb storage check
   include_tasks: "check_static.yaml"

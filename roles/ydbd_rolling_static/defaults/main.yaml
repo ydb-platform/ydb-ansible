@@ -12,3 +12,5 @@ ydbops_local: false
 #         ydbops_darwin_amd64 - MacOS Intel
 # Default value: ydbops
 ydbops_source_bin: ydbops
+
+availability_mode: strong
