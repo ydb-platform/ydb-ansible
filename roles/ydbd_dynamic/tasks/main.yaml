@@ -70,6 +70,10 @@
     token: "{{ ydb_credentials.token }}"
   loop: "{{ ydb_dynnodes }}"
 
+- name: Delay for 1 mon
+  pause:
+    seconds: 60
+
 - name: run test queries
   ydb_platform.ydb.run_test_queries:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"

@@ -1,0 +1,10 @@
+---
+
+- name: Check connections between nodes
+  wait_for:
+    host: "{{ item }}"
+    port: 22
+    state: started
+    delay: 0
+    timeout: 1
+  loop: "{{ groups['ydb'] }}"

@@ -1,6 +1,10 @@
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   become: true
   tasks:
+    - name: check connectivity
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.check_connectivity
+
     - name: setup packages
       ansible.builtin.import_role:
         name: ydb_platform.ydb.packages
