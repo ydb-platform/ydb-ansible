@@ -3,6 +3,30 @@
     path: "{{ ydb_dir }}/bin/ydbd"
   register: ydbd_stat
 
+- name: Get version
+  run_once: true
+  when: ydb_version is not defined
+  block:
+  - name: Create the YDB server binary directory for archive
+    file: state=directory
+          path="{{ ydb_dir }}/release/archive"
+          recurse=true
+          group=bin
+          owner=root
+          mode='0755'
+  - name: unpack YDB server archive to archive directory
+    ansible.builtin.unarchive:
+      src: "{{ ydb_archive }}"
+      dest: "{{ ydb_dir }}/release/archive"
+      owner: root
+      group: root
+      extra_opts: "{{ ydb_archive_unpack_options }}"
+  - name: Get version
+    shell: "{{ ydb_dir }}/release/archive/bin/ydbd --compatibility-info | grep 'Version' | cut -f 2 -d ':' | tr '-' '.' | awk '{ print $1;}'"
+    register: cmd_version
+  - set_fact: 
+      ydb_version: "{{ cmd_version.stdout }}"
+
 - name: Create the YDB server binary directory
   file: state=directory
         path="{{ ydb_dir }}/release/{{ ydb_version }}"
@@ -18,6 +42,7 @@
     owner: root
     group: root
     extra_opts: "{{ ydb_archive_unpack_options }}"
+  when: not ydbd_stat.stat.exists|bool or ydb_force_update|bool
 
 - name: Symlink the YDB binaries
   file: path="{{ ydb_dir }}/bin"

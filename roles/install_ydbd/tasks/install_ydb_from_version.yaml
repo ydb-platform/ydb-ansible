@@ -8,6 +8,8 @@
 
 - name: Download YDB release archive
   delegate_to: 127.0.0.1
+  run_once: true
+  become: false
   ansible.builtin.get_url:
     url: "https://binaries.ydb.tech/release/{{ ydb_version }}/ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
     dest: "{{ ydb_archive_dest }}"
@@ -15,4 +17,3 @@
 - name: install YDB server binary package from a downloaded archive
   import_tasks:
     file: install_ydb_from_archive.yaml
-  register: ydb_is_installed

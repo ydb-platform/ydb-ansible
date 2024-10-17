@@ -63,14 +63,6 @@
 - name: Create the YDB configuration backup directory
   file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode='0700'
 
-- name: Create the YDB server binary directory
-  file: state=directory
-        path="{{ ydb_dir }}/release/{{ ydb_version }}"
-        recurse=true
-        group=bin
-        owner=root
-        mode='0755'
-
 - name: generate certificates
   when: ydb_tls_dir is not defined
   delegate_to: 127.0.0.1

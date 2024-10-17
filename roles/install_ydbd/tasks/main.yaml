@@ -14,15 +14,16 @@
 
 - name: install YDB server and cli binaries
   block:
+
   - name: install YDB server binary package from archive
     import_tasks:
       file: install_ydb_from_archive.yaml
-    when: ydb_archive is defined
+    when: ydb_archive is defined 
 
   - name: download and install YDB server binary package from a release version number
     import_tasks:
       file: install_ydb_from_version.yaml
-    when: ydb_version is defined and ydb_archive is undefined and ydb_git_version is undefined
+    when: ydb_version is defined
 
   - name: install YDB server binary package from source code
     import_tasks:
