@@ -1,8 +1,3 @@
-- name: check if ydbd present
-  stat:
-    path: "{{ ydb_dir }}/bin/ydbd"
-  register: ydbd_stat
-
 - name: Get version
   run_once: true
   when: ydb_version is not defined
@@ -26,6 +21,11 @@
     register: cmd_version
   - set_fact: 
       ydb_version: "{{ cmd_version.stdout }}"
+
+- name: check if ydbd present
+  stat:
+    path: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
+  register: ydbd_stat
 
 - name: Create the YDB server binary directory
   file: state=directory

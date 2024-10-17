@@ -2,4 +2,4 @@
   become: true
   roles:
   - role: ydbd_rolling_static
-    availability_mode: force
+    availability_mode: weak

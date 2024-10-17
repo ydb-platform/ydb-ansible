@@ -1,6 +1,9 @@
 - hosts: "{{ playbook_hosts | default('ydb') }}"
+  become: true
+
   roles:
   - role: ydbd_rolling_static
+    availability_mode: weak
     tags:
       - storage
       - static
