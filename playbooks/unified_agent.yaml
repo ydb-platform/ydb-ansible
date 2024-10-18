@@ -1,4 +1,0 @@
-- hosts: all
-  become: true
-  roles:
-  - role: ydbd_unified_agent
