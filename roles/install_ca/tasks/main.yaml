@@ -1,0 +1,20 @@
+---
+
+- name: Create default certs directories
+  file:
+    path: "/usr/local/share/ca-certificates/extra/"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0755
+
+- name: Copy CA to server
+  copy:
+    src: "{{ ca_file }}" 
+    dest: "/usr/local/share/ca-certificates/extra/ydb-extra-ca.crt"
+    owner: "root"
+    group: "root"
+    mode: '0644'
+
+- name: Update CA certificates
+  shell: update-ca-certificates

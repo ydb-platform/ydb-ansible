@@ -1,0 +1,18 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.install_ca
+# PROPOSE : This playbook is designed to install extra CA certificate on every YDB node.
+#           Such certificate can be needed for external S3 storages with self-signed certificates.
+# HOW TO USE:
+#     Define var 'ca_file' with desired CA file
+#
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.install_ca --extra-vars "ca_file=CA/my_ca.crt"
+#
+- hosts: "{{ playbook_hosts | default('ydb') }}"
+  become: true
+  tasks:
+    - name: Install CA certificates
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.install_ca
