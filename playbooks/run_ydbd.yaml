@@ -1,0 +1,5 @@
+- hosts: ydbd_static
+  become: true
+  run_once: true
+  roles:
+  - role: run_ydbd

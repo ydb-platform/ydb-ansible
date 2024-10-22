@@ -1,4 +1,4 @@
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ playbook_hosts | default('ydbd_dynamic') }}"
   become: true
   tasks:
     - name: setup ydb dynamic nodes

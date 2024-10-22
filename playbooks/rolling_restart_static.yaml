@@ -1,5 +1,6 @@
-- hosts: "{{ playbook_hosts | default('ydb') }}[0]"
+- hosts: "{{ playbook_hosts | default('ydbd_static') }}"
   become: true
+  run_once: true
   roles:
   - role: ydbd_rolling_static
     availability_mode: weak

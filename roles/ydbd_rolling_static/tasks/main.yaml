@@ -62,6 +62,7 @@
         ca_file: "{{ ydb_dir }}/certs/ca.crt"
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
+        hosts: "{{ inventory_hostname }}"
 
 - name: ydb storage check
   include_tasks: "check_static.yaml"

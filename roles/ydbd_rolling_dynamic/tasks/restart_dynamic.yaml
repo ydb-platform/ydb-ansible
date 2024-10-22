@@ -1,7 +1,7 @@
 ---
 # YDB restart dynamic nodes on a single host
 
-- name: Restart the dynamic nodes on {{ hostname }}
+- name: Restart the dynamic nodes on {{ inventory_hostname }}
   ansible.builtin.systemd:
     state: restarted
     name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
