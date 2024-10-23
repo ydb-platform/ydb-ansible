@@ -30,3 +30,4 @@
   ansible.builtin.systemd:
     name: cpufrequtils.service
     state: restarted
+  when: "'cpufrequtils' in services"

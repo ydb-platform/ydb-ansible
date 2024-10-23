@@ -26,7 +26,7 @@
         mode: '0644'
     - name: Load the {{ ydb_congestion_module }} module
       command: "/sbin/modprobe {{ ydb_congestion_module }}"
-  when: ydb_congestion_module is defined
+  when: ydb_congestion_module is defined and ansible_distribution != "RedHat"
 
 - name: Build the kernel settings adjustments file
   template:
@@ -114,12 +114,9 @@
 - name: configure cpu governor
   block:
     - name: install cpufrequtils
-      ansible.builtin.apt:
+      ansible.builtin.package:
         pkg: cpufrequtils
         state: present
-        force: true
-        cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
-        update_cache: "{{ apt_update_cache | default(True) }}"
       timeout: 300
 
     - name: use performance cpu governor
@@ -145,3 +142,4 @@
         name: cpufrequtils.service
         state: started
         enabled: true
+      when: "'cpufrequtils' in services"
