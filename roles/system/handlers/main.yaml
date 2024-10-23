@@ -15,7 +15,7 @@
   ansible.builtin.systemd:
     name: cron.service
     state: restarted
-  when: "'cron' in services" and "'crond' not in services"
+  when: "'cron' in services and 'crond' not in services"
 
 - name: restart crond
   ansible.builtin.systemd:

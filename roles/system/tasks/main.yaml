@@ -17,11 +17,6 @@
 
 - name: Congestion control kernel module setup
   block:
-    - name: Ensure kernel-modules-extra is installed on RHEL variants
-      ansible.builtin.package:
-        name: kernel-modules-extra
-        state: present
-      when: ansible_os_family != 'Debian'
     - name: Build the kernel module customization for congestion control
       template:
         src: network-modules.j2

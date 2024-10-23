@@ -5,6 +5,7 @@ preferences: []
 configs: []
 
 packages:
+  - kernel-modules-extra
   - bash-completion
   - ca-certificates
   - curl
