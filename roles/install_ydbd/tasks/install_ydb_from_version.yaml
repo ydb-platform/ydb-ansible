@@ -11,7 +11,7 @@
   run_once: true
   become: false
   stat:
-    path: "{{ ydb_archive_dest }}"
+    path: "{{ ydb_archive }}"
   register: ydbd_archive_stat
 
 - name: Download YDB release archive

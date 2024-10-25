@@ -4,7 +4,7 @@ import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
-
+INVALID_PASSWORD = 'CLIENT_UNAUTHENTICATED'
 
 def main():
     argument_spec=dict(
@@ -16,8 +16,14 @@ def main():
     try:
         ydb_cli = cli.YDB.from_module(module)
         end_ts = time.time() + module.params.get('timeout')
+        password = module.params.get('password')
         while time.time() < end_ts:
             rc, stdout, stderr = ydb_cli(['monitoring', 'healthcheck', '--format', 'json'])
+            if rc != 0 and password != '':
+                module.log('falling back to default user')
+                ydb_cli = cli.YDB.from_module(module, user='root', password=password)
+                rc, stdout, stderr = ydb_cli(['monitoring', 'healthcheck', '--format', 'json'])
+
             if rc != 0:
                 module.log(f'healthcheck failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
                 time.sleep(5)

@@ -1,3 +1,12 @@
+- name: Get PIDs of YDBD
+  shell: pgrep ydbd | wc -l
+  register: pids_of_ydbd
+
+- name: Check presence of YDBD
+  when: pids_of_ydbd.stdout != "0"
+  ansible.builtin.fail:
+    msg: "aborting playbook execution. Stop running YDB instances"
+
 - name: check if required variables are defined
   ansible.builtin.assert:
     that:
@@ -71,6 +80,7 @@
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ inventory_hostname }}:2135"
     database: "/{{ ydb_domain }}"
+    password: "{{ ydb_password }}"
   run_once: true
 
 - name: get ydb token
