@@ -31,3 +31,7 @@ packages:
   - unzip
   - wget
   - xfsprogs
+
+  packages_required:
+  - libaio
+  

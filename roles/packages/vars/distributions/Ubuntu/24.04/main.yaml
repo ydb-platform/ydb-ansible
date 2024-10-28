@@ -40,4 +40,5 @@ packages:
   - xfsprogs
   - libaio1t64
 
-libaio_package: libaio1t64
+packages_required:
+  - libaio1

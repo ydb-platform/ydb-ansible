@@ -33,3 +33,5 @@ packages:
   - xfsprogs
   - libxcrypt-compat
 
+packages_required:
+  - libaio

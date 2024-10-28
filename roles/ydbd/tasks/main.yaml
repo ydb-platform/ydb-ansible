@@ -7,23 +7,6 @@
     - {ydb_archive | ydbd_binary}
     - ydb_config
 
-- name: set vars_for_distribution variables
-  ansible.builtin.include_vars:
-    file: "{{ vars_for_distribution_file }}"
-    name: vars_for_distribution
-  
-- name: set vars_for_distribution variables for Ubuntu 24.04
-  ansible.builtin.include_vars:
-    file: "distributions/{{ ansible_distribution }}/{{ ansible_distribution_version }}/main.yaml"
-    name: vars_for_distribution  
-  when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "24.04"
-
-- name: ensure libaio is installed
-  ansible.builtin.package:
-    name: "{{ vars_for_distribution.libaio_package }}"
-    state: present
-  timeout: 300
-
 - name: create certs group
   group:
     name: certs

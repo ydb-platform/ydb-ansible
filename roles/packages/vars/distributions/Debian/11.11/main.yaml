@@ -40,3 +40,6 @@ packages:
   - xfsprogs
   - libaio1
   - systemd-timesyncd
+
+packages_required:
+  - libaio1

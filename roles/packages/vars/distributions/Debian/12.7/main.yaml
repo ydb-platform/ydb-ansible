@@ -39,3 +39,6 @@ packages:
   - wget
   - xfsprogs
   - systemd-timesyncd
+
+packages_required:
+  - libaio1
