@@ -167,7 +167,7 @@
 - name: Create the YDB release directory
   file:
     state: directory
-    path="{{ ydb_dir }}/release"
+    path: "{{ ydb_dir }}/release"
     group: bin
     owner: root
     mode: '0755'
