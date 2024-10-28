@@ -148,13 +148,9 @@ Notes:
 # Supported operation system
 
 - ydb_platform.ydb.initial_setup - Install cluster
-    - Ubuntu 22.04
-    - Ubuntu 24.04
-    - Debian 11.11
-    - Debian 12.7
-    - AstraLinux 
-    - AlmaLinux 9
-    - To check: AlmaLinux 8
-    - Not supported: RedHat 8
-    - To check: RedHat 9
-    - To check: RedOS 7
+    - Ubuntu 22.04, 24.04
+    - Debian 11.11, 12.7
+    - AstraLinux 1.7
+    - AlmaLinux 8,9
+    - RedHat 9
+    - RedOS 7
