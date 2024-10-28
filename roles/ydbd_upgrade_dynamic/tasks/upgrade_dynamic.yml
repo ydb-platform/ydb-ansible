@@ -2,11 +2,12 @@
 # YDB upgrade dynamic nodes on a single host
 
 - name: Create the YDB server binary directory
-  file: state=directory
-        path="{{ ydb_dir }}/release/{{ ydb_version }}"
-        recurse=true
-        group=bin
-        owner=root
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/release/{{ ydb_version }}"
+    group: bin
+    owner: root
+    mode: '0755'
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
   any_errors_fatal: true
@@ -24,19 +25,21 @@
   any_errors_fatal: true
 
 - name: Symlink the YDB binaries
-  file: path="{{ ydb_dir }}/bin"
-        src="./release/{{ ydb_version }}/bin"
-        state=link
-        force=yes
+  file:
+    path: "{{ ydb_dir }}/bin"
+    src: "./release/{{ ydb_version }}/bin"
+    state: link
+    force: yes
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
   any_errors_fatal: true
 
 - name: Symlink the YDB libraries
-  file: path="{{ ydb_dir }}/lib"
-        src="./release/{{ ydb_version }}/lib"
-        state=link
-        force=yes
+  file:
+    path: "{{ ydb_dir }}/lib"
+    src: "./release/{{ ydb_version }}/lib"
+    state: link
+    force: yes
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
   any_errors_fatal: true
