@@ -31,7 +31,7 @@ packages:
   - unzip
   - wget
   - xfsprogs
-  - libxcrypt-compat
 
 packages_required:
+  - libxcrypt-compat
   - libaio

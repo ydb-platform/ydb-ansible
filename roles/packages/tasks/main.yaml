@@ -1,5 +1,10 @@
 ---
 
+- name: set vars_for_distribution_version variables
+  ansible.builtin.include_vars:
+    file: "{{ vars_for_distribution_version_file }}"
+    name: vars_for_distribution_version
+
 - name: install required packages
   ansible.builtin.package:
     pkg: "{{ vars_for_distribution_version.packages_required }}"
@@ -28,11 +33,6 @@
     - name: fix unconfigured packages
       shell: dpkg --configure --pending
       when: dpkg_audit_result.rc != 0
-
-- name: set vars_for_distribution_version variables
-  ansible.builtin.include_vars:
-    file: "{{ vars_for_distribution_version_file }}"
-    name: vars_for_distribution_version
 
 - name: setup apt repositories
   ansible.builtin.apt_repository:
