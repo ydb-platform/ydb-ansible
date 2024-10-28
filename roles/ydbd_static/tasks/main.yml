@@ -1,14 +1,6 @@
 ---
 # ydbd static node deployment
 
-- name: Create the YDB audit base directory
-  file:
-    state: directory
-    path: "{{ ydb_dir }}/audit"
-    group: ydb
-    owner: ydb
-    mode: '0700'
-
 - name: Create the YDB audit directory for the storage node
   file:
     state: directory

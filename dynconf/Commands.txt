@@ -1,0 +1,5 @@
+ydb auth get-token -f >ydbd-token
+./ydbd -s grpcs://bigpig1:2135 --ca-file ../tls/ca.crt -f ydbd-token admin console configs dump-yaml >step0.yaml
+cp step0.yaml step1.yaml
+vi step1.yaml
+ydb admin config replace -f step1.yaml 

@@ -31,6 +31,7 @@ ExecStart={{ ydb_dir }}/bin/ydbd server --tenant /{{ ydb_domain }}/{{ ydb_dbname
     --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }} \
 {%- endif %}
     --ca {{ ydb_dir }}/certs/ca.crt --grpc-ca {{ ydb_dir }}/certs/ca.crt \
+    --grpc-cert {{ ydb_dir }}/certs/node.crt --grpc-key {{ ydb_dir }}/certs/node.key \
     --mon-cert {{ ydb_dir }}/certs/web.pem
 LimitNOFILE=65536
 LimitCORE=0

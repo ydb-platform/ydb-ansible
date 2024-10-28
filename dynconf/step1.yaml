@@ -1,0 +1,38 @@
+metadata:
+  kind: MainConfig
+  cluster: ""
+  version: 0
+config:
+  yaml_config_enabled: true
+allowed_labels:
+  node_id:
+    type: string
+  host:
+    type: string
+  tenant:
+    type: string
+selector_config:
+- description: cookie=INIT-00 merge_strategy=MERGE id=1.1
+  selector:
+    tenant: /Domain0/testdb
+  config:
+    shared_cache_config:
+      memory_limit: 34359738368
+    table_service_config: !inherit
+      enable_implicit_query_parameter_types: true
+      query_limits: !inherit
+        result_rows_limit: 20000
+    actor_system_config:
+      executor:
+      - {name: System, spin_threshold: '10', threads: 2, max_threads: 11, type: BASIC}
+      - {name: User, spin_threshold: '1', threads: 5, max_threads: 12, type: BASIC}
+      - {name: Batch, spin_threshold: '1', threads: 2, max_threads: 4, type: BASIC}
+      - {name: IO, threads: 1, type: IO}
+      - {name: IC, spin_threshold: '10', threads: 5, max_threads: 11, time_per_mailbox_micro_secs: 100, max_avg_ping_deviation: 500, type: BASIC}
+      scheduler: {progress_threshold: '10000', resolution: '64', spin_threshold: '0'}
+      sys_executor: 0
+      user_executor: 1
+      batch_executor: 2
+      io_executor: 3
+      service_executor:
+      - {executor_id: 4, service_name: Interconnect}
