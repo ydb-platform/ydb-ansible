@@ -1,7 +1,7 @@
 metadata:
   kind: MainConfig
   cluster: ""
-  version: 1
+  version: 0
 config:
   yaml_config_enabled: true
 allowed_labels:
@@ -19,6 +19,7 @@ selector_config:
     shared_cache_config:
       memory_limit: 34359738368
     table_service_config: !inherit
+      enable_implicit_query_parameter_types: true
       query_limits: !inherit
         result_rows_limit: 20000
     actor_system_config:
