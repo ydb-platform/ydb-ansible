@@ -3,3 +3,4 @@ vars_for_distribution_file: "distributions/{{ ansible_distribution }}/main.yaml"
 vars_for_distribution_version_dir: "distributions/{{ ansible_distribution }}/{{ ansible_distribution_version }}"
 vars_for_distribution_version_file: "distributions/{{ ansible_distribution }}/{{ ansible_distribution_version }}/main.yaml"
 ydb_tools_install: false
+ydb_enforce_user_token_requirement: false
