@@ -4,8 +4,8 @@
   copy:
     src: "files/port_listner.py"
     dest: "/tmp/port_listner.py"
-    owner: ydb
-    group: ydb
+    owner: root
+    group: root
     mode: 0755
 
 - name: Start script to listen YDB ports
@@ -25,3 +25,6 @@
 - name: Stop script
   shell: "pkill -f \"python3 .*port_listner.py.*\""
   ignore_errors: True
+
+- name: Remove script
+  shell: "rm /tmp/port_listner.py"
