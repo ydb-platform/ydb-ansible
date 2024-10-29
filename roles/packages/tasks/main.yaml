@@ -75,14 +75,14 @@
     cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
     update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 900
-  when: ansible_os_family == 'Debian'
+  when: ansible_os_family == 'Debian' and ydb_tools_install|bool
 
 - name: install packages by DNF
   ansible.builtin.dnf:
     pkg: "{{ vars_for_distribution_version.packages }}"
     state: present
   timeout: 900
-  when: ansible_os_family != 'Debian'
+  when: ansible_os_family != 'Debian' and ydb_tools_install|bool
 
 - name: configure systemd-timesyncd
   when: ansible_os_family == 'Debian'
