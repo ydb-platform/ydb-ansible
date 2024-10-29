@@ -38,7 +38,6 @@ packages:
   - unzip
   - wget
   - xfsprogs
-  - libaio1t64
 
 packages_required:
-  - libaio1
+  - libaio1t64
