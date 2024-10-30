@@ -1,0 +1,29 @@
+---
+
+- name: get ydb token
+  ydb_platform.ydb.get_token:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
+  run_once: true
+  register: ydb_credentials
+  until: "'token' in ydb_credentials"
+  retries: 10
+  delay: 10
+
+- name: Execute command
+  ydb_platform.ydb.ydbd_cmd:
+    cmd: "{{ cmd }}"
+    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+  register: cmd_result
+
+- name: Command output
+  debug:
+    var: cmd_result

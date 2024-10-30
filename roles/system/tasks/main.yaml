@@ -15,44 +15,29 @@
     - name: flush handlers
       meta: flush_handlers
 
-
-- name: configure systemd-timesyncd
+- name: Congestion control kernel module setup
   block:
-    - name: assert required variables are defined
-      ansible.builtin.assert:
-        that:
-          - "{{ (system_ntp_servers|length) > 1 }}"
-      when: system_ntp_servers is defined
-
-    - name: create conf.d directory for timesyncd
-      ansible.builtin.file:
-        path: /etc/systemd/timesyncd.conf.d
-        state: directory
-      when: system_ntp_servers is defined
-
-    - name: configure systemd-timesyncd
-      ansible.builtin.copy:
-        content: |
-          [Time]
-          NTP={{ system_ntp_servers[0] }}
-          FallbackNTP={{ system_ntp_servers[1:] | join(" ") }}
-        dest:  /etc/systemd/timesyncd.conf.d/ydb.conf
+    - name: Build the kernel module customization for congestion control
+      template:
+        src: network-modules.j2
+        dest: /etc/modules-load.d/50-ydbd.conf
         owner: root
         group: root
         mode: '0644'
-      when: system_ntp_servers is defined
-      notify:
-        - restart timesyncd
+    - name: Load the {{ ydb_congestion_module }} module
+      command: "/sbin/modprobe {{ ydb_congestion_module }}"
+  when: ydb_congestion_module is defined and ansible_distribution != "RedHat"
 
-    - name: flush handlers
-      meta: flush_handlers
+- name: Build the kernel settings adjustments file
+  template:
+    src: kernel-settings.j2
+    dest: /etc/sysctl.d/50-ydbd.conf
+    owner: root
+    group: root
+    mode: '0644'
 
-    - name: start timesyncd
-      ansible.builtin.systemd:
-        name: systemd-timesyncd.service
-        state: started
-        enabled: true
-
+- name: Refresh the current sysctl settings
+  command: "/sbin/sysctl --system"
 
 - name: configure systemd-journald
   block:
@@ -82,7 +67,6 @@
         state: started
         enabled: true
 
-
 - name: configure kernel
   block:
     - name: configure /etc/modules-load.d dir
@@ -111,9 +95,7 @@
         mode: '0o644'
         dest: /etc/sysctl.d/{{ item }}
       with_items:
-        - 10-console-messages.conf
         - 10-link-restrictions.conf
-        - 10-magic-sysrq.conf
         - 10-network-security.conf
         - 10-ptrace.conf
         - 10-zeropage.conf
@@ -132,12 +114,9 @@
 - name: configure cpu governor
   block:
     - name: install cpufrequtils
-      ansible.builtin.apt:
+      ansible.builtin.package:
         pkg: cpufrequtils
         state: present
-        force: true
-        cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
-        update_cache: "{{ apt_update_cache | default(True) }}"
       timeout: 300
 
     - name: use performance cpu governor
@@ -163,3 +142,4 @@
         name: cpufrequtils.service
         state: started
         enabled: true
+      when: "'cpufrequtils' in services"

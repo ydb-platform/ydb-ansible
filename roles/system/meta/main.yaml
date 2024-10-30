@@ -1,0 +1,3 @@
+dependencies:
+  - ydb_platform.ydb.preflight
+allow_duplicates: false

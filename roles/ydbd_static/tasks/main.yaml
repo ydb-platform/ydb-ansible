@@ -1,3 +1,12 @@
+- name: Get PIDs of YDBD
+  shell: pgrep ydbd | wc -l
+  register: pids_of_ydbd
+
+- name: Check presence of YDBD
+  when: pids_of_ydbd.stdout != "0"
+  ansible.builtin.fail:
+    msg: "aborting playbook execution. Stop running YDB instances"
+
 - name: check if required variables are defined
   ansible.builtin.assert:
     that:
@@ -64,6 +73,18 @@
     enabled: true
   any_errors_fatal: true
 
+- name: wait for ydb healthcheck switch to "GOOD" status
+  ydb_platform.ydb.wait_healthcheck:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
+    enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+  run_once: true
+
 - name: get ydb token
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -114,6 +135,7 @@
     endpoint: "grpcs://{{ inventory_hostname }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
+    enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
   run_once: true
 
 - name: set cluster root password

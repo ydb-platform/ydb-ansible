@@ -1,5 +1,18 @@
+---
+
+- name: set vars_for_distribution_version variables
+  ansible.builtin.include_vars:
+    file: "{{ vars_for_distribution_version_file }}"
+    name: vars_for_distribution_version
+
+- name: install required packages
+  ansible.builtin.package:
+    pkg: "{{ vars_for_distribution_version.packages_required }}"
+    state: present
+  timeout: 900
+
 - name: configure unconfigured packages
-  when: ydb_dpkg_configure
+  when: ydb_dpkg_configure|bool and ansible_os_family == 'Debian'
   block:
     - name: check dpkg audit
       shell: dpkg --audit
@@ -21,18 +34,13 @@
       shell: dpkg --configure --pending
       when: dpkg_audit_result.rc != 0
 
-- name: set vars_for_distribution_version variables
-  ansible.builtin.include_vars:
-    file: "{{ vars_for_distribution_version_file }}"
-    name: vars_for_distribution_version
-
 - name: setup apt repositories
   ansible.builtin.apt_repository:
     repo: "{{ item }}"
     state: present
     update_cache: no
   loop: "{{ vars_for_distribution_version.repositories }}"
-  when: vars_for_distribution_version.repositories
+  when: vars_for_distribution_version.repositories and ansible_os_family == 'Debian'
   notify:
     - update apt cache
 
@@ -42,7 +50,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.preferences }}"
-  when: vars_for_distribution_version.preferences
+  when: vars_for_distribution_version.preferences and ansible_os_family == 'Debian'
   notify:
     - update apt cache
 
@@ -52,14 +60,14 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.configs }}"
-  when: vars_for_distribution_version.configs
+  when: vars_for_distribution_version.configs and ansible_os_family == 'Debian'
   notify:
     - update apt cache
 
 - name: flush handlers
   meta: flush_handlers
 
-- name: install packages
+- name: install packages by APT
   ansible.builtin.apt:
     pkg: "{{ vars_for_distribution_version.packages }}"
     state: present
@@ -67,3 +75,63 @@
     cache_valid_time: "{{ apt_cache_valid_time | default(3600) }}"
     update_cache: "{{ apt_update_cache | default(True) }}"
   timeout: 900
+  when: ansible_os_family == 'Debian' and ydb_tools_install|bool
+
+- name: install packages by DNF
+  ansible.builtin.dnf:
+    pkg: "{{ vars_for_distribution_version.packages }}"
+    state: present
+  timeout: 900
+  when: ansible_os_family != 'Debian' and ydb_tools_install|bool
+
+- name: configure systemd-timesyncd
+  when: ansible_os_family == 'Debian'
+  block:
+    - name: assert required variables are defined
+      ansible.builtin.assert:
+        that:
+          - "{{ (system_ntp_servers|length) > 1 }}"
+      when: system_ntp_servers is defined
+
+    - name: create conf.d directory for timesyncd
+      ansible.builtin.file:
+        path: /etc/systemd/timesyncd.conf.d
+        state: directory
+      when: system_ntp_servers is defined
+
+    - name: configure systemd-timesyncd
+      ansible.builtin.copy:
+        content: |
+          [Time]
+          NTP={{ system_ntp_servers[0] }}
+          FallbackNTP={{ system_ntp_servers[1:] | join(" ") }}
+        dest:  /etc/systemd/timesyncd.conf.d/ydb.conf
+        owner: root
+        group: root
+        mode: '0644'
+      when: system_ntp_servers is defined
+      notify:
+        - restart timesyncd
+
+    - name: flush handlers
+      meta: flush_handlers
+
+    - name: start timesyncd
+      ansible.builtin.systemd:
+        name: systemd-timesyncd.service
+        state: started
+        enabled: true
+
+- name: configure chrony
+  block:
+    - name: Ensure chrony is installed
+      ansible.builtin.package:
+        name: chrony
+        state: present
+
+    - name: Ensure chrony is running
+      ansible.builtin.systemd:
+        enabled: true
+        state: started
+        name: chronyd
+  when: ansible_os_family != 'Debian'

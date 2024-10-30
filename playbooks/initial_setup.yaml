@@ -1,6 +1,28 @@
+---
+
+
+# PLAYBOOK: ydb_platform.ydb.initial_setup
+# PROPOSE : This playbook is designed to install YDB cluster.
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#     - YDB config
+#     - SSL certificates
+#
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.initial_setup
+#
+
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   become: true
   tasks:
+    - name: check connectivity
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.check_connectivity
+
     - name: setup packages
       ansible.builtin.import_role:
         name: ydb_platform.ydb.packages

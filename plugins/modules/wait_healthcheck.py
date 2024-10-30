@@ -4,20 +4,29 @@ import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
-
+INVALID_PASSWORD = 'CLIENT_UNAUTHENTICATED'
 
 def main():
     argument_spec=dict(
         timeout=dict(type='int', default=180),
+        enforce_user_token_requirement=dict(type='bool', default=False),
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
     result = {'changed': False}
     try:
-        ydb_cli = cli.YDB.from_module(module)
-        end_ts = time.time() + module.params.get('timeout')
+        ydb_cmd  = ['monitoring', 'healthcheck', '--format', 'json']
+        end_ts   = time.time() + module.params.get('timeout')
+        password = module.params.get('password')
+        user     = module.params.get('user')
+        enforce_user_token_requirement = module.params.get('enforce_user_token_requirement')
+        if user != '' and password != '' and enforce_user_token_requirement == True:
+            ydb_cli  = cli.YDB.from_module(module, user=user, password=password)
+        else:
+            # Anonymouse mode
+            ydb_cli  = cli.YDB.from_module(module)
         while time.time() < end_ts:
-            rc, stdout, stderr = ydb_cli(['monitoring', 'healthcheck', '--format', 'json'])
+            rc, stdout, stderr = ydb_cli(ydb_cmd)
             if rc != 0:
                 module.log(f'healthcheck failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
                 time.sleep(5)

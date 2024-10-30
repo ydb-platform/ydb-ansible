@@ -144,3 +144,13 @@ Notes:
 1. YDB cluster configuration file is copied to each server.
 1. Rolling restart is performed for YDB storage nodes, node by node, checking for the YDB storage cluster to become healthy after the restart of each node.
 1. Rolling restart is performed for YDB database nodes, server by server, restarting all nodes sitting in the single server at a time, and waiting for the specified number of seconds after each server's nodes restart.
+
+# Supported operation system
+
+- ydb_platform.ydb.initial_setup - Install cluster
+    - Ubuntu 22.04, 24.04
+    - Debian 11.11, 12.7
+    - AstraLinux 1.7
+    - AlmaLinux 8,9
+    - RedHat 9
+    - RedOS 7

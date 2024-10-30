@@ -1,0 +1,6 @@
+---
+
+# Optional network congestion control setting, htcp recommended
+ydb_congestion_setting: htcp
+# Optional module to load the congestion control algorithm
+ydb_congestion_module: tcp_htcp

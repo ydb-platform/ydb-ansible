@@ -3,3 +3,5 @@ ydb_libidn_archive_unpack_options: ['--strip-component=1']
 ydb_archive_unpack_options: ['--strip-component=1']
 
 ydb_repo_url: https://github.com/ydb-platform/ydb.git
+
+ydb_force_update: false

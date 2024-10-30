@@ -16,30 +16,53 @@
   retries: 10
   delay: 10
 
-- name: create bin directory
-  delegate_to: 127.0.0.1
-  run_once: true
-  ansible.builtin.file:
-    path: "{{ ansible_config_file | dirname }}/bin/"
-    state: directory
+- name: Restart from localhost
+  when: ydbops_local|bool
+  block:
+    - name: create bin directory
+      delegate_to: 127.0.0.1
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ ansible_config_file | dirname }}/bin/"
+        state: directory
+    - name: install ydbops
+      delegate_to: 127.0.0.1
+      run_once: true
+      ansible.builtin.get_url:
+        url: https://github.com/ydb-platform/ydbops/releases/latest/download/{{ ydbops_source_bin }}
+        dest: "{{ ansible_config_file | dirname }}/bin/ydbops"
+        mode: 0755
 
-- name: install ydbops
-  delegate_to: 127.0.0.1
-  run_once: true
-  ansible.builtin.get_url:
-    url: https://storage.yandexcloud.net/blinkov-tmp/ydbops # TODO: replace with a release URL
-    dest: "{{ ansible_config_file | dirname }}/bin/"
-    mode: 0755
+    - name: "run ydbops to gracefully restart the cluster, it takes a long time"
+      delegate_to: 127.0.0.1
+      run_once: true
+      ydb_platform.ydb.restart_storage:
+        ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
+        ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}:2135"
+        # ssh_args: "ssh -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }} -o StrictHostKeyChecking=no -o ProxyCommand=\\\"ssh -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user }}@{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}\\\""
+        ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }}"
+        ca_file: "{{ ydb_tls_dir }}/ca.crt"
+        token: "{{ ydb_credentials.token }}"
 
-- name: "run ydbops to gracefully restart the cluster, it takes a long time"
-  delegate_to: 127.0.0.1
-  run_once: true
-  ydb_platform.ydb.restart_storage:
-    ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
-    ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}.:2135"
-    ssh_args: "ssh -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }} -o StrictHostKeyChecking=no -o ProxyCommand=\\\"ssh -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user }}@{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}\\\""
-    ca_file: "{{ ansible_config_file | dirname }}/files/TLS/certs/ca.crt"
-    token: "{{ ydb_credentials.token }}"
+- name: Restart from static node
+  when: not ydbops_local|bool
+  become: true
+  block:
+    - name: install ydbops
+      ansible.builtin.get_url:
+        url: https://github.com/ydb-platform/ydbops/releases/latest/download/{{ ydbops_source_bin }}
+        dest: "{{ ydb_dir }}/bin/ydbops"
+        mode: 0755
+
+    - name: "run ydbops to gracefully restart the cluster, it takes a long time"
+      run_once: true
+      ydb_platform.ydb.restart_storage:
+        ydbops_bin: "{{ ydb_dir }}/bin/ydbops"
+        ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}:2135"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        token: "{{ ydb_credentials.token }}"
+        availability_mode: "{{ availability_mode }}"
+        hosts: "{{ inventory_hostname }}"
 
 - name: ydb storage check
   include_tasks: "check_static.yaml"

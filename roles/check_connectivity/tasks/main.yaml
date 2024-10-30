@@ -1,0 +1,30 @@
+---
+
+- name: Copy script for testing connectivity
+  copy:
+    src: "files/port_listner.py"
+    dest: "/tmp/port_listner.py"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Start script to listen YDB ports
+  shell: "nohup python3 /tmp/port_listner.py {{ ydb_ports| join(' ') }} &"
+
+- name: Check connections between nodes
+  wait_for:
+    host: "{{ item.0 }}"
+    port: "{{ item.1 }}"
+    state: started
+    delay: 0
+    timeout: 1
+  with_nested: 
+    - "{{ groups['ydb'] }}"
+    - "{{ ydb_ports }}"
+
+- name: Stop script
+  shell: "pkill -f \"python3 .*port_listner.py.*\""
+  ignore_errors: True
+
+- name: Remove script
+  shell: "rm /tmp/port_listner.py"

@@ -1,5 +1,6 @@
 - name: check if required variables are defined
   hosts: "{{ playbook_hosts | default('ydb') }}"
+
   tasks:
   - ansible.builtin.assert:
       that:
@@ -14,7 +15,10 @@
     - database
     - dynamic
     - no_restart
+
 - hosts: "{{ playbook_hosts | default('ydb') }}"
+  become: true
+
   roles:
   - role: preflight
   - role: install_ydbd
@@ -24,5 +28,7 @@
     - database
     - dynamic
     - no_restart
+
 - name: Restart YDB cluster
+  become: true
   ansible.builtin.import_playbook: restart.yaml

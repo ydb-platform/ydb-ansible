@@ -1,7 +1,10 @@
+- 
+
 - name: restart timesyncd
   ansible.builtin.systemd:
     name: systemd-timesyncd.service
     state: restarted
+  when: "'systemd-timesyncd' in services"
 
 - name: restart journald
   ansible.builtin.systemd:
@@ -12,6 +15,13 @@
   ansible.builtin.systemd:
     name: cron.service
     state: restarted
+  when: "'cron' in services and 'crond' not in services"
+
+- name: restart crond
+  ansible.builtin.systemd:
+    name: crond.service
+    state: restarted
+  when: "'crond' in services"
 
 - name: apply kernel settings
   ansible.builtin.shell: sysctl -p
@@ -20,3 +30,4 @@
   ansible.builtin.systemd:
     name: cpufrequtils.service
     state: restarted
+  when: "'cpufrequtils' in services"

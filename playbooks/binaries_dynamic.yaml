@@ -1,0 +1,4 @@
+- hosts: ydbd_dynamic
+  become: true
+  roles:
+  - role: ydbd

@@ -1,0 +1,34 @@
+repositories: []
+
+preferences: []
+
+configs: []
+
+packages:
+  - kernel-modules-extra
+  - bash-completion
+  - ca-certificates
+  - curl
+  - dnsutils
+  - gdisk
+  - iptables
+  - jq
+  - logrotate
+  - lsof
+  - nvme-cli
+  - procps
+  - python3-apt
+  - python3-pip
+  - python3-requests
+  - python3-virtualenv
+  - rsync
+  - strace
+  - tar
+  - tmux
+  - tzdata
+  - unzip
+  - wget
+  - xfsprogs
+
+packages_required:
+  - libaio

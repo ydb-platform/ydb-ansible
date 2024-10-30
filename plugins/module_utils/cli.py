@@ -146,11 +146,12 @@ class YdbOps(CLI):
         ssh_args=dict(type='str', default=None),
         availability_mode=dict(type='str', default='strong'),
         token=dict(type='str', default=None, no_log=True),
-        token_file=dict(type='str', default=None)
+        token_file=dict(type='str', default=None),
+        hosts=dict(type='str',default=None),
     )
 
     def __init__(self, module, ydbops_bin, ydbops_endpoint, ydbops_systemd_unit=None,
-                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None):
+                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, hosts=None):
         self.module = module
 
         self.common_options = [ydbops_bin, 'restart', '--storage']
@@ -166,6 +167,8 @@ class YdbOps(CLI):
             self.common_options.extend(['--systemd-unit', ydbops_systemd_unit])
         if availability_mode is not None:
             self.common_options.extend(['--availability-mode', availability_mode])
+        if hosts is not None:
+            self.common_options.extend(['--hosts',hosts])
         if token is not None:
             self.common_environ['YDB_TOKEN'] = token
         elif token_file is not None:
