@@ -1,3 +1,15 @@
+---
+
+
+# PLAYBOOK: ydb_platform.ydb.run_ydbd
+# PROPOSE : This playbook is designed to execute a command with YDBD on a static server
+#           
+# EXAMPLE:
+#
+# get help for admin section
+#   ansible-playbook ydb_platform.ydb.run_ydbd --extra-vars 'cmd="admin --help"'
+#
+
 - hosts: ydbd_static
   become: true
   run_once: true
