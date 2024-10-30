@@ -15,20 +15,18 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
     result = {'changed': False}
     try:
-        ydb_cmd = ['monitoring', 'healthcheck', '--format', 'json']
-        ydb_cli = cli.YDB.from_module(module)
-        end_ts = time.time() + module.params.get('timeout')
+        ydb_cmd  = ['monitoring', 'healthcheck', '--format', 'json']
+        end_ts   = time.time() + module.params.get('timeout')
         password = module.params.get('password')
+        user     = module.params.get('user')
         enforce_user_token_requirement = module.params.get('enforce_user_token_requirement')
-        if enforce_user_token_requirement != False:
-            ydb_cmd.insert(0,'root')     
-            ydb_cmd.insert(0,'--user')
-            ydb_cmd.insert(0,'--no-password')
+        if user != '' and password != '' and enforce_user_token_requirement == True:
+            ydb_cli  = cli.YDB.from_module(module, user=user, password=password)
+        else:
+            # Anonymouse mode
+            ydb_cli  = cli.YDB.from_module(module)
         while time.time() < end_ts:
             rc, stdout, stderr = ydb_cli(ydb_cmd)
-            if rc != 0:
-                ydb_cli = cli.YDB.from_module(module, user='root', password=password)
-                rc, stdout, stderr = ydb_cli(ydb_cmd)
             if rc != 0:
                 module.log(f'healthcheck failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
                 time.sleep(5)

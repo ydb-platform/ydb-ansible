@@ -80,6 +80,7 @@
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ inventory_hostname }}:2135"
     database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
   run_once: true
