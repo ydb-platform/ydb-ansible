@@ -1,2 +1,3 @@
 ydb_allow_format_drives: false
 ydb_skip_data_loss_confirmation_prompt: false
+ydb_enforce_user_token_requirement: true
