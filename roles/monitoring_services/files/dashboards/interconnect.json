@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 9,
+  "id": 29,
   "links": [],
   "panels": [
     {
@@ -104,6 +104,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -112,7 +113,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_OutgoingTraffic{container=\"ydb-static\"}[$__rate_interval]))",
+          "expr": "sum by(host, pod) (rate(interconnect_OutgoingTraffic{container!=\"ydb-dynamic\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -208,6 +209,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -216,7 +218,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_IncomingTraffic{container=\"ydb-static\"}[$__rate_interval]))",
+          "expr": "sum by(host, pod) (rate(interconnect_IncomingTraffic{container!=\"ydb-dynamic\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -312,6 +314,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -320,7 +323,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_OutgoingTraffic{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
+          "expr": "sum by(host, pod) (rate(interconnect_OutgoingTraffic{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -416,6 +419,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -424,7 +428,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_IncomingTraffic{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
+          "expr": "sum by(host, pod) (rate(interconnect_IncomingTraffic{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -520,6 +524,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -528,7 +533,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_ClockSkewMicrosec{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
+          "expr": "sum by(host, pod) (rate(interconnect_ClockSkewMicrosec{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -624,6 +629,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -632,7 +638,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by(le, instance) (rate(interconnect_PingTimeUs_bucket{container=\"ydb-static\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by(le, host, pod) (rate(interconnect_PingTimeUs_bucket{container!=\"ydb-dynamic\"}[$__rate_interval])))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -728,6 +734,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -736,7 +743,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by(le, instance) (rate(interconnect_PingTimeUs_bucket{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by(le, host,pod) (rate(interconnect_PingTimeUs_bucket{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval])))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -750,42 +757,36 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "30s",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "prometheus",
-          "value": "ce1nq77uzc54wd"
+          "text": "Prometheus",
+          "value": "prometheus"
         },
-        "hide": 0,
         "includeAll": false,
-        "multi": false,
         "name": "ds",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "type": "datasource"
       },
       {
         "current": {
-          "selected": false,
-          "text": "/Root/testdb0",
-          "value": "/Root/testdb0"
+          "text": "/Root/database-k3s-sample",
+          "value": "/Root/database-k3s-sample"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "${ds}"
         },
         "definition": "label_values(database)",
-        "hide": 0,
         "includeAll": false,
-        "multi": false,
         "name": "database",
         "options": [],
         "query": {
@@ -795,8 +796,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       }
     ]
@@ -809,7 +808,6 @@
   "timezone": "browser",
   "title": "Interconnect Dashboard",
   "uid": "ce1od47yqbxfkc",
-  "version": 30,
+  "version": 17,
   "weekStart": ""
 }
-
