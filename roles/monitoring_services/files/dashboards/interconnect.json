@@ -532,8 +532,8 @@
             "uid": "${ds}"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by(host, pod) (rate(interconnect_ClockSkewMicrosec{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
+          "editorMode": "builder",
+          "expr": "max by(host, pod) (abs(rate(interconnect_ClockSkewMicrosec{database=\"$database\", container=\"ydb-dynamic\"}[$__rate_interval])))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -543,7 +543,7 @@
           "useBackend": false
         }
       ],
-      "title": "ClockSkewMicrosec between db nodes",
+      "title": "ClockSkewMicrosec between db nodes (max drift)",
       "type": "timeseries"
     },
     {
@@ -808,6 +808,6 @@
   "timezone": "browser",
   "title": "Interconnect Dashboard",
   "uid": "ce1od47yqbxfkc",
-  "version": 17,
+  "version": 19,
   "weekStart": ""
 }
