@@ -59,6 +59,8 @@
     pool_kind: "{{ ydb_pool_kind }}"
     groups: "{{ ydb_database_groups }}"
   run_once: true
+  retries: 50
+  delay: 15
 
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
