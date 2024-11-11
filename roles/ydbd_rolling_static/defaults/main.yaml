@@ -3,8 +3,8 @@
 # ydbops_local - control cluster from localhost
 # values: false - use any static host for cluster control
 #         true  - use localhost for cluster control
-# Default value: false
-ydbops_local: false
+# Default value: true
+ydbops_local: true
 
 # ydbops_source_bin - binary for ydbops
 # values: ydbops - Linux x86_64
@@ -16,3 +16,6 @@ ydbops_source_bin: ydbops
 availability_mode: strong
 
 ydb_enforce_user_token_requirement: true
+
+ydbops_release_url: https://github.com/ydb-platform/ydbops/releases/latest/download/
+

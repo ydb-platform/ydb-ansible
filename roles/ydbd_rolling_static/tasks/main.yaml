@@ -17,6 +17,7 @@
   delay: 10
 
 - name: Restart from localhost
+  become: false
   when: ydbops_local|bool
   block:
     - name: create bin directory
@@ -29,7 +30,7 @@
       delegate_to: 127.0.0.1
       run_once: true
       ansible.builtin.get_url:
-        url: https://github.com/ydb-platform/ydbops/releases/latest/download/{{ ydbops_source_bin }}
+        url: "{{ ydbops_release_url }}/{{ ydbops_source_bin }}"
         dest: "{{ ansible_config_file | dirname }}/bin/ydbops"
         mode: 0755
 
@@ -48,11 +49,20 @@
   when: not ydbops_local|bool
   become: true
   block:
+
     - name: install ydbops
       ansible.builtin.get_url:
-        url: https://github.com/ydb-platform/ydbops/releases/latest/download/{{ ydbops_source_bin }}
+        url: "{{ ydbops_release_url }}/{{ ydbops_source_bin }}"
         dest: "{{ ydb_dir }}/bin/ydbops"
         mode: 0755
+      when: ydbops_binary is not defined
+
+    - name: install ydbops
+      ansible.builtin.copy:
+        src: "{{ ydbops_binary }}"
+        dest: "{{ ydb_dir }}/bin/ydbops"
+        mode: 0755
+      when: ydbops_binary is defined
 
     - name: "run ydbops to gracefully restart the cluster, it takes a long time"
       run_once: true
@@ -63,6 +73,7 @@
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
         hosts: "{{ inventory_hostname }}"
+        ssh_args: "bash"
 
 - name: ydb storage check
   include_tasks: "check_static.yaml"
