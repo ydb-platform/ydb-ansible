@@ -1,3 +1,3 @@
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
   roles:
   - role: ydbd_rolling_dynamic

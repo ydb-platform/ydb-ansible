@@ -1,4 +1,3 @@
 - hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
-  become: true
   roles:
-  - role: ydbd
+  - role: ydbd_newdb
