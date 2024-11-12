@@ -73,7 +73,6 @@
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
         hosts: "{{ inventory_hostname }}"
-        ssh_args: "bash"
 
 - name: ydb storage check
   include_tasks: "check_static.yaml"
