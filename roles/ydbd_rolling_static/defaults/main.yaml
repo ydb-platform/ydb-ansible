@@ -3,8 +3,8 @@
 # ydbops_local - control cluster from localhost
 # values: false - use any static host for cluster control
 #         true  - use localhost for cluster control
-# Default value: true
-ydbops_local: true
+# Default value: false
+ydbops_local: false
 
 # ydbops_source_bin - binary for ydbops
 # values: ydbops - Linux x86_64
