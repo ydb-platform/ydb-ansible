@@ -1,4 +1,4 @@
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
   become: true
   run_once: true
   roles:

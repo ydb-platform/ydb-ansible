@@ -1,1 +1,2 @@
 ydb_dpkg_configure: true
+ydb_tools_install: false

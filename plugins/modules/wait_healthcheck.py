@@ -28,6 +28,14 @@ def main():
         while time.time() < end_ts:
             rc, stdout, stderr = ydb_cli(ydb_cmd)
             if rc != 0:
+                if user != '':
+                # Try to connect without password
+                    ydb_cmd_nopass = ydb_cmd.copy()
+                    ydb_cmd_nopass.insert(0,user)
+                    ydb_cmd_nopass.insert(0,'--user')
+                    ydb_cmd_nopass.insert(0,'--no-password')
+                    rc, stdout, stderr = ydb_cli(ydb_cmd_nopass)
+            if rc != 0:
                 module.log(f'healthcheck failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
                 time.sleep(5)
                 continue

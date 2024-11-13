@@ -10,7 +10,7 @@
 #   ansible-playbook ydb_platform.ydb.run_ydbd --extra-vars 'cmd="admin --help"'
 #
 
-- hosts: ydbd_static
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
   become: true
   run_once: true
   roles:

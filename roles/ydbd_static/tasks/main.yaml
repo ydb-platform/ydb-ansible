@@ -27,6 +27,24 @@
   loop:
     - ydb_password
 
+- name: Add the disk formatting script
+  template: src=safe_format.j2 dest={{ ydb_dir }}/home/safe_format.sh mode='755'
+
+- name: Add the static node startup wait script
+  template: src=wait_initial.j2 dest={{ ydb_dir }}/home/wait_initial.sh mode='755'
+
+- name: Add the storage recovery wait script
+  template: src=wait_normal.j2 dest={{ ydb_dir }}/home/wait_normal.sh mode='755'
+
+- name: Add the storage initialization script
+  template: src=init_storage.j2 dest={{ ydb_dir }}/home/init_storage.sh mode='755'
+
+- name: Add the password initialization script
+  template: src=init_password.j2 dest={{ ydb_dir }}/home/init_password.sh mode='755'
+
+- name: Add the database creation script
+  template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode='755'
+
 - name: create static node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
   changed_when: false

@@ -1,0 +1,55 @@
+#! /bin/sh
+# Wait for normal YDB storage condition.
+
+set +e
+set +u
+
+if [ -z "$1" ]; then
+  DB_ENDPOINT=grpcs://`hostname -f`:2135
+else
+  DB_ENDPOINT=grpcs://"$1":2135
+fi
+DB_DOMAIN=/{{ ydb_domain }}
+CAFILE={{ ydb_dir }}/certs/ca.crt
+PASSFILE={{ ydb_dir }}/certs/secret
+
+LD_LIBRARY_PATH={{ ydb_dir }}/lib
+export LD_LIBRARY_PATH
+
+PATH={{ ydb_dir }}/bin:$PATH
+export PATH
+
+set +e
+set -u
+
+USE_ENV_AUTH=0
+if [ -f ${PASSFILE} ]; then
+    USE_ENV_AUTH=1
+    . ${PASSFILE}
+fi
+
+run_health() {
+    if [ ${USE_ENV_AUTH} -eq 1 ]; then
+        ydb --ca-file ${CAFILE} -e ${DB_ENDPOINT} -d ${DB_DOMAIN} \
+            monitoring healthcheck --format json 2>/dev/null
+    else
+        ydb --ca-file ${CAFILE} -e ${DB_ENDPOINT} -d ${DB_DOMAIN} \
+            --user root --no-password monitoring healthcheck --format json 2>/dev/null
+    fi
+}
+
+COUNTER=0
+while true; do
+    V=$( run_health | jq -r '.self_check_result' 2>/dev/null )
+    if [ "$V" = "GOOD" ]; then
+        exit 0
+    fi
+    COUNTER=$((COUNTER + 1))
+    if [ $COUNTER -gt 36 ]; then
+        echo "ERROR: storage did not recover in 3 minutes" >&2
+        exit 1
+    fi
+    sleep 5
+done
+
+# End Of File
