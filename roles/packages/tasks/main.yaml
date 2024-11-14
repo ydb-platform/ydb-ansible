@@ -57,7 +57,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.preferences }}"
-  when: vars_for_distribution_version.preferences and ansible_os_family == 'Debian'  and ydb_tools_install|bool
+  when: vars_for_distribution_version.preferences and ansible_os_family == 'Debian' and ydb_tools_install|bool
   notify:
     - update apt cache
 
