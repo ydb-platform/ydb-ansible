@@ -11,8 +11,15 @@
     state: present
   timeout: 900
 
+- name: install cpufrequtils
+  ansible.builtin.package:
+    pkg: cpufrequtils
+    state: present
+  timeout: 300
+  when: ydb_tools_install|bool
+
 - name: configure unconfigured packages
-  when: ydb_dpkg_configure|bool and ansible_os_family == 'Debian'
+  when: ydb_dpkg_configure|bool and ansible_os_family == 'Debian' and ydb_tools_install|bool
   block:
     - name: check dpkg audit
       shell: dpkg --audit
@@ -40,7 +47,7 @@
     state: present
     update_cache: no
   loop: "{{ vars_for_distribution_version.repositories }}"
-  when: vars_for_distribution_version.repositories and ansible_os_family == 'Debian'
+  when: vars_for_distribution_version.repositories and ansible_os_family == 'Debian' and ydb_tools_install|bool
   notify:
     - update apt cache
 
@@ -50,7 +57,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.preferences }}"
-  when: vars_for_distribution_version.preferences and ansible_os_family == 'Debian'
+  when: vars_for_distribution_version.preferences and ansible_os_family == 'Debian'  and ydb_tools_install|bool
   notify:
     - update apt cache
 
@@ -60,7 +67,7 @@
     dest: "{{ item.dest }}"
     force: true
   loop: "{{ vars_for_distribution_version.configs }}"
-  when: vars_for_distribution_version.configs and ansible_os_family == 'Debian'
+  when: vars_for_distribution_version.configs and ansible_os_family == 'Debian' and ydb_tools_install|bool
   notify:
     - update apt cache
 
@@ -85,7 +92,7 @@
   when: ansible_os_family != 'Debian' and ydb_tools_install|bool
 
 - name: configure systemd-timesyncd
-  when: ansible_os_family == 'Debian'
+  when: ansible_os_family == 'Debian' and ydb_tools_install|bool
   block:
     - name: assert required variables are defined
       ansible.builtin.assert:
@@ -134,4 +141,4 @@
         enabled: true
         state: started
         name: chronyd
-  when: ansible_os_family != 'Debian'
+  when: ansible_os_family != 'Debian' and ydb_tools_install|bool
