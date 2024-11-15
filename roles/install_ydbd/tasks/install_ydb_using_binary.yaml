@@ -10,7 +10,6 @@
   ansible.builtin.copy:
     src: "{{ ydbd_binary }}"
     dest: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
-    attributes: +x
     mode: 0755
     follow: true
     checksum: no
@@ -19,7 +18,6 @@
   ansible.builtin.copy:
     src: "{{ ydb_cli_binary }}"
     dest: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydb"
-    attributes: +x
     mode: 0755
     follow: true
     checksum: no

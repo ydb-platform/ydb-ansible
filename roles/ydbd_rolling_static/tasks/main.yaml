@@ -16,6 +16,16 @@
   retries: 10
   delay: 10
 
+# ydbops_source_bin - source binary for ydbops
+# values: ydbops - Linux x86_64
+#         ydbops_darwin_arm64 - MacOS Silicon M1/..
+#         ydbops_darwin_amd64 - MacOS Intel
+# Default value: ydbops
+- name: "Define ydbops name"
+  set_fact:
+    ydbops_source_bin: ydbops
+
+
 - name: Restart from localhost
   become: false
   when: ydbops_local|bool
@@ -26,6 +36,19 @@
       ansible.builtin.file:
         path: "{{ ansible_config_file | dirname }}/bin/"
         state: directory
+    
+    - name: "Gather"
+      delegate_to: 127.0.0.1
+      ansible.builtin.setup:
+
+    - name: "MacOS"
+      when: ansible_facts.os_family == "Darwin"
+      set_fact:
+        ydbops_source_bin: "{{ ydbops_source_bin  }}_darwin_{{ ansible_facts.architecture }}"
+
+    - name: "Restore facts"
+      ansible.builtin.setup:
+
     - name: install ydbops
       delegate_to: 127.0.0.1
       run_once: true
@@ -49,6 +72,11 @@
   when: not ydbops_local|bool
   become: true
   block:
+
+    - name: "MacOS"
+      when: ansible_facts.os_family == "Darwin"
+      set_fact:
+        ydbops_source_bin: "{{ ydbops_source_bin  }}_darwin_{{ ansible_facts.architecture }}"
 
     - name: install ydbops
       ansible.builtin.get_url:

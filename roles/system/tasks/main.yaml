@@ -28,14 +28,6 @@
       command: "/sbin/modprobe {{ ydb_congestion_module }}"
   when: ydb_congestion_module is defined and ansible_distribution != "RedHat"
 
-- name: Build the kernel settings adjustments file
-  template:
-    src: kernel-settings.j2
-    dest: /etc/sysctl.d/50-ydbd.conf
-    owner: root
-    group: root
-    mode: '0644'
-
 - name: Refresh the current sysctl settings
   command: "/sbin/sysctl --system"
 
@@ -113,12 +105,6 @@
 
 - name: configure cpu governor
   block:
-    - name: install cpufrequtils
-      ansible.builtin.package:
-        pkg: cpufrequtils
-        state: present
-      timeout: 300
-
     - name: use performance cpu governor
       copy:
         content: "GOVERNOR=performance"
