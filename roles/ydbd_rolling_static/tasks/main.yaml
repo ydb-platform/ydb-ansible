@@ -40,11 +40,14 @@
     - name: "Gather"
       delegate_to: 127.0.0.1
       ansible.builtin.setup:
-  
+
     - name: "MacOS"
       when: ansible_facts.os_family == "Darwin"
       set_fact:
         ydbops_source_bin: "{{ ydbops_source_bin  }}_darwin_{{ ansible_facts.architecture }}"
+
+    - name: "Restore facts"
+      ansible.builtin.setup:
 
     - name: install ydbops
       delegate_to: 127.0.0.1
