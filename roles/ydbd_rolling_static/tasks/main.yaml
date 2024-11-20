@@ -30,24 +30,32 @@
   become: false
   when: ydbops_local|bool
   block:
+    - name: Check ydbops is present
+      stat:
+        path: "{{ ansible_config_file | dirname }}/bin/ydbops"
+      register: ydbops_stat 
+
     - name: create bin directory
       delegate_to: 127.0.0.1
       run_once: true
       ansible.builtin.file:
         path: "{{ ansible_config_file | dirname }}/bin/"
         state: directory
+      when: not ydbops_stat.stat.exists|bool
     
     - name: "Gather"
       delegate_to: 127.0.0.1
       ansible.builtin.setup:
+      when: not ydbops_stat.stat.exists|bool
 
     - name: "MacOS"
-      when: ansible_facts.os_family == "Darwin"
+      when: ansible_facts.os_family == "Darwin" and not ydbops_stat.stat.exists|bool
       set_fact:
         ydbops_source_bin: "{{ ydbops_source_bin  }}_darwin_{{ ansible_facts.architecture }}"
 
     - name: "Restore facts"
       ansible.builtin.setup:
+      when: not ydbops_stat.stat.exists|bool
 
     - name: install ydbops
       delegate_to: 127.0.0.1
@@ -56,6 +64,7 @@
         url: "{{ ydbops_release_url }}/{{ ydbops_source_bin }}"
         dest: "{{ ansible_config_file | dirname }}/bin/ydbops"
         mode: 0755
+      when: not ydbops_stat.stat.exists|bool
 
     - name: "run ydbops to gracefully restart the cluster, it takes a long time"
       delegate_to: 127.0.0.1
@@ -67,14 +76,19 @@
         ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }}"
         ca_file: "{{ ydb_tls_dir }}/ca.crt"
         token: "{{ ydb_credentials.token }}"
+        availability_mode: "{{ availability_mode }}"
 
 - name: Restart from static node
   when: not ydbops_local|bool
   become: true
   block:
+    - name: Check ydbops is present
+      stat:
+        path: "{{ ydb_dir }}/bin/ydbops"
+      register: ydbops_stat 
 
     - name: "MacOS"
-      when: ansible_facts.os_family == "Darwin"
+      when: ansible_facts.os_family == "Darwin" and not ydbops_stat.stat.exists|bool
       set_fact:
         ydbops_source_bin: "{{ ydbops_source_bin  }}_darwin_{{ ansible_facts.architecture }}"
 
@@ -83,14 +97,14 @@
         url: "{{ ydbops_release_url }}/{{ ydbops_source_bin }}"
         dest: "{{ ydb_dir }}/bin/ydbops"
         mode: 0755
-      when: ydbops_binary is not defined
+      when: ydbops_binary is not defined and not ydbops_stat.stat.exists|bool
 
     - name: install ydbops
       ansible.builtin.copy:
         src: "{{ ydbops_binary }}"
         dest: "{{ ydb_dir }}/bin/ydbops"
         mode: 0755
-      when: ydbops_binary is defined
+      when: ydbops_binary is defined and not ydbops_stat.stat.exists|bool
 
     - name: "run ydbops to gracefully restart the cluster, it takes a long time"
       run_once: true

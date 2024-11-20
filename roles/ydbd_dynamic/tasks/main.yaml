@@ -71,6 +71,7 @@
     database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
     token: "{{ ydb_credentials.token }}"
   loop: "{{ ydb_dynnodes }}"
+  retries: 5
 
 - name: Delay for 1 mon
   pause:
