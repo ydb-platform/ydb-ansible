@@ -18,12 +18,11 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 29,
+  "id": 43,
   "links": [],
   "panels": [
     {
       "datasource": {
-        "default": false,
         "type": "prometheus",
         "uid": "${ds}"
       },
@@ -79,7 +78,7 @@
               }
             ]
           },
-          "unit": "decbytes"
+          "unit": "ns"
         },
         "overrides": []
       },
@@ -89,18 +88,16 @@
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 2,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "none"
         }
       },
@@ -112,23 +109,35 @@
             "uid": "${ds}"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_OutgoingTraffic{container!=\"ydb-dynamic\"}[$__rate_interval]))",
+          "editorMode": "builder",
+          "expr": "sum(vdisks_DiskTimeAvailable{group=\"$group\"})",
           "fullMetaSearch": false,
+          "hide": false,
           "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "DiskTimeAvailable",
           "range": true,
-          "refId": "A",
+          "refId": "D",
           "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(vdisks_ScrubDiskCost{group=\"$group\"}[$__rate_interval])) + sum(rate(vdisks_UserDiskCost{group=\"$group\"}[$__rate_interval])) + sum(rate(vdisks_InternalDiskCost{group=\"$group\"}[$__rate_interval])) + sum(rate(vdisks_CompactionDiskCost{group=\"$group\"}[$__rate_interval])) + sum(rate(vdisks_DefragDiskCost{group=\"$group\"}[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Total Cost",
+          "range": true,
+          "refId": "A"
         }
       ],
-      "title": "Storage Outgoing Traffic",
+      "title": "DiskTimeAvailable and Cost relation",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "default": false,
         "type": "prometheus",
         "uid": "${ds}"
       },
@@ -184,7 +193,7 @@
               }
             ]
           },
-          "unit": "decbytes"
+          "unit": "ns"
         },
         "overrides": []
       },
@@ -194,18 +203,16 @@
         "x": 12,
         "y": 0
       },
-      "id": 2,
+      "id": 1,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "none"
         }
       },
@@ -217,23 +224,86 @@
             "uid": "${ds}"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_IncomingTraffic{container!=\"ydb-dynamic\"}[$__rate_interval]))",
+          "editorMode": "builder",
+          "expr": "sum(rate(vdisks_UserDiskCost{group=\"$group\"}[$__rate_interval]))",
           "fullMetaSearch": false,
+          "hide": false,
           "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "UserDiskCost",
           "range": true,
-          "refId": "A",
+          "refId": "E",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum(rate(vdisks_InternalDiskCost{group=\"$group\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "legendFormat": "InternalDiskCost",
+          "range": true,
+          "refId": "F",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum(rate(vdisks_CompactionDiskCost{group=\"$group\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "legendFormat": "CompactionDiskCost",
+          "range": true,
+          "refId": "C",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum(rate(vdisks_DefragDiskCost{group=\"$group\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "legendFormat": "DefragDiskCost",
+          "range": true,
+          "refId": "B",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum(rate(vdisks_ScrubDiskCost{group=\"$group\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "legendFormat": "ScrubDiskCost",
+          "range": true,
+          "refId": "D",
           "useBackend": false
         }
       ],
-      "title": "Storage Incoming Traffic",
+      "title": "Cost by source",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "default": false,
         "type": "prometheus",
         "uid": "${ds}"
       },
@@ -269,7 +339,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "none"
+              "mode": "normal"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -289,7 +359,7 @@
               }
             ]
           },
-          "unit": "decbytes"
+          "unit": "ns"
         },
         "overrides": []
       },
@@ -302,15 +372,13 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "none"
         }
       },
@@ -322,23 +390,22 @@
             "uid": "${ds}"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_OutgoingTraffic{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
+          "editorMode": "builder",
+          "expr": "vdisks_DiskTimeAvailable{group=\"$group\"}",
           "fullMetaSearch": false,
+          "hide": false,
           "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{orderNumber}} - {{instance}}",
           "range": true,
-          "refId": "A",
+          "refId": "D",
           "useBackend": false
         }
       ],
-      "title": "Database Outgoing Traffic",
+      "title": "DiskTimeAvailable by VDisk",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "default": false,
         "type": "prometheus",
         "uid": "${ds}"
       },
@@ -394,7 +461,7 @@
               }
             ]
           },
-          "unit": "decbytes"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -407,15 +474,13 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "none"
         }
       },
@@ -427,387 +492,67 @@
             "uid": "${ds}"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by(instance) (rate(interconnect_IncomingTraffic{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval]))",
+          "editorMode": "builder",
+          "expr": "sum(rate(vdisks_BurstDetector_redMs{group=\"$group\"}[$__rate_interval]))",
           "fullMetaSearch": false,
+          "hide": false,
           "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "ScrubDiskCost",
           "range": true,
-          "refId": "A",
+          "refId": "D",
           "useBackend": false
         }
       ],
-      "title": "Database Incoming Traffic",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${ds}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "µs"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${ds}"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "max by(instance) (abs(rate(interconnect_ClockSkewMicrosec{database=\"$database\", container=\"ydb-dynamic\"}[$__rate_interval])))",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "ClockSkewMicrosec between db nodes (max drift)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${ds}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "µs"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 6,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${ds}"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by(le, instance) (rate(interconnect_PingTimeUs_bucket{container!=\"ydb-dynamic\"}[$__rate_interval])))",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "PingTime between storage nodes",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${ds}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "µs"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${ds}"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by(le, instance) (rate(interconnect_PingTimeUs_bucket{database=\"$database\",container=\"ydb-dynamic\"}[$__rate_interval])))",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{instance}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "PingTime between database nodes",
+      "title": "Total burst duration",
       "type": "timeseries"
     }
   ],
   "preload": false,
-  "refresh": "30s",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
+          "text": "000000000",
+          "value": "000000000"
+        },
+        "definition": "label_values(group)",
+        "description": "group",
+        "label": "group",
+        "name": "group",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(group)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
           "text": "Prometheus",
           "value": "prometheus"
         },
-        "includeAll": false,
         "name": "ds",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
         "regex": "",
         "type": "datasource"
-      },
-      {
-        "current": {
-          "text": "/Root/database-k3s-sample",
-          "value": "/Root/database-k3s-sample"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${ds}"
-        },
-        "definition": "label_values(database)",
-        "includeAll": false,
-        "name": "database",
-        "options": [],
-        "query": {
-          "qryType": 1,
-          "query": "label_values(database)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "type": "query"
       }
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Interconnect Dashboard",
-  "uid": "ce1od47yqbxfkc",
-  "version": 26,
+  "title": "Distributed Storage performance metrics by group",
+  "uid": "rd_ds-perf-metrics-by-group",
+  "version": 1,
   "weekStart": ""
 }
