@@ -77,9 +77,9 @@ Overall installation is performed according to the [official instruction](https:
     ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
     ```
 
-1. In the new subdirectory, create the `ansible.cfg` file using the [provided example](examples/common/ansible.cfg).
+1. In the new subdirectory, create the `ansible.cfg` file using the [provided example](https://github.com/ydb-platform/ydb-ansible-examples/blob/main/3-nodes-mirror-3-dc/ansible.cfg).
 1. Create the `files` and `files/certs` directories, and put the TLS keys and certificates there. If the certificates were generated using the provided helper script, the `CA/certs/YYYY-MM-DD_hh-mm-ss` subdirectory should typically be copied as `files/certs`.
-1. Create the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](examples/common/inventory/50-inventory.yaml), [inventory-vault.yaml](examples/common/inventory/99-inventory-vault.yaml).
+1. Create the `inventory/50-inventory.yaml`, `inventory/99-inventory-vault.yaml` files. These files contain the host list, installation configuration and secrets to be used. The example files are provided: [inventory.yaml](https://github.com/ydb-platform/ydb-ansible-examples/blob/main/3-nodes-mirror-3-dc/inventory/50-inventory.yaml), [inventory-vault.yaml](https://github.com/ydb-platform/ydb-ansible-examples/blob/main/3-nodes-mirror-3-dc/inventory/99-inventory-vault.yaml).
 1. Create the [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/vault_managing_passwords.html) password file as `ansible_vault_password_file`, with the password to protect the sensible secrets.
 1. Encrypt `inventory/99-inventory-vault.yaml` with `ansible-vault encrypt inventory/99-inventory-vault.yaml` command. To edit this file use command `ansible-vault edit inventory/99-inventory-vault.yaml`.
 1. Prepare the cluster configuration file [according to the instructions in the documentation](https://ydb.tech/en/docs/deploy/manual/deploy-ydb-on-premises#config), and save as `files/config.yaml`. Omit the `actor_system_config` section - it will be added automatically.
