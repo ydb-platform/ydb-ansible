@@ -220,5 +220,59 @@ graph LR
   jump --22/tcp--> node03
 
 ```
+WARNING: Cluster restart doesn't work with bastion without direct access to FQDN nodes via 2135/tcp.
 
 ## Install with preconfigured host
+1) Prepare binaries:
+    - create docker image for Ansible by using Dockerfile (Internet connection is required, for example: `docker build . -t ydb-ansible`) and save it as a binary file (`docker save ydb-ansible -o ydb-ansible.image`)
+    - download YDB archive or build binaries from sources
+    - download YDB Dstool (or create it from sources)
+    - download YDBOps (https://github.com/ydb-platform/ydbops/releases)
+1) Prepare host for ansible:
+    - install Docker (For example, apt install docker.io)
+    - install YDB docker image (`docker load -i ydb-ansible.image`)
+    - upload binary files (ydb, ydb-dstool, ydbd, ydbops)
+1) Prepare ansible configuration as it is described above (TLS certificates, config, inventory). Required settings in inventory (50-inventory.yaml)
+```
+        ydb_tls_dir: "{{ ansible_config_file | dirname }}/TLS/CA/certs/2024-11-21_09-07-03"
+        ydbd_binary: "{{ ansible_config_file | dirname }}/files/ydbd"
+        ydb_cli_binary: "{{ ansible_config_file | dirname }}/files/ydb"
+        ydb_version: "24.4.1"
+        ydbops_binary: "{{ ansible_config_file | dirname }}/files/ydbops"
+        ydb_dstool_binary: "{{ ansible_config_file | dirname }}/files/ydb-dstool"
+```
+
+HINT: All files paths must be in ansible folder. This folder will be mounted as `/ansible` in docker container.
+
+4) Execute playbook from the ansible folder with configured files:
+```
+sudo docker run -it --rm \
+	-v $(pwd):/ansible \
+	-v /home/ansible/.ssh:/root/.ssh \
+	ydb-ansible ansible-playbook ydb_platform.ydb.initial_setup
+```
+
+### Control hosts by ansilbe via console
+```
+sudo docker run -it --rm \
+        -v $(pwd):/ansible \
+        -v /home/ansible/.ssh:/root/.ssh \
+        ydb-ansible ansible-console ydb
+```
+
+### Use different ansible collection
+You can download another version of YDB Ansible collection or get official and chagne it in your own way.
+
+```
+git clone https://github.com/ydb-platform/ydb-ansible /home/ansible/ydb-ansible
+cd /home/ansible/ydb-ansible
+git checkout SOMEBRANCH
+```
+
+```
+sudo docker run -it --rm \
+        -v $(pwd):/ansible \
+        -v /home/ansible/.ssh:/root/.ssh \
+        -v /home/ansible/ydb-ansible:/root/.ansible/collections/ansible_collections/ydb_platform/ydb \
+        ydb-ansible ansible-console ydb
+```
