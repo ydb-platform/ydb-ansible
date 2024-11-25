@@ -87,7 +87,7 @@ Overall installation is performed according to the [official instruction](https:
 1. Deploy the YDB cluster by running the playbook with the following command:
 
     ```bash
-    ansible-playbook setup_playbook.yaml
+    ansible-playbook ydb_platform.ydb.initial_setup
     ```
 
 ### Updating the cluster configuration files
@@ -145,7 +145,31 @@ Notes:
 1. Rolling restart is performed for YDB storage nodes, node by node, checking for the YDB storage cluster to become healthy after the restart of each node.
 1. Rolling restart is performed for YDB database nodes, server by server, restarting all nodes sitting in the single server at a time, and waiting for the specified number of seconds after each server's nodes restart.
 
-# Supported operation system
+## List of playbooks
+- ydb_platform.ydb.initial_setup - Install cluster from scratch
+- ydb_platform.ydb.binaries_all - Install YDB binaries to all nodes
+- ydb_platform.ydb.binaries_static - Install YDB binaries to all static/storage nodes
+- ydb_platform.ydb.binaries_dynamic - Install YDB binaries to all dynamic nodes
+- ydb_platform.ydb.restart - Restart static (weak mode) and after that dynamic nodes
+- ydb_platform.ydb.rolling_restart_static - Restart static nodes in weak mode
+- ydb_platform.ydb.rolling_restart_dynamic - Restart dynamic nodes
+
+```mermaid
+graph TD;
+   binaries_all --all hosts--> install_ydb 
+   binaries_static --static--> install_ydb 
+   binaries_dynamic --dynamic--> install_ydb
+   restart --1--> rolling_restart_static
+   restart --2--> rolling_restart_dynamic
+   subgraph install_ydb
+    install_from_archive(use local archive with binaries)
+    install_from_source_code(make it from source code)
+    install_from_version(download from official site)
+    install_from_binary(use local binaries)
+   end
+```
+
+## Supported operation system
 
 - ydb_platform.ydb.initial_setup - Install cluster
     - Ubuntu 22.04, 24.04
@@ -154,3 +178,47 @@ Notes:
     - AlmaLinux 8,9
     - RedHat 9
     - RedOS 7
+
+# Install in isolated mode
+Isolated mode - situation when hosts are isolated from Internet (intranet, secure environment). There two possible way to install:
+1. Use bastion / jump host
+2. Use internal preconfigured host
+
+## Install with bastion
+The procdere of install is just the same like common install. But there're some limitations and recomendations.
+
+- Required settings in inventory (50-inventory.yaml)
+```
+    ansible_user: bastion_username
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o User=node_username -A -J bastion_username@{{ lookup('env','JUMP_IP') }}"
+    # This key must work with all nodes (bastion and YDB hosts)
+    # Or you must specify for hosts specific private key in ansible_ssh_common_args
+    ansible_ssh_private_key_file: "~/.ssh/id_rsa"
+```
+- YDB Dstool must be installed from binary (50-inventory.yaml)
+```
+    ydb_dstool_binary: "{{ ansible_config_file | dirname }}/files/ydb-dstool"
+```
+
+
+```mermaid
+
+graph LR
+  subgraph host
+    ansible
+    ydbops
+  end
+  subgraph Internal Network
+    jump
+    node01
+    node02
+    node03
+  end
+  host --22/tcp--> jump
+  jump --22/tcp--> node01
+  jump --22/tcp--> node02
+  jump --22/tcp--> node03
+
+```
+
+## Install with preconfigured host
