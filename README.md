@@ -185,7 +185,7 @@ Isolated mode - situation when hosts are isolated from Internet (intranet, secur
 2. Use internal preconfigured host
 
 ## Install with bastion
-The procdere of install is just the same like common install. But there're some limitations and recomendations.
+The procedure of install is just the same like common install. But there're some limitations and recomendations.
 
 - Required settings in inventory (50-inventory.yaml)
 ```
@@ -261,7 +261,7 @@ sudo docker run -it --rm \
 ```
 
 ### Use different ansible collection
-You can download another version of YDB Ansible collection or get official and chagne it in your own way.
+You can download another version of YDB Ansible collection or get official archive and change it in your own way.
 
 ```
 git clone https://github.com/ydb-platform/ydb-ansible /home/ansible/ydb-ansible
