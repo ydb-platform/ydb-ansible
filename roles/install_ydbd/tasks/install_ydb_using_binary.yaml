@@ -13,6 +13,7 @@
     mode: 0755
     follow: true
     checksum: true
+  when: ydbd_binary_copy_skip is not defined or not ydbd_binary_copy_skip|bool
 
 - name: copy YDB cli binary file
   ansible.builtin.copy:
