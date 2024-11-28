@@ -1,3 +1,4 @@
 #! /bin/sh
 
-ansible-playbook -b -i hosts -f 20 unified-agent.yaml
+. ./run-active-options.sh
+${RUN_ANSIBLE_PARALLEL} unified-agent.yaml
