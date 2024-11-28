@@ -3,23 +3,23 @@
 #   ansible_user=someuser
 
 [ydbd_static]
-b-ycydb-s1 ydb_front=u-ycydb-s1 ydb_back=b-ycydb-s1
-b-ycydb-s2 ydb_front=u-ycydb-s2 ydb_back=b-ycydb-s2
-b-ycydb-s3 ydb_front=u-ycydb-s3 ydb_back=b-ycydb-s3
-b-ycydb-s4 ydb_front=u-ycydb-s4 ydb_back=b-ycydb-s4
-b-ycydb-s5 ydb_front=u-ycydb-s5 ydb_back=b-ycydb-s5
-b-ycydb-s6 ydb_front=u-ycydb-s6 ydb_back=b-ycydb-s6
-b-ycydb-s7 ydb_front=u-ycydb-s7 ydb_back=b-ycydb-s7
-b-ycydb-s8 ydb_front=u-ycydb-s8 ydb_back=b-ycydb-s8
-b-ycydb-s9 ydb_front=u-ycydb-s9 ydb_back=b-ycydb-s9
+b-ycydb-s1 ydb_front=u-ycydb-s1 ydb_back_number=1
+b-ycydb-s2 ydb_front=u-ycydb-s2 ydb_back_number=2
+b-ycydb-s3 ydb_front=u-ycydb-s3 ydb_back_number=3
+b-ycydb-s4 ydb_front=u-ycydb-s4 ydb_back_number=4
+b-ycydb-s5 ydb_front=u-ycydb-s5 ydb_back_number=5
+b-ycydb-s6 ydb_front=u-ycydb-s6 ydb_back_number=6
+b-ycydb-s7 ydb_front=u-ycydb-s7 ydb_back_number=7
+b-ycydb-s8 ydb_front=u-ycydb-s8 ydb_back_number=8
+b-ycydb-s9 ydb_front=u-ycydb-s9 ydb_back_number=9
 
 [ydbd_dynamic]
-b-ycydb-d1 ydb_front=u-ycydb-d1 ydb_back=b-ycydb-d1 ydb_node_dc=zone-a ydb_node_rack=1 ydb_node_body=1
-b-ycydb-d2 ydb_front=u-ycydb-d2 ydb_back=b-ycydb-d2 ydb_node_dc=zone-b ydb_node_rack=1 ydb_node_body=1
-b-ycydb-d3 ydb_front=u-ycydb-d3 ydb_back=b-ycydb-d3 ydb_node_dc=zone-c ydb_node_rack=1 ydb_node_body=1
-b-ycydb-d4 ydb_front=u-ycydb-d4 ydb_back=b-ycydb-d4 ydb_node_dc=zone-a ydb_node_rack=2 ydb_node_body=1
-b-ycydb-d5 ydb_front=u-ycydb-d5 ydb_back=b-ycydb-d5 ydb_node_dc=zone-b ydb_node_rack=2 ydb_node_body=1
-b-ycydb-d6 ydb_front=u-ycydb-d6 ydb_back=b-ycydb-d6 ydb_node_dc=zone-c ydb_node_rack=2 ydb_node_body=1
-b-ycydb-d7 ydb_front=u-ycydb-d7 ydb_back=b-ycydb-d7 ydb_node_dc=zone-a ydb_node_rack=3 ydb_node_body=1
-b-ycydb-d8 ydb_front=u-ycydb-d8 ydb_back=b-ycydb-d8 ydb_node_dc=zone-b ydb_node_rack=3 ydb_node_body=1
-b-ycydb-d9 ydb_front=u-ycydb-d9 ydb_back=b-ycydb-d9 ydb_node_dc=zone-c ydb_node_rack=3 ydb_node_body=1
+b-ycydb-d1 ydb_front=u-ycydb-d1 ydb_back_name=b-ycydb-d1 ydb_node_dc=zone-a ydb_node_rack=1 ydb_node_body=1
+b-ycydb-d2 ydb_front=u-ycydb-d2 ydb_back_name=b-ycydb-d2 ydb_node_dc=zone-b ydb_node_rack=1 ydb_node_body=1
+b-ycydb-d3 ydb_front=u-ycydb-d3 ydb_back_name=b-ycydb-d3 ydb_node_dc=zone-c ydb_node_rack=1 ydb_node_body=1
+b-ycydb-d4 ydb_front=u-ycydb-d4 ydb_back_name=b-ycydb-d4 ydb_node_dc=zone-a ydb_node_rack=2 ydb_node_body=1
+b-ycydb-d5 ydb_front=u-ycydb-d5 ydb_back_name=b-ycydb-d5 ydb_node_dc=zone-b ydb_node_rack=2 ydb_node_body=1
+b-ycydb-d6 ydb_front=u-ycydb-d6 ydb_back_name=b-ycydb-d6 ydb_node_dc=zone-c ydb_node_rack=2 ydb_node_body=1
+b-ycydb-d7 ydb_front=u-ycydb-d7 ydb_back_name=b-ycydb-d7 ydb_node_dc=zone-a ydb_node_rack=3 ydb_node_body=1
+b-ycydb-d8 ydb_front=u-ycydb-d8 ydb_back_name=b-ycydb-d8 ydb_node_dc=zone-b ydb_node_rack=3 ydb_node_body=1
+b-ycydb-d9 ydb_front=u-ycydb-d9 ydb_back_name=b-ycydb-d9 ydb_node_dc=zone-c ydb_node_rack=3 ydb_node_body=1
