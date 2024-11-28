@@ -70,6 +70,17 @@ domains_config:
     - "root"
     - "ydb-admin1@ldap"
     - "CN=ydb-admins,OU=demo1,DC=ydb,DC=demo@ldap"
+    register_dynamic_node_allowed_sids:
+    - "root@builtin" # required, does not add any real extra permissions
+    - "registerNode@cert"
+
+client_certificate_authorization:
+  request_client_certificate: true
+  client_certificate_definitions:
+    - member_groups: ["registerNode@cert"]
+      subject_terms:
+      - short_name: "O"
+        values: ["YDB Self-Signed Authority"]
 
 blob_storage_config:         # configuration of static blobstorage group.
                              # YDB uses this group to store system tablets' data, like SchemeShard

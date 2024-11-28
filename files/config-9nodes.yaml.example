@@ -15,51 +15,51 @@ hosts:
 - host: ycydb-s2
   host_config_id: 1
   walle_location:
-    body: 2
-    data_center: 'zone-a'
-    rack: '2'
+    body: 1
+    data_center: 'zone-b'
+    rack: '1'
 - host: ycydb-s3
   host_config_id: 1
   walle_location:
-    body: 3
-    data_center: 'zone-a'
-    rack: '3'
+    body: 1
+    data_center: 'zone-c'
+    rack: '1'
 - host: ycydb-s4
   host_config_id: 1
   walle_location:
-    body: 4
-    data_center: 'zone-b'
-    rack: '4'
+    body: 1
+    data_center: 'zone-a'
+    rack: '2'
 - host: ycydb-s5
   host_config_id: 1
   walle_location:
-    body: 5
+    body: 1
     data_center: 'zone-b'
-    rack: '5'
+    rack: '2'
 - host: ycydb-s6
   host_config_id: 1
   walle_location:
-    body: 6
-    data_center: 'zone-b'
-    rack: '6'
+    body: 1
+    data_center: 'zone-c'
+    rack: '2'
 - host: ycydb-s7
   host_config_id: 1
   walle_location:
-    body: 7
-    data_center: 'zone-c'
-    rack: '7'
+    body: 1
+    data_center: 'zone-a'
+    rack: '3'
 - host: ycydb-s8
   host_config_id: 1
   walle_location:
-    body: 8
-    data_center: 'zone-c'
-    rack: '8'
+    body: 1
+    data_center: 'zone-b'
+    rack: '3'
 - host: ycydb-s9
   host_config_id: 1
   walle_location:
-    body: 9
+    body: 1
     data_center: 'zone-c'
-    rack: '9'
+    rack: '3'
 domains_config:
   domain:
   - name: Domain0
@@ -92,8 +92,18 @@ domains_config:
     - "root"
     - "ADMINS"
     - "DATABASE-ADMINS"
-table_service_config:
-  sql_version: 1
+    register_dynamic_node_allowed_sids:
+    - "root@builtin" # required, does not add any real extra permissions
+    - "registerNode@cert"
+
+client_certificate_authorization:
+  request_client_certificate: true
+  client_certificate_definitions:
+    - member_groups: ["registerNode@cert"]
+      subject_terms:
+      - short_name: "O"
+        values: ["YDB Self-Signed Authority"]
+
 blob_storage_config:
   service_set:
     groups:
@@ -105,16 +115,16 @@ blob_storage_config:
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s2
+          - node_id: ycydb-s4
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s3
+          - node_id: ycydb-s7
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s4
+          - node_id: ycydb-s2
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
@@ -122,22 +132,23 @@ blob_storage_config:
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s6
+          - node_id: ycydb-s8
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s7
+          - node_id: ycydb-s3
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s8
+          - node_id: ycydb-s6
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
           - node_id: ycydb-s9
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
+
 channel_profile_config:
   profile:
   - channel:
@@ -151,24 +162,33 @@ channel_profile_config:
       pdisk_category: 1
       storage_pool_kind: ssd
     profile_id: 0
+
 interconnect_config:
     start_tcp: true
     encryption_mode: OPTIONAL
     path_to_certificate_file: "/opt/ydb/certs/node.crt"
     path_to_private_key_file: "/opt/ydb/certs/node.key"
     path_to_ca_file: "/opt/ydb/certs/ca.crt"
+
 grpc_config:
-    cert: "/opt/ydb/certs/node.crt"
-    key: "/opt/ydb/certs/node.key"
-    ca: "/opt/ydb/certs/ca.crt"
+    worker_threads: 2
+    workers_per_completion_queue: 1
+    handlers_per_completion_queue: 1000
+    grpc_proxy_count: 2
     services_enabled:
     - legacy
+
 bootstrap_config:
   shared_cache_config: {memory_limit: '4294967296'}
+
+table_service_config:
+  sql_version: 1
+
 audit_config:
   file_backend:
     format: JSON
-    file_path: "ydb-audit.log"
+    file_path: "ydb-audit.log" # Relative path should be used
+
 # Actor system config is appended to the configuration file by Ansible task.
 # Provided here in the commented form for reference
 #actor_system_config:
