@@ -1,68 +1,105 @@
 storage_config_generation: 0
 static_erasure: mirror-3-dc
+
 host_configs:
 - drive:
   - path: /dev/disk/by-partlabel/ydb_disk_1
     type: SSD
+  - path: /dev/disk/by-partlabel/ydb_disk_2
+    type: SSD
+  - path: /dev/disk/by-partlabel/ydb_disk_3
+    type: SSD
   host_config_id: 1
+
 hosts:
-- host: ycydb-s1
+- host: b-ydbd-1.back.private
+  node_id: 1
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-a'
     rack: '1'
-- host: ycydb-s2
+- host: b-ydbd-2.back.private
+  node_id: 2
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-b'
+    rack: '1'
+- host: b-ydbd-3.back.private
+  node_id: 3
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-c'
+    rack: '1'
+- host: b-ydbd-4.back.private
+  node_id: 4
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-a'
+    rack: '2'
+- host: b-ydbd-5.back.private
+  node_id: 5
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-b'
+    rack: '2'
+- host: b-ydbd-6.back.private
+  node_id: 6
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-c'
+    rack: '2'
+- host: b-ydbd-7.back.private
+  node_id: 7
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-a'
+    rack: '3'
+- host: b-ydbd-8.back.private
+  node_id: 8
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-b'
+    rack: '3'
+- host: b-ydbd-9.back.private
+  node_id: 9
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-c'
+    rack: '3'
+- host: b-ydbd-10.back.private
+  node_id: 10
   host_config_id: 1
   walle_location:
     body: 2
     data_center: 'zone-a'
-    rack: '2'
-- host: ycydb-s3
+    rack: '1'
+- host: b-ydbd-11.back.private
+  node_id: 11
   host_config_id: 1
   walle_location:
-    body: 3
-    data_center: 'zone-a'
-    rack: '3'
-- host: ycydb-s4
-  host_config_id: 1
-  walle_location:
-    body: 4
+    body: 2
     data_center: 'zone-b'
-    rack: '4'
-- host: ycydb-s5
+    rack: '1'
+- host: b-ydbd-12.back.private
+  node_id: 12
   host_config_id: 1
   walle_location:
-    body: 5
-    data_center: 'zone-b'
-    rack: '5'
-- host: ycydb-s6
-  host_config_id: 1
-  walle_location:
-    body: 6
-    data_center: 'zone-b'
-    rack: '6'
-- host: ycydb-s7
-  host_config_id: 1
-  walle_location:
-    body: 7
+    body: 2
     data_center: 'zone-c'
-    rack: '7'
-- host: ycydb-s8
-  host_config_id: 1
-  walle_location:
-    body: 8
-    data_center: 'zone-c'
-    rack: '8'
-- host: ycydb-s9
-  host_config_id: 1
-  walle_location:
-    body: 9
-    data_center: 'zone-c'
-    rack: '9'
+    rack: '1'
+
 domains_config:
   domain:
-  - name: Domain0
+  - name: cluster1
     storage_pool_types:
     - kind: ssd
       pool_config:
@@ -92,8 +129,18 @@ domains_config:
     - "root"
     - "ADMINS"
     - "DATABASE-ADMINS"
-table_service_config:
-  sql_version: 1
+    register_dynamic_node_allowed_sids:
+    - "root@builtin" # required, does not add any real extra permissions
+    - "registerNode@cert"
+
+client_certificate_authorization:
+  request_client_certificate: true
+  client_certificate_definitions:
+    - member_groups: ["registerNode@cert"]
+      subject_terms:
+      - short_name: "O"
+        values: ["YDB Self-Signed Authority"]
+
 blob_storage_config:
   service_set:
     groups:
@@ -101,43 +148,44 @@ blob_storage_config:
       rings:
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s1
+          - node_id: b-ydbd-1.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s2
+          - node_id: b-ydbd-4.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s3
+          - node_id: b-ydbd-7.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s4
+          - node_id: b-ydbd-2.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s5
+          - node_id: b-ydbd-5.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s6
+          - node_id: b-ydbd-8.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s7
+          - node_id: b-ydbd-3.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s8
+          - node_id: b-ydbd-6.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s9
+          - node_id: b-ydbd-9.back.private
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
+
 channel_profile_config:
   profile:
   - channel:
@@ -151,24 +199,65 @@ channel_profile_config:
       pdisk_category: 1
       storage_pool_kind: ssd
     profile_id: 0
+
 interconnect_config:
     start_tcp: true
     encryption_mode: OPTIONAL
     path_to_certificate_file: "/opt/ydb/certs/node.crt"
     path_to_private_key_file: "/opt/ydb/certs/node.key"
     path_to_ca_file: "/opt/ydb/certs/ca.crt"
+
 grpc_config:
     cert: "/opt/ydb/certs/node.crt"
     key: "/opt/ydb/certs/node.key"
     ca: "/opt/ydb/certs/ca.crt"
+    worker_threads: 2
+    workers_per_completion_queue: 1
+    handlers_per_completion_queue: 1000
+    grpc_proxy_count: 2
     services_enabled:
     - legacy
+
+tracing_config:
+  backend:
+    opentelemetry:
+      collector_url: grpc://gw0:4317
+      service_name: ydb
+  external_throttling:
+    - max_traces_per_minute: 10
+
+table_service_config:
+  sql_version: 1
+  index_auto_choose_mode: MAX_USED_PREFIX
+  enable_kqp_data_query_stream_lookup: true
+  enable_kqp_data_query_stream_idx_lookup_join: true
+  resource_manager:
+    kqp_pattern_cache_compiled_capacity_bytes: 524288000
+    kqp_pattern_cache_capacity_bytes: 524288000
+
+feature_flags:
+  enable_views: true
+  enable_data_shard_volatile_transactions: true
+  enable_grpc_audit: false
+  enable_get_node_labels: false
+
 bootstrap_config:
-  shared_cache_config: {memory_limit: '4294967296'}
+  shared_cache_config: {memory_limit: '51539607552'}
+
+resource_broker_config:
+  queues:
+  - name: queue_restore
+    limit:
+      cpu: 8
+  - name: queue_backup
+    limit:
+      cpu: 8
+
 audit_config:
   file_backend:
     format: JSON
     file_path: "ydb-audit.log"
+
 # Actor system config is appended to the configuration file by Ansible task.
 # Provided here in the commented form for reference
 #actor_system_config:

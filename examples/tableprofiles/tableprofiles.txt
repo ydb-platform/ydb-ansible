@@ -1,0 +1,66 @@
+ConfigureRequest {
+
+  Actions {
+    RemoveConfigItems {
+      CookieFilter {
+        Cookies: "generic-table-profile-00"
+      }
+    }
+  }
+
+  Actions {
+    AddConfigItem {
+      ConfigItem {
+        Cookie: "generic-table-profile-00"
+        Config {
+          TableProfilesConfig {
+            TableProfiles {
+              Name: "default"
+              CompactionPolicy: "default"
+              ExecutionPolicy: "default"
+              PartitioningPolicy: "default"
+              StoragePolicy: "default"
+              ReplicationPolicy: "default"
+              CachingPolicy: "default"
+            }
+            CompactionPolicies {
+              Name: "default"
+            }
+            ExecutionPolicies {
+              Name: "default"
+            }
+            PartitioningPolicies {
+              Name: "default"
+              AutoSplit: true
+              AutoMerge: true
+              SizeToSplit: 2147483648
+            }
+            StoragePolicies {
+              Name: "default"
+              ColumnFamilies {
+                StorageConfig {
+                  SysLog {
+                    PreferredPoolKind: "ssd"
+                  }
+                  Log {
+                    PreferredPoolKind: "ssd"
+                  }
+                  Data {
+                    PreferredPoolKind: "ssd"
+                  }
+                }
+              }
+            }
+            ReplicationPolicies {
+              Name: "default"
+            }
+            CachingPolicies {
+              Name: "default"
+            }
+          }
+        }
+      }
+    }
+  }
+
+}

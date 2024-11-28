@@ -19,6 +19,12 @@ WorkingDirectory={{ ydb_dir }}/audit/{{ ydb_dbname }}-{{ item.instance }}
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server --tenant /{{ ydb_domain }}/{{ ydb_dbname }} --tcp \
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-dynamic.yaml  \
+{%- if ydb_back_name is defined %}
+    --node-host {{ ydb_back_name }} \
+{%- endif %}
+{%- if ydb_front is defined %}
+    --grpc-public-host {{ ydb_front }} \
+{%- endif %}
 {%- if 'offset' in item %}
     --grpcs-port {{ 2136 + item.offset }}  --ic-port {{ 19002 + item.offset }} --mon-port {{ 8766 + item.offset }}  \
 {%- else %}

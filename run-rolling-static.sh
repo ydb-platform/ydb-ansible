@@ -1,3 +1,4 @@
 #! /bin/sh
 
-ansible-playbook -b -i hosts rolling-static.yaml
+. ./run-active-options.sh
+${RUN_ANSIBLE} rolling-static.yaml

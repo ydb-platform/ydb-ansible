@@ -9,25 +9,30 @@ host_configs: # the list of available host configurations in the cluster.
   - path: /dev/disk/by-partlabel/ydb_disk_3
     type: SSD
   host_config_id: 1
+
 hosts:
 - host: zeit-1
+  node_id: 1
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-a'
     rack: '1'
 - host: zeit-2
+  node_id: 2
   host_config_id: 1
   walle_location:
     body: 2
     data_center: 'zone-b'
     rack: '2'
 - host: zeit-3
+  node_id: 3
   host_config_id: 1
   walle_location:
     body: 3
     data_center: 'zone-c'
     rack: '3'
+
 domains_config:
   # There can be only one root domain in a cluster. Domain name prefixes all scheme objects names, e.g. full name of a table table1 in database db1.
   # in a cluster with domains_config.domain.name parameter set to Root would be equal to /Root/db1/table1
@@ -70,6 +75,17 @@ domains_config:
     - "root"
     - "ydb-admin1@ldap"
     - "CN=ydb-admins,OU=demo1,DC=ydb,DC=demo@ldap"
+    register_dynamic_node_allowed_sids:
+    - "root@builtin" # required, does not add any real extra permissions
+    - "registerNode@cert"
+
+client_certificate_authorization:
+  request_client_certificate: true
+  client_certificate_definitions:
+    - member_groups: ["registerNode@cert"]
+      subject_terms:
+      - short_name: "O"
+        values: ["YDB Self-Signed Authority"]
 
 blob_storage_config:         # configuration of static blobstorage group.
                              # YDB uses this group to store system tablets' data, like SchemeShard
@@ -79,41 +95,41 @@ blob_storage_config:         # configuration of static blobstorage group.
       rings:          # in mirror-3-dc must have exactly 3 rings or availability zones
       - fail_domains:  # first record: fail domains of the static group describe where each vdisk of the static group should be located.
         - vdisk_locations:
-          - node_id: zeit-1
+          - node_id: 1
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: zeit-1
+          - node_id: 1
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_2
         - vdisk_locations:
-          - node_id: zeit-1
+          - node_id: 1
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_3
       - fail_domains: # second ring: fail domains of the static group describe where each vdisk of the static group should be located.
         - vdisk_locations:
-          - node_id: zeit-2
+          - node_id: 2
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: zeit-2
+          - node_id: 2
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_2
         - vdisk_locations:
-          - node_id: zeit-2
+          - node_id: 2
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_3
       - fail_domains: # third ring: fail domains of the static group describe where each vdisk of the static group should be located.
         - vdisk_locations:
-          - node_id: zeit-3
+          - node_id: 3
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: zeit-3
+          - node_id: 3
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_2
         - vdisk_locations:
-          - node_id: zeit-3
+          - node_id: 3
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_3
 

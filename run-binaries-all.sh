@@ -1,3 +1,4 @@
 #! /bin/sh
 
-ansible-playbook -b -i hosts -f 20 binaries-all.yaml
+. ./run-active-options.sh
+${RUN_ANSIBLE_PARALLEL} binaries-all.yaml

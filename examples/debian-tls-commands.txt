@@ -1,0 +1,2 @@
+sudo cp -v dc2016-ca.pem /usr/local/share/ca-certificates/dc2016-ca.crt
+sudo update-ca-certificates

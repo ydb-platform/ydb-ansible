@@ -3,19 +3,19 @@
 ansible_python_interpreter: /usr/bin/python3
 
 # YDB cluster domain (aka cluster identifier), Root in the documentation
-ydb_domain: Domain0
+ydb_domain: cluster1
 
 # YDB software installation directory
 ydb_dir: /opt/ydb
 
 # Source directory with TLS keys and certificares
-ydb_tls_dir: ./tls/CA/certs/2023-03-09_16-49-39
-
-# YDB server software archive
-ydb_archive: yasubd-24.1.18.2-linux-amd64.tar.gz
+ydb_tls_dir: ../tls
 
 # YDB server software release
-ydb_version: 24.1.18.2
+ydb_version: 24.3.13.4
+
+# YDB server software archive
+ydb_archive: "../yasubd-{{ ydb_version }}-linux-amd64.tar.xz"
 
 # Extra options passed to tar for unpack, typically "--strip-component=1"
 ydb_unpack_options: "--strip-component=1"
@@ -28,14 +28,14 @@ ydb_dbname: testdb
 ydb_pool_kind: ssd
 
 # Default number of groups per newly created database
-ydb_default_groups: 9
+ydb_default_groups: 26
 
 # Name of YDB cluster configuration file
-ydb_config: config.yaml
+ydb_config: cluster-config.yaml
 
 # Number of cores for static and dynamic nodes
-ydb_cores_static: 31
-ydb_cores_dynamic: 14
+ydb_cores_static: 15
+ydb_cores_dynamic: 22
 
 # YDB physical disk device names and labels for static nodes
 ydb_disks:
@@ -43,12 +43,14 @@ ydb_disks:
       label: ydb_disk_1
     - name: /dev/vdc
       label: ydb_disk_2
+    - name: /dev/vdd
+      label: ydb_disk_3
 
 # The list of exactly three node brokers (static nodes)
 ydb_brokers:
-  - ycydb-s1
-  - ycydb-s2
-  - ycydb-s3
+  - b-ydbd-1.back.private
+  - b-ydbd-2.back.private
+  - b-ydbd-3.back.private
 
 # The list of dynnodes to run on each host
 #  instance is the service suffix
@@ -56,11 +58,10 @@ ydb_brokers:
 #  affinity is optional, and is the vCPU mask to run the service
 # To check: for pid in `pgrep ydbd`; do sudo taskset -cp $pid; done
 ydb_dynnodes:
-  - { instance: 'a', offset: 0, affinity: '32-47' }
-#  - { instance: 'b', offset: 1, affinity: '48-63' }
+  - { instance: 'a', offset: 0 }
 
 # Optional parameter defining the CPU affinity of static nodes' services
-ydb_affinity_static: '0-31'
+# ydb_affinity_static: '0-10'
 
 # Extra sleep time to allow dynamic nodes to settle up
 dynnode_restart_sleep_seconds: 10
