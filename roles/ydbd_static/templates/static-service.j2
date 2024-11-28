@@ -20,6 +20,12 @@ Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server --node static --tcp \
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-static.yaml \
     --grpcs-port 2135 --ic-port 19001 --mon-port 8765 \
+{%- if ydb_back is defined %}
+    --node-name {{ ydb_back }} \
+{%- endif %}
+{%- if ydb_front is defined %}
+    --grpc-public-host {{ ydb_front }} \
+{%- endif %}
     --ca {{ ydb_dir }}/certs/ca.crt --grpc-ca {{ ydb_dir }}/certs/ca.crt \
     --grpc-cert {{ ydb_dir }}/certs/node.crt --grpc-key {{ ydb_dir }}/certs/node.key \
     --mon-cert {{ ydb_dir }}/certs/web.pem
