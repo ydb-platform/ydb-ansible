@@ -1,0 +1,6 @@
+sudo cp -v dc2016-ca.pem /etc/pki/ca-trust/source/anchors/dc2016-ca.crt
+sudo update-ca-trust extract
+
+for x in `seq 1 15`; do
+  ssh ydbd-${x}.front.private "cd /etc/ssl/certs/ && sudo ln -sv ca-bundle.crt ca-certificates.crt"
+done
