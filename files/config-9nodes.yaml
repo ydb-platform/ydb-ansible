@@ -7,54 +7,63 @@ host_configs:
   host_config_id: 1
 hosts:
 - host: ycydb-s1
+  node_id: 1
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-a'
     rack: '1'
 - host: ycydb-s2
+  node_id: 2
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-b'
     rack: '1'
 - host: ycydb-s3
+  node_id: 3
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-c'
     rack: '1'
 - host: ycydb-s4
+  node_id: 4
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-a'
     rack: '2'
 - host: ycydb-s5
+  node_id: 5
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-b'
     rack: '2'
 - host: ycydb-s6
+  node_id: 6
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-c'
     rack: '2'
 - host: ycydb-s7
+  node_id: 7
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-a'
     rack: '3'
 - host: ycydb-s8
+  node_id: 8
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-b'
     rack: '3'
 - host: ycydb-s9
+  node_id: 9
   host_config_id: 1
   walle_location:
     body: 1
@@ -111,41 +120,41 @@ blob_storage_config:
       rings:
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s1
+          - node_id: 1
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s4
+          - node_id: 4
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s7
-            pdisk_category: SSD
-            path: /dev/disk/by-partlabel/ydb_disk_1
-      - fail_domains:
-        - vdisk_locations:
-          - node_id: ycydb-s2
-            pdisk_category: SSD
-            path: /dev/disk/by-partlabel/ydb_disk_1
-        - vdisk_locations:
-          - node_id: ycydb-s5
-            pdisk_category: SSD
-            path: /dev/disk/by-partlabel/ydb_disk_1
-        - vdisk_locations:
-          - node_id: ycydb-s8
+          - node_id: 7
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
       - fail_domains:
         - vdisk_locations:
-          - node_id: ycydb-s3
+          - node_id: 2
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s6
+          - node_id: 5
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
         - vdisk_locations:
-          - node_id: ycydb-s9
+          - node_id: 8
+            pdisk_category: SSD
+            path: /dev/disk/by-partlabel/ydb_disk_1
+      - fail_domains:
+        - vdisk_locations:
+          - node_id: 3
+            pdisk_category: SSD
+            path: /dev/disk/by-partlabel/ydb_disk_1
+        - vdisk_locations:
+          - node_id: 6
+            pdisk_category: SSD
+            path: /dev/disk/by-partlabel/ydb_disk_1
+        - vdisk_locations:
+          - node_id: 9
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_1
 

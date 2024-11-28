@@ -12,18 +12,21 @@ host_configs: # the list of available host configurations in the cluster.
 
 hosts:
 - host: ycydb-s1
+  node_id: 1
   host_config_id: 1
   walle_location:
     body: 1
     data_center: 'zone-a'
     rack: '1'
 - host: ycydb-s2
+  node_id: 2
   host_config_id: 1
   walle_location:
     body: 2
     data_center: 'zone-b'
     rack: '2'
 - host: ycydb-s3
+  node_id: 3
   host_config_id: 1
   walle_location:
     body: 3
