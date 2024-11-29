@@ -1,45 +1,63 @@
-FROM cr.yandex/mirror/ubuntu:22.04
+# pull base image
+FROM alpine:3.19
 
-ENV DEBIAN_FRONTEND noninteractive
+ARG ANSIBLE_CORE_VERSION
+ARG ANSIBLE_VERSION
+ARG ANSIBLE_LINT
+ENV ANSIBLE_CORE_VERSION "2.17.4"
+ENV ANSIBLE_VERSION "10.4.0"
+ENV ANSIBLE_LINT "24.9.2"
 
-RUN apt-get -yqq update && \
-    apt-get -yqq upgrade && \
-    apt-get -yqq install \
-    openssh-client \
-    rsync \
-    dnsutils telnet netcat-openbsd iputils-ping \
-    tcpdump strace net-tools \
-    lsof tmux \
-    jq vim less \
-    psmisc traceroute \
-    iftop dstat \
-    sysstat fping \
-    htop atop \
-    socat iproute2 \
-    curl wget \
-    python3-pip \
-    sshpass \
-    git \
-    locales
+# Labels.
+LABEL maintainer="elabpro@yandex-team.ru" \
+    org.label-schema.schema-version="1.0" \
+    org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.name="elabpro/ydb-ansible" \
+    org.label-schema.description="Ansible inside Docker" \
+    org.label-schema.url="https://github.com/elabpro/ydb-ansible" \
+    org.label-schema.vcs-url="https://github.com/elabpro/ydb-ansible" \
+    org.label-schema.vendor="YDB Platform" \
+    org.label-schema.docker.cmd="docker run --rm -it -v $(pwd):/ansible ~/.ssh/id_rsa:/root/id_rsa ydb-ansible"
 
-RUN locale-gen en_US.UTF-8
-RUN localectl set-locale en_US.UTF-8
-RUN dpkg-reconfigure locales
+RUN apk --no-cache add \
+        sudo \
+        python3\
+        py3-pip \
+        openssl \
+        ca-certificates \
+        sshpass \
+        openssh-client \
+        rsync \
+        git && \
+    apk --no-cache add --virtual build-dependencies \
+        python3-dev \
+        libffi-dev \
+        musl-dev \
+        gcc \
+        cargo \
+        build-base && \
+    rm -rf /usr/lib/python3.11/EXTERNALLY-MANAGED && \
+    pip3 install --upgrade pip wheel && \
+    pip3 install --upgrade cryptography cffi && \
+    pip3 install ansible-core==${ANSIBLE_CORE_VERSION} && \
+    pip3 install ansible==${ANSIBLE_VERSION} && \
+    pip3 install --ignore-installed ansible-lint==${ANSIBLE_LINT} && \
+    pip3 install mitogen jmespath && \
+    apk del build-dependencies && \
+    rm -rf /var/cache/apk/* && \
+    rm -rf /root/.cache/pip && \
+    rm -rf /root/.cargo
 
-RUN mkdir -p /opt/ansible_collections/ydb_platform/ydb
-WORKDIR /opt/ansible_collections/ydb_platform/ydb
+RUN mkdir /ansible && \
+    mkdir -p /etc/ansible && \
+    echo 'localhost' > /etc/ansible/hosts
 
-COPY requirements.txt ./requirements.txt
-RUN pip3 install -r ./requirements.txt
+WORKDIR /ansible
+COPY entrypoint.sh /entrypoint.sh
 
-COPY requirements.yaml ./requirements.yaml
-RUN ansible-galaxy install -r ./requirements.yaml
+RUN ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git
 
-RUN mkdir -p ~/.ssh && \
-    echo 'Host *' >> ~/.ssh/config && \
-    echo '    StrictHostKeyChecking no' >> ~/.ssh/config
+CMD [ "ansible-playbook", "--version" ]
 
-ENV PYTHONDONTWRITEBYTECODE 1
-RUN echo 'export PYTHONDONTWRITEBYTECODE=1' > /etc/profile.d/10-python.sh
 
-RUN git config --global --add safe.directory /opt

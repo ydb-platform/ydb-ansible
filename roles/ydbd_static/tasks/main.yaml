@@ -128,11 +128,24 @@
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
 
-- name: install ydb-dstool
+- name: Check ydb-dstool presence
+  stat:
+    path: "{{ ydb_dir }}/bin/ydb-dstool"
+  register: ydb_dstool_exists
+
+- name: install ydb-dstool (from ydb_dstool_binary)
+  ansible.builtin.copy:
+    src: "{{ ydb_dstool_binary }}"
+    dest: "{{ ydb_dir }}/bin/ydb-dstool"
+    mode: 0755
+  when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is defined
+
+- name: install ydb-dstool (from URL)
   ansible.builtin.get_url:
     url: https://storage.yandexcloud.net/blinkov-tmp/ydb-dstool # TODO: replace with a release URL
     dest: "{{ ydb_dir }}/bin/"
     mode: 0755
+  when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
 
 - name: init YDB storage if not initialized
   ydb_platform.ydb.init_storage:
