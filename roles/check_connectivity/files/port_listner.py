@@ -8,16 +8,18 @@ import threading
 import sys
 
 def listen_port(port):
-    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)  
-    sock.bind(('::', port)) 
-    sock.listen(5)  
+    addr = ("", port) 
+    if socket.has_dualstack_ipv6():
+        sock = socket.create_server(addr, family=socket.AF_INET6, dualstack_ipv6=True)
+    else:
+        sock = socket.create_server(addr)  
 
     print(f"Listen port {port}...")
 
     while True:
         conn, addr = sock.accept()
         with conn:
-            print(f"New connection fomr {addr}")
+            print(f"New connection from {addr}")
 
 def main():
     if len(sys.argv) < 2:
