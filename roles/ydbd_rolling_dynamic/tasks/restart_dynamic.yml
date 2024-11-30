@@ -4,24 +4,21 @@
 - name: "Identify the services for database {{ ydb_dbname }} on {{ dynnode_name }}"
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
-  block:
-    - ansible.builtin.command: "{{ ydb_dir }}/home/list_db_services.sh {{ ydb_dbname }}"
-      register: ydbd_db_svc
-    - set_fact:
-        ydbd_db_svc_list: "{{ ydbd_db_svc.stdout.split(' ') }}"
+  ansible.builtin.command: "{{ ydb_dir }}/home/list_db_services.sh {{ ydb_dbname }}"
+  register: ydbd_db_svc
 
 - name: "Restart the database services on {{ dynnode_name }}"
-  when: ydbd_db_svc_list|length > 0
+  when: ydbd_db_svc.stdout|length > 0
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
   any_errors_fatal: true
   block:
     - name: "Invoke the service restart on {{ dynnode_name }}"
+      any_errors_fatal: true
+      loop: "{{ ydbd_db_svc.stdout_lines }}"
       ansible.builtin.systemd:
         state: restarted
-        name: "{{ item[0] }}"
-      any_errors_fatal: true
-      loop: "{{ ydbd_db_svc_list }}"
+        name: "{{ item.split(' ')[0] }}"
     - name: "Transfer the secrets to {{ dynnode_name }}"
       copy:
         src: secret
@@ -30,10 +27,11 @@
         owner: ydb
         mode: '0700'
     - name: "Wait for the dynamic nodes to come up on {{ dynnode_name }}"
-      command: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ item[1] }} {{ ydb_dbname }}"
       become: true
       become_user: ydb
-      loop: "{{ ydbd_db_svc_list }}"
+      loop: "{{ ydbd_db_svc.stdout_lines }}"
+      ansible.builtin.command:
+        cmd: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ item.split(' ')[1] }} {{ ydb_dbname }}"
     - name: "Cleanup the transferred secrets on {{ dynnode_name }}"
       file: state=absent path={{ ydb_dir }}/certs/secret
     - name: Additional delay to settle the dynamic nodes
