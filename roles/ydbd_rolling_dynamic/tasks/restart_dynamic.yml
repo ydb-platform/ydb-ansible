@@ -8,7 +8,7 @@
   register: ydbd_db_svc
 
 - name: "Restart the database services on {{ dynnode_name }}"
-  when: ydbd_db_svc.stdout|length > 0
+  when: ydbd_db_svc.stdout_lines|length > 0
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
   any_errors_fatal: true
