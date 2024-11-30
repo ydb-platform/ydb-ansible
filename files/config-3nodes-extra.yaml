@@ -184,8 +184,7 @@ bootstrap_config:
   shared_cache_config: {memory_limit: '4294967296'}
 
 feature_flags:
-  enable_grpc_audit: false
-  enable_get_node_labels: true
+  check_database_access_permission: true
   enable_views: true
 
 log_config:

@@ -236,6 +236,7 @@ table_service_config:
     kqp_pattern_cache_capacity_bytes: 524288000
 
 feature_flags:
+  check_database_access_permission: true
   enable_views: true
   enable_data_shard_volatile_transactions: true
   enable_grpc_audit: false

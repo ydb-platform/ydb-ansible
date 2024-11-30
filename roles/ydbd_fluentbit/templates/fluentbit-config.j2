@@ -1,0 +1,75 @@
+#jinja2: trim_blocks:False
+[SERVICE]
+    flush        2
+    log_level    info
+    parsers_file parsers.conf
+    plugins_file plugins.conf
+    storage.path {{ ydb_dir }}/fluentbit/data/buffer
+
+[INPUT]
+    name systemd
+    Tag ydbd-storage
+    storage.type filesystem
+    DB {{ ydb_dir }}/fluentbit/data/ydbd-storage.db
+    Systemd_Filter  _SYSTEMD_UNIT=ydbd-storage.service
+
+
+{%- for x1 in ydbd_svc %}
+[INPUT]
+    name systemd
+    Tag {{ x1 }}
+    storage.type filesystem
+    DB {{ ydb_dir }}/fluentbit/data/{{ x1 }}.db
+    Systemd_Filter  _SYSTEMD_UNIT={{ x1 }}.service
+
+{%- endfor %}
+
+[FILTER]
+    Name parser
+    Match ydbd-*
+    Key_Name MESSAGE
+    Parser ydb
+    Reserve_Data On
+    Preserve_Key On
+
+[FILTER]
+    Name modify
+    Match ydbd-*
+    Condition Key_does_not_exist P_LEVEL
+    Set P_LEVEL unknown
+    Hard_copy MESSAGE P_MESSAGE
+
+[FILTER]
+    Name modify
+    Match ydbd-storage
+    Add P_DB /{{ ydb_domain }}
+
+
+{%- for x2 in ydbd_svc %}
+[FILTER]
+    Name modify
+    Match {{ x2 }}
+    Add P_DB /{{ ydb_domain }}/{{ x2 | regex_replace('^ydbd-(.*)-*$', '\\1') }}
+
+{%- endfor %}
+
+[FILTER]
+    Name record_modifier
+    Match ydbd-*
+    Allowlist_key P_DB
+    Allowlist_key P_SERVICE
+    Allowlist_key P_DTTM
+    Allowlist_key P_LEVEL
+    Allowlist_key P_MESSAGE
+    Allowlist_key _HOSTNAME
+    Allowlist_key _SYSTEMD_UNIT
+
+[OUTPUT]
+    Name ydb
+    LogLevel error
+    ConnectionURL {{ ydb_fluentbit_destination }}
+    CredentialsStatic {{ ydb_fluentbit_credentials }}
+    Certificates {{ ydb_fluentbit_ca }}
+    Match ydbd-*
+    TablePath ydblogs
+    Columns {".timestamp": "ts",".input":"input",".hash":"datahash","P_DB":"dbname","P_SERVICE":"service","P_DTTM":"ts_orig","P_LEVEL":"level","P_MESSAGE":"msg","_HOSTNAME":"hostname","_SYSTEMD_UNIT":"unit"}

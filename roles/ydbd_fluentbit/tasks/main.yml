@@ -1,0 +1,114 @@
+---
+# ydbd fluentibit instance deployment
+
+- name: Create the YDB fluentbit instance directory
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/fluentbit"
+    group: ydb
+    owner: ydb
+    mode: '0755'
+
+- name: Install the fluentbit binary package
+  ansible.builtin.unarchive:
+    creates: "{{ ydb_dir }}/fluentbit/bin/fluent-bit"
+    dest: "{{ ydb_dir }}/fluentbit"
+    group: bin
+    owner: root
+    src: "{{ ydb_fluentbit_archive }}"
+    extra_opts: "{{ ydb_unpack_options }}"
+
+- name: Ensure permissions for the YDB fluentbit instance directory
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/fluentbit"
+    group: bin
+    owner: root
+    mode: '0755'
+
+- name: Create the YDB fluentbit configuration directory
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/fluentbit/etc"
+    group: bin
+    owner: root
+    mode: '0755'
+
+- name: Create the YDB fluentbit data directory
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/fluentbit/data"
+    group: bin
+    owner: root
+    mode: '0700'
+
+- name: Create the YDB fluentbit buffer directory
+  file:
+    state: directory
+    path: "{{ ydb_dir }}/fluentbit/data/buffer"
+    group: bin
+    owner: root
+    mode: '0700'
+
+- name: Generate the YDB fluentbit parsers files
+  template:
+    src: fluentbit-parsers.j2
+    dest: "{{ ydb_dir }}/fluentbit/etc/parsers.conf"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Generate the YDB fluentbit plugins files
+  template:
+    src: fluentbit-plugins.j2
+    dest: "{{ ydb_dir }}/fluentbit/etc/plugins.conf"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Generate the YDB fluentbit service files
+  template:
+    src: fluentbit-service.j2
+    dest: "/etc/systemd/system/ydbd-fluentbit.service"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Refresh systemd services configuration
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Update the database service listing script
+  template:
+    src: list_all_db_services.j2
+    dest: "{{ ydb_dir }}/home/list_all_db_services.sh"
+    group: ydb
+    owner: ydb
+    mode: '0755'
+
+- name: "Collect the per-node database services"
+  ansible.builtin.command: "{{ ydb_dir }}/home/list_all_db_services.sh {{ ydb_dbname }}"
+  register: ydbd_svc_data
+
+- name: "Extract the per-node database services as list"
+  set_fact:
+    ydbd_svc: "{{ ydbd_svc_data.stdout_lines }}"
+
+- name: Generate the YDB fluentbit config files
+  template:
+    src: fluentbit-config.j2
+    dest: "{{ ydb_dir }}/fluentbit/etc/fluent-bit.conf"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Start the YDB fluentbit services
+  ansible.builtin.systemd:
+    state: started
+    name: ydbd-fluentbit
+  any_errors_fatal: true
+
+- name: Enable the YDB fluentbit services for automatic startup
+  ansible.builtin.systemd:
+    enabled: true
+    name: ydbd-fluentbit
