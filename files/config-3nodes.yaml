@@ -132,6 +132,7 @@ blob_storage_config:         # configuration of static blobstorage group.
           - node_id: ycydb-s3
             pdisk_category: SSD
             path: /dev/disk/by-partlabel/ydb_disk_3
+
 channel_profile_config:
   profile:
   - channel:
@@ -145,26 +146,35 @@ channel_profile_config:
       pdisk_category: 1
       storage_pool_kind: ssd
     profile_id: 0
+
 interconnect_config:
   start_tcp: true
   encryption_mode: OPTIONAL
   path_to_certificate_file: "/opt/ydb/certs/node.crt"
   path_to_private_key_file: "/opt/ydb/certs/node.key"
   path_to_ca_file: "/opt/ydb/certs/ca.crt"
+
 grpc_config:
     cert: "/opt/ydb/certs/node.crt"
     key: "/opt/ydb/certs/node.key"
     ca: "/opt/ydb/certs/ca.crt"
     services_enabled:
     - legacy
+
+feature_flags:
+  check_database_access_permission: true
+
 table_service_config:
   sql_version: 1
+
 bootstrap_config:
   shared_cache_config: {memory_limit: '4294967296'}
+
 audit_config:
   file_backend:
     format: JSON
     file_path: "ydb-audit.log"
+
 # Actor system config is appended to the configuration file by Ansible task.
 # Provided here in the commented form for reference
 #actor_system_config:

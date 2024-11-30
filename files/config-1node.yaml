@@ -107,8 +107,7 @@ table_service_config:
   enable_kqp_data_query_stream_lookup: true
 
 feature_flags:
-  enable_grpc_audit: false
-  enable_get_node_labels: true
+  check_database_access_permission: true
   enable_views: true
 
 log_config:
