@@ -1,0 +1,20 @@
+#! /bin/sh
+# List the services for the particular YDB database on the current host.
+
+set +e
+set +u
+
+DB_NAME="$1"
+
+(cd /etc/systemd/system && ls ydbd-${DB_NAME}-*.service) | while read sn; do
+  tfile=`mktemp`
+  systemctl show $sn >$tfile
+  STATE=`grep UnitFileState $tfile | grep enabled`
+  PORT=`grep ExecStart= $tfile | sed -n 's|.*grpcs-port \([0-9][0-9]*\).*|\1|p'`
+  rm -f $tfile
+  if [ ! -z "$STATE" ]; then
+    echo "$sn" ${PORT}
+  fi
+done
+
+# End Of File
