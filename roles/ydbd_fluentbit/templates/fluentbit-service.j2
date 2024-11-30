@@ -1,0 +1,15 @@
+#jinja2: trim_blocks:False
+[Unit]
+Description=Fluent Bit instance for YDB logs collection
+Documentation=https://docs.fluentbit.io/manual/
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+Environment=LD_LIBRARY_PATH={{ ydb_dir }}/fluentbit/lib
+ExecStart={{ ydb_dir }}/fluentbit/bin/fluent-bit -c {{ ydb_dir }}/fluentbit/etc/fluent-bit.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

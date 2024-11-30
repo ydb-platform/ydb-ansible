@@ -1,0 +1,14 @@
+#! /bin/sh
+# List the services for all YDB databases on the current host.
+
+set +e
+set +u
+
+(cd /etc/systemd/system && ls ydbd-*-*.service) | while read sn; do
+  STATE=`systemctl show $sn | grep UnitFileState=enabled $tfile`
+  if [ ! -z "$STATE" ]; then
+    basename "$sn" .service
+  fi
+done
+
+# End Of File
