@@ -17,7 +17,7 @@
         group: ydb
         owner: ydb
         mode: '0700'
-    - name: Run the database creation script
+    - name: "Create the database {{ ydb_dbname }} on {{ ydb_pool_kind }}:{{ ydb_default_groups }}"
       command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_dbname }} {{ ydb_pool_kind }} {{ ydb_default_groups }}"
       become: true
       become_user: ydb
