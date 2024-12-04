@@ -29,6 +29,9 @@
     copy:
       src: "{{ ydb_config }}"
       dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
+      owner: root
+      group: ydb
+      mode: 0640
     tags:
       - storage
       - static

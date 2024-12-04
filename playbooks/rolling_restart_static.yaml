@@ -1,6 +1,23 @@
-- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+---
+
+# PLAYBOOK: ydb_platform.ydb.rolling_restart_static
+# PROPOSE : This playbook is designed for safe restart for the static/storage nodes
+#           
+# EXAMPLE:
+#
+# Restart all nodes
+#   ansible-playbook ydb_platform.ydb.rolling_restart_static
+#
+# Restart all nodes on the host
+#   ansible-playbook ydb_platform.ydb.rolling_restart_static -l <HostFQDN>
+#
+
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static' in groups else groups['ydb'] }}"
   become: true
-  run_once: true
+
   roles:
   - role: ydbd_rolling_static
     availability_mode: weak
+    tags:
+      - storage
+      - static

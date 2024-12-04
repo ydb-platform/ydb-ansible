@@ -8,6 +8,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=ydb
+UMask=077
 PermissionsStartOnly=true
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
@@ -23,7 +24,10 @@ Restart=always
 RestartSec=1
 SyslogIdentifier=ydbd
 SyslogFacility=daemon
-SyslogLevel=info
+SyslogLevel=err
+{%- if ydb_affinity_static is defined %}
+CPUAffinity={{ ydb_affinity_static }}
+{%- endif %}
 
 [Install]
 WantedBy=multi-user.target

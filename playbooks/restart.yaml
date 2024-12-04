@@ -1,6 +1,5 @@
 ---
 
-
 # PLAYBOOK: ydb_platform.ydb.restart
 # PROPOSE : This playbook is designed for safe restart for the cluster
 #           
