@@ -49,7 +49,7 @@
 [FILTER]
     Name modify
     Match {{ x2 }}
-    Add P_DB /{{ ydb_domain }}/{{ x2 | regex_replace('^ydbd-(.*)-*$', '\\1') }}
+    Add P_DB /{{ ydb_domain }}/{{ x2 | regex_replace('^ydbd-(.*)-.*$', '\\1') }}
 
 {%- endfor %}
 

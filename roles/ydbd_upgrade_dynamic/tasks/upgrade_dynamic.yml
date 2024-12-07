@@ -44,39 +44,38 @@
   delegate_facts: true
   any_errors_fatal: true
 
-- name: Restart the dynamic nodes on {{ dynnode_name }}
-  ansible.builtin.systemd:
-    state: restarted
-    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
-  throttle: 1
+- name: "Identify the services for all databases on {{ dynnode_name }}"
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
-  loop: "{{ ydb_dynnodes }}"
-  any_errors_fatal: true
+  ansible.builtin.command: "{{ ydb_dir }}/home/list_all_db_services.sh"
+  register: ydbd_db_svc
 
-- name: Transfer the secrets to {{ dynnode_name }}
-  copy:
-    src: secret
-    dest: "{{ ydb_dir }}/certs/secret"
-    group: ydb
-    owner: ydb
-    mode: '0700'
+- name: "Restart the database services on {{ dynnode_name }}"
+  when: ydbd_db_svc.stdout_lines|length > 0
   delegate_to: "{{ dynnode_name }}"
   delegate_facts: true
   any_errors_fatal: true
-
-- name: Wait for the dynamic nodes to come up
-  command: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ 2136 + item.offset }} {{ ydb_dbname }}"
-  become: true
-  become_user: ydb
-  delegate_to: "{{ dynnode_name }}"
-  delegate_facts: true
-  loop: "{{ ydb_dynnodes }}"
-
-- name: Cleanup the transferred secrets at {{ dynnode_name }}
-  file: state=absent path={{ ydb_dir }}/certs/secret
-  delegate_to: "{{ dynnode_name }}"
-  delegate_facts: true
-
-- name: Additional delay to settle the dynamic nodes
-  ansible.builtin.pause: seconds={{ dynnode_restart_sleep_seconds }}
+  block:
+    - name: "Invoke the service restart on {{ dynnode_name }}"
+      any_errors_fatal: true
+      loop: "{{ ydbd_db_svc.stdout_lines }}"
+      ansible.builtin.systemd:
+        state: restarted
+        name: "{{ item.split(' ')[0] }}.service"
+    - name: "Transfer the secrets to {{ dynnode_name }}"
+      copy:
+        src: secret
+        dest: "{{ ydb_dir }}/certs/secret"
+        group: ydb
+        owner: ydb
+        mode: '0700'
+    - name: "Wait for the dynamic nodes to come up on {{ dynnode_name }}"
+      become: true
+      become_user: ydb
+      loop: "{{ ydbd_db_svc.stdout_lines }}"
+      ansible.builtin.command:
+        cmd: "{{ ydb_dir }}/home/wait_dynamic.sh {{ inventory_hostname }} {{ item.split(' ')[1] }} {{ item.split(' ')[2] }}"
+    - name: "Cleanup the transferred secrets on {{ dynnode_name }}"
+      file: state=absent path={{ ydb_dir }}/certs/secret
+    - name: Additional delay to settle the dynamic nodes
+      ansible.builtin.pause: seconds={{ dynnode_restart_sleep_seconds }}
