@@ -7,7 +7,7 @@ set +u
 DB_NAME="$1"
 
 (cd /etc/systemd/system && ls ydbd-${DB_NAME}-*.service) | while read sn; do
-  NM=`basename $sn`
+  NM=`basename $sn .service`
   DB=`echo $sn | sed -n 's|ydbd-\([a-zA-Z][a-zA-Z0-9]*\)-.*|\1|p'`
   STATE=`systemctl show -pUnitFileState $sn | grep enabled`
   PORT=`systemctl show -pExecStart $sn | sed -n 's|.*grpcs-port \([0-9][0-9]*\).*|\1|p'`
