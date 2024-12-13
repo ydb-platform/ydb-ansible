@@ -47,10 +47,11 @@
 
 
 {%- for x2 in ydbd_svc %}
+{%- set x2_first = x2.split(' ')[0] %}
 [FILTER]
     Name modify
-    Match {{ x2 }}
-    Add P_DB /{{ ydb_domain }}/{{ x2.split(' ')[0] | regex_replace('^ydbd-(.*)-.*$', '\\1') }}
+    Match {{ x2_first }}
+    Add P_DB /{{ ydb_domain }}/{{ x2_first | regex_replace('^ydbd-(.*)-.*$', '\\1') }}
 
 {%- endfor %}
 
