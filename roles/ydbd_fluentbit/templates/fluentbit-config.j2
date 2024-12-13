@@ -15,12 +15,13 @@
 
 
 {%- for x1 in ydbd_svc %}
+{%- set x1_first = x1.split(' ')[0] %}
 [INPUT]
     name systemd
-    Tag {{ x1 }}
+    Tag {{ x1_first }}
     storage.type filesystem
-    DB {{ ydb_dir }}/fluentbit/data/{{ x1.split(' ')[0] }}.db
-    Systemd_Filter  _SYSTEMD_UNIT={{ x1.split(' ')[0] }}.service
+    DB {{ ydb_dir }}/fluentbit/data/{{ x1_first }}.db
+    Systemd_Filter  _SYSTEMD_UNIT={{ x1_first }}.service
 
 {%- endfor %}
 
