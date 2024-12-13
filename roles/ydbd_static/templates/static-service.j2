@@ -11,6 +11,7 @@ Restart=always
 RestartSec=1
 User=ydb
 UMask=077
+#AmbientCapabilities=CAP_SYS_PTRACE
 PermissionsStartOnly=true
 SyslogIdentifier=ydbd
 SyslogFacility=daemon
@@ -28,8 +29,8 @@ ExecStart={{ ydb_dir }}/bin/ydbd server --tcp \
     --grpc-public-host {{ ydb_front }} \
 {%- endif %}
     --grpcs-port 2135 --ic-port 19001 --mon-port 8765 \
-    --ca {{ ydb_dir }}/certs/ca.crt --grpc-ca {{ ydb_dir }}/certs/ca.crt \
-    --grpc-cert {{ ydb_dir }}/certs/node.crt --grpc-key {{ ydb_dir }}/certs/node.key \
+    --ca {{ ydb_dir }}/certs/ca.crt --cert {{ ydb_dir }}/certs/node.crt --key {{ ydb_dir }}/certs/node.key \
+    --grpc-ca {{ ydb_dir }}/certs/ca.crt --grpc-cert {{ ydb_dir }}/certs/node.crt --grpc-key {{ ydb_dir }}/certs/node.key \
     --mon-cert {{ ydb_dir }}/certs/web.pem
 LimitNOFILE=65536
 LimitCORE=0

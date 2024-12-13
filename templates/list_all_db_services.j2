@@ -1,12 +1,10 @@
 #! /bin/sh
-# List the services for the particular YDB database on the current host.
+# List the services for all YDB databases on the current host.
 
 set +e
 set +u
 
-DB_NAME="$1"
-
-(cd /etc/systemd/system && ls ydbd-${DB_NAME}-*.service) | while read sn; do
+(cd /etc/systemd/system && ls ydbd-*-*.service) | while read sn; do
   NM=`basename $sn .service`
   DB=`echo $sn | sed -n 's|ydbd-\([a-zA-Z][a-zA-Z0-9]*\)-.*|\1|p'`
   STATE=`systemctl show -pUnitFileState $sn | grep enabled`

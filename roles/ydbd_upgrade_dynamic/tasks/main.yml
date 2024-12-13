@@ -1,6 +1,14 @@
 ---
 # ydbd dynamic nodes rolling upgrade
 
+- name: Update the database service listing script
+  template:
+    src: list_all_db_services.j2
+    dest: "{{ ydb_dir }}/home/list_all_db_services.sh"
+    group: ydb
+    owner: ydb
+    mode: '0755'
+
 - name: YDB database nodes rolling upgrade
   include_tasks: "upgrade_dynamic.yml"
   loop: "{{ groups['ydbd_dynamic']|flatten(levels=1) }}"

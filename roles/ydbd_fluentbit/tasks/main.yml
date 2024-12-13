@@ -87,12 +87,12 @@
     mode: '0755'
 
 - name: "Collect the per-node database services"
-  ansible.builtin.command: "{{ ydb_dir }}/home/list_all_db_services.sh {{ ydb_dbname }}"
+  ansible.builtin.command: "{{ ydb_dir }}/home/list_all_db_services.sh"
   register: ydbd_svc_data
 
 - name: "Extract the per-node database services as list"
   set_fact:
-    ydbd_svc: "{{ ydbd_svc_data.stdout_lines }}"
+    ydbd_svc: "{{ ydbd_svc_data.stdout_lines | map('regex_replace', '^([A-Za-z][A-Za-z0-9_].*$)[ ]', '\\1') | list }}"
 
 - name: Generate the YDB fluentbit config files
   template:

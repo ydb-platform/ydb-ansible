@@ -15,12 +15,13 @@
 
 
 {%- for x1 in ydbd_svc %}
+{%- set x1_first = x1.split(' ')[0] %}
 [INPUT]
     name systemd
-    Tag {{ x1 }}
+    Tag {{ x1_first }}
     storage.type filesystem
-    DB {{ ydb_dir }}/fluentbit/data/{{ x1 }}.db
-    Systemd_Filter  _SYSTEMD_UNIT={{ x1 }}.service
+    DB {{ ydb_dir }}/fluentbit/data/{{ x1_first }}.db
+    Systemd_Filter  _SYSTEMD_UNIT={{ x1_first }}.service
 
 {%- endfor %}
 
@@ -46,10 +47,11 @@
 
 
 {%- for x2 in ydbd_svc %}
+{%- set x2_first = x2.split(' ')[0] %}
 [FILTER]
     Name modify
-    Match {{ x2 }}
-    Add P_DB /{{ ydb_domain }}/{{ x2 | regex_replace('^ydbd-(.*)-*$', '\\1') }}
+    Match {{ x2_first }}
+    Add P_DB /{{ ydb_domain }}/{{ x2_first | regex_replace('^ydbd-(.*)-.*$', '\\1') }}
 
 {%- endfor %}
 
