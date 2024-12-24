@@ -81,6 +81,7 @@
 - name: Restart from static node
   when: not ydbops_local|bool
   become: true
+  throttle: 1
   block:
     - name: Check ydbops is present
       stat:
@@ -107,10 +108,10 @@
       when: ydbops_binary is defined and not ydbops_stat.stat.exists|bool
 
     - name: "run ydbops to gracefully restart the cluster, it takes a long time"
-      run_once: true
       ydb_platform.ydb.restart_storage:
         ydbops_bin: "{{ ydb_dir }}/bin/ydbops"
-        ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}:2135"
+        ydbops_endpoint: "grpcs://{{ play_hosts | flatten(levels=1) | first }}:2135"
+        ssh_args: "bash"
         ca_file: "{{ ydb_dir }}/certs/ca.crt"
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"

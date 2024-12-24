@@ -1,3 +1,20 @@
-- hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
+---
+
+# PLAYBOOK: ydb_platform.ydb.rolling_restart_dynamic
+# PROPOSE : This playbook is designed for safe restart for the dynamic nodes
+#           
+# EXAMPLE:
+#
+# Restart all nodes
+#   ansible-playbook ydb_platform.ydb.rolling_restart_dynamic
+#
+# Restart all nodes on the host
+#   ansible-playbook ydb_platform.ydb.rolling_restart_dynamic -l <HostFQDN>
+#
+
+- hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic' in groups else groups['ydb'] }}"
   roles:
   - role: ydbd_rolling_dynamic
+    tags:
+      - database
+      - dynamic
