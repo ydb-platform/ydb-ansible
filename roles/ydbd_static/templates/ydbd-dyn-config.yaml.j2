@@ -1,0 +1,15 @@
+metadata:
+  cluster: ""
+  version: 0
+config:
+# This parameter must be set in 'true'
+  yaml_config_enabled: true
+  actor_system_config:
+# Auto configure node by using number of CPU cores
+    use_auto_config: true
+# Type of the node (HYBRID, COMPUTE, STORAGE)
+    node_type: COMPUTE
+# Number of CPU cores
+    cpu_count: {{ ydb_cores_dynamic }}
+allowed_labels: {}
+selector_config: []

@@ -17,6 +17,7 @@
     - ydb_disks
     - ydb_domain
     - ydb_user
+    - ydb_dynamic_config
 
 - name: check if required secrets are defined
   no_log: true
@@ -44,6 +45,9 @@
 
 - name: Add the database creation script
   template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode='755'
+
+- name: Add the dyn config
+  template: src=ydbd-dyn-config.yaml.j2 dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
 
 - name: create static node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
@@ -179,4 +183,17 @@
     user: "{{ ydb_user }}"
     new_password: "{{ ydb_password }}"
     token: "{{ ydb_credentials.token }}"
+  run_once: true
+
+- name: Configure dyn config
+  ydb_platform.ydb.dynconfig_apply:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
+    token: "{{ ydb_credentials.token }}"
+    config: "{{ ydb_dir }}/cfg/ydbd-dyn-config.yaml"
+  when: ydb_dynamic_config|bool
   run_once: true

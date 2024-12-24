@@ -1,2 +1,5 @@
 ydb_database_groups: 1
 ydb_request_client_certificate: false
+# ydb_dynamic_config - use dynamic configs instead of static configs
+# Default value: false
+ydb_dynamic_config: false

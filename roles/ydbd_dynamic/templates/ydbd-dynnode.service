@@ -11,7 +11,9 @@ User=ydb
 PermissionsStartOnly=true
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
+{% if not ydb_dynamic_config|bool %}
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
+{% endif %}
     --grpcs-port {{ 2136 + item.offset }} --grpc-ca {{ ydb_dir }}/certs/ca.crt \
     --ic-port {{ 19002 + item.offset }} --ca {{ ydb_dir }}/certs/ca.crt \
     --mon-port {{ 8766 + item.offset }} --mon-cert {{ ydb_dir }}/certs/web.pem \
