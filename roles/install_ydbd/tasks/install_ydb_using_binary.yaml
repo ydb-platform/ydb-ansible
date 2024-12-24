@@ -1,3 +1,26 @@
+- name: Get version
+  when: ydb_version is not defined
+  run_once: true
+  block:
+  - name: Create the YDB server binary directory for archive
+    file: state=directory
+          path="{{ ydb_dir }}/release/archive/bin"
+          recurse=true
+          group=bin
+          owner=root
+          mode='0755'
+  - name: copy YDB server binary file
+    ansible.builtin.copy:
+      src: "{{ ydbd_binary }}"
+      dest: "{{ ydb_dir }}/release/archive/bin/ydbd"
+      mode: 0755
+      follow: true
+  - name: Get version
+    shell: "{{ ydb_dir }}/release/archive/bin/ydbd --compatibility-info | grep 'Version' | cut -f 2 -d ':' | tr '-' '.' | awk '{ print $1;}'"
+    register: cmd_version
+  - set_fact: 
+      ydb_version: "{{ cmd_version.stdout }}"
+
 - name: Create the YDB server binary directory
   file: state=directory
         path="{{ ydb_dir }}/release/{{ ydb_version }}/bin"
