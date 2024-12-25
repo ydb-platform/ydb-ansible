@@ -18,6 +18,7 @@
     - ydb_domain
     - ydb_user
     - ydb_dynamic_config
+    - ydb_use_dynamic_config
 
 - name: check if required secrets are defined
   no_log: true
@@ -47,7 +48,7 @@
   template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode='755'
 
 - name: Add the dyn config
-  template: src=ydbd-dyn-config.yaml.j2 dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
+  template: src={{ ydb_dynamic_config }} dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
 
 - name: create static node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
@@ -195,5 +196,5 @@
     user: "{{ ydb_user }}"
     token: "{{ ydb_credentials.token }}"
     config: "{{ ydb_dir }}/cfg/ydbd-dyn-config.yaml"
-  when: ydb_dynamic_config|bool
+  when: ydb_use_dynamic_config|bool
   run_once: true

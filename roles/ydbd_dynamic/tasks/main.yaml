@@ -10,12 +10,12 @@
     - ydb_brokers
     - ydb_dbname
     - ydb_dynnodes
-    - ydb_dynamic_config
+    - ydb_use_dynamic_config
 
 - name: create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
   changed_when: false
-  when: not ydb_dynamic_config|bool
+  when: not ydb_use_dynamic_config|bool
 
 - name: create dynamic node systemd unit
   template:
