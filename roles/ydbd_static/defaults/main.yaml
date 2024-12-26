@@ -7,4 +7,4 @@ ydb_use_dynamic_config: false
 
 # ydb_dynamic_config - path to a custom dynamic config file
 # Default value: ansible/roles/ydb_static/ydb-din-config.yaml.j2
-ydb_dynamic_config: ydb-din-config.yaml.j2
+ydb_dynamic_config: ydbd-dyn-config.yaml.j2
