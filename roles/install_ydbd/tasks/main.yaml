@@ -23,7 +23,7 @@
   - name: download and install YDB server binary package from a release version number
     import_tasks:
       file: install_ydb_from_version.yaml
-    when: ydb_version is defined and ydbd_binary is not defined
+    when: ydb_version is defined and ydbd_binary is not defined and ydb_archive is not defined 
 
   - name: install YDB server binary package from source code
     import_tasks:

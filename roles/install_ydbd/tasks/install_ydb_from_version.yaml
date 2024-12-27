@@ -5,6 +5,7 @@
 - name: Set local path to ydb_archive variable
   set_fact:
     ydb_archive: "{{ ydb_archive_dest }}ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
+  when: ydb_archive is not defined
 
 - name: check if YDB release archive present
   delegate_to: 127.0.0.1
