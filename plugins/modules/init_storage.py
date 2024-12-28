@@ -55,7 +55,7 @@ def main():
             dstool_result = json.loads(stdout)[0]
             for pdisk in dstool_result:
                 if pdisk["Status"] != "ACTIVE":
-                    rc = ydb_dstool(['pdisk', 'set', '--status=ACTIVE','--pdisk-ids',pdisk["NodeId:PDiskId"]])
+                    rc = ydb_dstool(['pdisk', 'set', '--status=ACTIVE', '--pdisk-ids', pdisk["NodeId:PDiskId"]])
 
         result['changed'] = True
         result['msg'] = 'blobstorage config init succeeded'
