@@ -34,3 +34,10 @@
     import_tasks:
       file: install_ydb_using_binary.yaml
     when: ydbd_binary is defined and ydb_cli_binary is defined
+
+- name: Create the YDB CLI default binary directory
+  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='0700'
+
+- name: Disable YDB CLI version checks
+  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb mode='0644'
+  register: ydb_is_installed

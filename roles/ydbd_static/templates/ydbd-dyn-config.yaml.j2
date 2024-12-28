@@ -11,6 +11,6 @@ config:
     node_type: COMPUTE
 # Number of CPU cores
     cpu_count: {{ ydb_cores_dynamic }}
-{{ lookup('ansible.builtin.file', '{{ ydb_config }}') | indent( width=2, first=True) }}
+{{ lookup('ansible.builtin.template', '{{ ydb_config }}') | indent( width=2, first=True) }}
 allowed_labels: {}
 selector_config: []

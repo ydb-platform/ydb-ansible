@@ -104,7 +104,7 @@
         mode: 0440
 
 - name: copy configuration file
-  copy:
+  ansible.builtin.template:
     src: "{{ ydb_config }}"
     dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
     owner: root
