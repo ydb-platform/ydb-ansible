@@ -23,7 +23,7 @@
   - name: download and install YDB server binary package from a release version number
     import_tasks:
       file: install_ydb_from_version.yaml
-    when: ydb_version is defined and ydbd_binary is not defined
+    when: ydb_version is defined and ydbd_binary is not defined and ydb_archive is not defined 
 
   - name: install YDB server binary package from source code
     import_tasks:
@@ -34,3 +34,10 @@
     import_tasks:
       file: install_ydb_using_binary.yaml
     when: ydbd_binary is defined and ydb_cli_binary is defined
+
+- name: Create the YDB CLI default binary directory
+  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='0700'
+
+- name: Disable YDB CLI version checks
+  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb mode='0644'
+  register: ydb_is_installed
