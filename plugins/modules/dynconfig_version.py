@@ -13,23 +13,21 @@ def main():
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
-    result = {'changed': False}
+    result = {'changed': False, 'version': 0}
     try:
         ydb_cmd  = ['admin', 'config', 'fetch']
         ydb_cli  = cli.YDB.from_module(module)
         rc, stdout, stderr = ydb_cli(ydb_cmd)
         if rc != 0:
+            # We get 1 exit code if no YAML config in cluster
             result['msg'] = f'command: "ydb admin config fetch" failed'
-            result['stderr'] = stderr
-            module.fail_json(**result)
         else:
-            version = 0
             match = re.search(r'version:\s*(\d+)', stdout)
             if match:
                 version = int(match.group(1))
+                result['version'] = version
             result['msg'] = ''
-            result['version'] = version
-            module.exit_json(**result)
+        module.exit_json(**result)
 
     except Exception as e:
         result['msg'] = f'unexpected exception: {e}'
