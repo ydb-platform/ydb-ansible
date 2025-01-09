@@ -35,6 +35,7 @@
     dest: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydbd"
     mode: 0755
     follow: true
+    force: "{{ ydb_force_update }}"
 
 - name: copy YDB cli binary file
   ansible.builtin.copy:
@@ -42,6 +43,7 @@
     dest: "{{ ydb_dir }}/release/{{ ydb_version }}/bin/ydb"
     mode: 0755
     follow: true
+    force: "{{ ydb_force_update }}"
 
 - name: Symlink the YDB binaries
   file: path="{{ ydb_dir }}/bin"
@@ -49,10 +51,5 @@
         state=link
         force=yes
 
-- name: Create the YDB CLI default binary directory
-  file: state=directory path={{ ydb_dir }}/home/ydb/bin recurse=true group=ydb owner=ydb mode='0700'
 
-- name: Disable YDB CLI version checks
-  copy: src=ydb-cli-config.json dest={{ ydb_dir }}/home/ydb/bin/config.json group=ydb owner=ydb mode='0644'
-  register: ydb_is_installed
 
