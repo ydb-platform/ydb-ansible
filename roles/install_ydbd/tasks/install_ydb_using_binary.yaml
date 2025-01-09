@@ -36,6 +36,7 @@
     mode: 0755
     follow: true
     force: "{{ ydb_force_update }}"
+    force: "{{ ydb_force_update }}"
 
 - name: copy YDB cli binary file
   ansible.builtin.copy:
@@ -44,11 +45,13 @@
     mode: 0755
     follow: true
     force: "{{ ydb_force_update }}"
+    force: "{{ ydb_force_update }}"
 
 - name: Symlink the YDB binaries
   file: path="{{ ydb_dir }}/bin"
         src="./release/{{ ydb_version }}/bin"
         state=link
         force=yes
+
 
 
