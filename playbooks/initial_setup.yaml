@@ -22,28 +22,48 @@
     - name: check connectivity
       ansible.builtin.import_role:
         name: ydb_platform.ydb.check_connectivity
+      tags:
+        - checks
 
     - name: setup packages
       ansible.builtin.import_role:
         name: ydb_platform.ydb.packages
+      tags:
+        - setup
+        - packages
 
     - name: configure system
       ansible.builtin.import_role:
         name: ydb_platform.ydb.system
+      tags:
+        - setup
+        - system
 
     - name: setup ydb
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd
+      tags:
+        - setup
+        - binaries
     
     - name: setup fq-connector
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydb_fq_connector
       when: ydb_install_fq_connector | default(false)
+      tags:
+        - setup
 
     - name: setup ydb static nodes
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_static
+      tags:
+        - setup
+        - static
+        - storage
 
     - name: setup ydb dynamic nodes
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic
+      tags:
+        - setup
+        - dynamic
