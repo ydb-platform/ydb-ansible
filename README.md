@@ -276,3 +276,22 @@ sudo docker run -it --rm \
         -v /home/ansible/ydb-ansible:/root/.ansible/collections/ansible_collections/ydb_platform/ydb \
         ydb-ansible ansible-console ydb
 ```
+# Dynamic config
+
+Dynamic config (https://ydb.tech/docs/en/maintenance/manual/dynamic-config) allows to configure dynamic nodes without local configs.
+
+To use dynamic configs you will have to turn off `ydb_enforce_user_token_requirement` and set `ydb_use_dynamic_config` in `true`.
+
+You can define your own dynamic config. In this case you can take `roles/ydb_static/templates/ydb-din-config.yaml.j2` as an example and make appropriate changes.
+
+```YAML
+        ydb_enforce_user_token_requirement: false
+
+        # ydb_use_dynamic_config - define how to configure dynamic nodes - static or dynamic configs
+        # Default value: false
+        ydb_use_dynamic_config: true
+
+        # ydb_dynamic_config - path to a custom dynamic config file
+        # Default value: ansible/roles/ydb_static/templates/ydb-din-config.yaml.j2
+        # ydb_dynamic_config: 
+```
