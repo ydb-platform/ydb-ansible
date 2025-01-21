@@ -176,6 +176,7 @@ graph TD;
     - Debian 11.11, 12.7
     - AstraLinux 1.7
     - AlmaLinux 8,9
+    - Altlinux 10
     - RedHat 9
     - RedOS 7
 
