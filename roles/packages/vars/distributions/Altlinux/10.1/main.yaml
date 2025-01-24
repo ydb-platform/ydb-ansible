@@ -1,0 +1,26 @@
+---
+
+repositories: []
+
+preferences: []
+
+configs: []
+
+packages:
+  - bash-completion
+  - bind
+  - ca-certificates
+  - chrony
+  - curl
+  - gdisk
+  - iperf3
+  - iptables
+  - jq
+  - logrotate
+  - lsof
+  - procps
+  - rsync
+  - strace
+  - tar
+
+packages_required: []  
