@@ -10,7 +10,6 @@ def is_block_device(path):
     mode = os.stat(path).st_mode
     return stat.S_ISBLK(mode)
 
-
 def create_partition_if_not_exists(module, name, label):
     changed = False
     label_path = os.path.join(LABEL_DIR, label)
@@ -20,7 +19,7 @@ def create_partition_if_not_exists(module, name, label):
     parted_bin = shutil.which('parted')
     partprobe_bin = shutil.which('partprobe')
     sgdisk_bin = shutil.which('sgdisk')
-    if parted_bin is not None and partprobe_bin is not None:
+    if parted_bin is not None and partprobe_bin is not None and not os.path.exists("/etc/altlinux-release"):
         changed = create_partition_parted(module, name, label, parted_bin, partprobe_bin)
     elif sgdisk_bin is not None:
         changed = create_partition_sgdisk(module, name, label, sgdisk_bin)
