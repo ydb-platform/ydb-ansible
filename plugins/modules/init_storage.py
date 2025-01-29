@@ -48,6 +48,14 @@ def main():
             result['stdout'] = stdout
             result['stderr'] = stderr
             module.fail_json(**result)
+        
+        # Check PDisk status
+        rc, stdout, stderr = ydb_dstool(['pdisk', 'list', '--format=json'])
+        if rc == 0:
+            dstool_result = json.loads(stdout)
+            for pdisk in dstool_result:
+                if "Status" in pdisk and pdisk["Status"] != "ACTIVE":
+                    rc = ydb_dstool(['pdisk', 'set', '--status=ACTIVE', '--pdisk-ids', pdisk["NodeId:PDiskId"]])
 
         result['changed'] = True
         result['msg'] = 'blobstorage config init succeeded'

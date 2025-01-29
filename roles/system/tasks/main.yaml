@@ -11,6 +11,13 @@
         hwclock: UTC
       notify:
         - restart cron
+      when: ansible_os_family != "Altlinux"
+
+    - name: set system timezone [Alt]
+      shell: timedatectl set-timezone UTC
+      notify:
+        - restart cron
+      when: ansible_os_family == "Altlinux"
 
     - name: flush handlers
       meta: flush_handlers

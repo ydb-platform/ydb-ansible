@@ -23,7 +23,7 @@
     - "{{ ydb_ports }}"
 
 - name: Stop script
-  shell: "pkill -f \"python3 .*port_listner.py.*\""
+  shell: "pkill -f -e \"port_listner\""
   ignore_errors: True
 
 - name: Remove script

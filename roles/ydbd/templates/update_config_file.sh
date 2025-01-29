@@ -21,6 +21,7 @@ if [ $COUNT -gt 0 ]; then
 fi
 
 cat >>${CONF_DST} <<EOF
+
 actor_system_config:
   use_auto_config: true
   node_type: $CONF_MODE
