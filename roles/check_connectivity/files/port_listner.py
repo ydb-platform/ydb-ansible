@@ -52,10 +52,10 @@ def main():
     threads = []
 
     for port in ports:
-        thread = threading.Thread(target=listen_port4, args=(port,))
+        thread = threading.Thread(target=listen_port6, args=(port,))
         threads.append(thread)
         thread.start()
-        thread = threading.Thread(target=listen_port6, args=(port,))
+        thread = threading.Thread(target=listen_port4, args=(port,))
         threads.append(thread)
         thread.start()
 
