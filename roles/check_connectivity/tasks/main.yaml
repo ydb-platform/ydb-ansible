@@ -1,12 +1,9 @@
 ---
 
-- name: Copy script for testing connectivity
-  copy:
-    src: "files/port_listner.py"
-    dest: "/tmp/port_listner.py"
-    owner: root
-    group: root
-    mode: 0755
+- name: Check ansible version
+  when: "ansible_version.full is version('2.11', '<=')"
+  ansible.builtin.fail:
+    msg: "aborting playbook execution. Install Ansible 2.11 or newer. Current version is {{ ansible_version.full }}"
 
 - name: Get PIDs of YDBD
   shell: pgrep ydbd | wc -l
@@ -17,18 +14,10 @@
   ansible.builtin.fail:
     msg: "aborting playbook execution. Stop running YDB instances"
 
-- name: Stop script
-  shell: "pkill -f -e \"port_listner\""
-  ignore_errors: True
-
-- name: Additional delay for OS to release ports 
-  ansible.builtin.pause: seconds=5
-
 - name: Start script to listen YDB ports
-  shell: "nohup python3 /tmp/port_listner.py {{ inventory_hostname }} {{ ydb_ports| join(' ') }} &"
-
-- name: Additional delay for OS to take ports
-  ansible.builtin.pause: seconds=5
+  shell: "nohup nc -4 -6 -l {{ item }} -q 60 &"
+  with_items: 
+    - "{{ ydb_ports }}"
 
 - name: Check connections between nodes
   wait_for:
@@ -40,10 +29,3 @@
   with_nested: 
     - "{{ groups['ydb'] }}"
     - "{{ ydb_ports }}"
-
-- name: Stop script
-  shell: "pkill -f -e \"port_listner\""
-  ignore_errors: True
-
-- name: Remove script
-  shell: "rm /tmp/port_listner.py"
