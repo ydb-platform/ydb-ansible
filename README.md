@@ -281,7 +281,7 @@ sudo docker run -it --rm \
 1) Q: How to install on Linux with kernel 5.15.0-1073-kvm, which does not contain the tcp_htcp module?
    A1: define empty variable `ydb_congestion_module` in inventory
    A2: define variable in command line:
-   `ansible-playbook ydb_platform.ydb.initial_setup --extra-vars "ydb_congestion_module=None"`
+   `ansible-playbook ydb_platform.ydb.initial_setup --extra-vars "ydb_congestion_module="`
 
 2) Q: How to handle error: `aborting playbook execution. Stop running YDB instances`?
    A1: Manually stop YDB instances on the hosts for new YDB installation
