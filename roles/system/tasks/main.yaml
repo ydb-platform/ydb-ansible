@@ -33,7 +33,7 @@
         mode: '0644'
     - name: Load the {{ ydb_congestion_module }} module
       command: "/sbin/modprobe {{ ydb_congestion_module }}"
-  when: ydb_congestion_module is defined and ansible_distribution != "RedHat"
+  when: ydb_congestion_module is defined and ydb_congestion_module != '' and ansible_distribution != "RedHat"
 
 - name: Refresh the current sysctl settings
   command: "/sbin/sysctl --system"
