@@ -8,8 +8,27 @@
     group: root
     mode: 0755
 
+- name: Get PIDs of YDBD
+  shell: pgrep ydbd | wc -l
+  register: pids_of_ydbd
+
+- name: Check presence of YDBD
+  when: pids_of_ydbd.stdout != "0"
+  ansible.builtin.fail:
+    msg: "aborting playbook execution. Stop running YDB instances"
+
+- name: Stop script
+  shell: "pkill -f -e \"port_listner\""
+  ignore_errors: True
+
+- name: Additional delay for OS to release ports 
+  ansible.builtin.pause: seconds=5
+
 - name: Start script to listen YDB ports
-  shell: "nohup python3 /tmp/port_listner.py {{ ydb_ports| join(' ') }} &"
+  shell: "nohup python3 /tmp/port_listner.py {{ inventory_hostname }} {{ ydb_ports| join(' ') }} &"
+
+- name: Additional delay for OS to take ports
+  ansible.builtin.pause: seconds=5
 
 - name: Check connections between nodes
   wait_for:
