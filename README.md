@@ -23,6 +23,16 @@ Current limitations:
 * the cluster configuration file has to be manually created;
 * there are no examples for configuring the storage nodes with different disk layouts (it seems to be doable by defining different `ydb_disks` values for different host groups).
 
+## Supported operation system
+
+- Ubuntu 20.04, 22.04, 24.04
+- Debian 11.11, 12.7
+- AstraLinux 1.7
+- AlmaLinux 8.9, 9.4, 9.5
+- Altlinux 8, 10 
+- RedHat 8.4, 10, 10.1
+- RedOS 7.3, 8
+
 ## Ansible Collection - ydb_platform.ydb
 
 Documentation for the collection.
@@ -169,17 +179,6 @@ graph TD;
    end
 ```
 
-## Supported operation system
-
-- ydb_platform.ydb.initial_setup - Install cluster
-    - Ubuntu 22.04, 24.04
-    - Debian 11.11, 12.7
-    - AstraLinux 1.7
-    - AlmaLinux 8,9
-    - Altlinux 10
-    - RedHat 9
-    - RedOS 7
-
 # Install in isolated mode
 Isolated mode - situation when hosts are isolated from Internet (intranet, secure environment). There two possible way to install:
 1. Use bastion / jump host
@@ -277,3 +276,20 @@ sudo docker run -it --rm \
         -v /home/ansible/ydb-ansible:/root/.ansible/collections/ansible_collections/ydb_platform/ydb \
         ydb-ansible ansible-console ydb
 ```
+
+# FAQ
+1) Q: How to install on Linux with kernel 5.15.0-1073-kvm, which does not contain the tcp_htcp module?
+   A1: define empty variable `ydb_congestion_module` in inventory
+   A2: define variable in command line:
+   `ansible-playbook ydb_platform.ydb.initial_setup --extra-vars "ydb_congestion_module=None"`
+
+2) Q: How to handle error: `aborting playbook execution. Stop running YDB instances`?
+   A1: Manually stop YDB instances on the hosts for new YDB installation
+   A2: Use other hosts without YDB
+   A3: Use ansible-console to stop YDB instances:
+   ```
+   ansible-console ydb
+   $ sudo systemctl stop ydbd-storage
+   $ sudo systemctl stop ydbd-database-a
+   $ sudo systemctl stop ydbd-database-b
+   ```
