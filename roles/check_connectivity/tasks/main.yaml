@@ -14,8 +14,18 @@
   ansible.builtin.fail:
     msg: "aborting playbook execution. Stop running YDB instances"
 
-- name: Start script to listen YDB ports
+- name: Start script to listen YDB ports IPv4/IPv6
   shell: "nohup nc -4 -6 -l {{ item }} -q 60 &"
+  with_items: 
+    - "{{ ydb_ports }}"
+
+- name: Start script to listen YDB ports IPv6
+  shell: "nohup nc -6 -l {{ item }} -q 60 &"
+  with_items: 
+    - "{{ ydb_ports }}"
+
+- name: Start script to listen YDB ports IPv4
+  shell: "nohup nc -4 -l {{ item }} -q 60 &"
   with_items: 
     - "{{ ydb_ports }}"
 
