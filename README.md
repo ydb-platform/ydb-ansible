@@ -27,7 +27,7 @@ Current limitations:
 
 - Ubuntu 20.04, 22.04, 24.04
 - Debian 11.11, 12.7
-- AstraLinux 1.7
+- AstraLinux 1.7, 1.8
 - AlmaLinux 8.9, 9.4, 9.5
 - Altlinux 8.4, 10, 10.1
 - RedHat 9.3
