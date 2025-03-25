@@ -1,2 +1,3 @@
 ydb_dpkg_configure: true
 ydb_tools_install: false
+package_libxcrypt: "{{ ansible_config_file | dirname }}/files/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm"

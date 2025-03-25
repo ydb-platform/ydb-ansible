@@ -14,6 +14,10 @@
   ansible.builtin.fail:
     msg: "aborting playbook execution. Stop running YDB instances"
 
+- name: Stop netcat
+  shell: "pkill nc"
+  ignore_errors: True
+
 - name: Start script to listen YDB ports IPv4/IPv6
   shell: "nohup nc -4 -6 -l {{ item }} -k &"
   with_items: 

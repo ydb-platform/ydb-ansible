@@ -1,9 +1,12 @@
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   become: true
   tasks:
-    - name: stop static
-      ansible.builtin.import_role:
-        name: ydb_platform.ydb.ydbd_static_stop
+
     - name: stop dynamic
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic_stop
+      ignore_errors: True
+
+    - name: stop static
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_static_stop

@@ -1,0 +1,13 @@
+---
+
+repositories: []
+
+preferences: []
+
+configs: []
+
+packages: []
+
+packages_required:
+  - libaio
+  - libxcrypt-compat

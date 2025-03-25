@@ -1,0 +1,8 @@
+---
+
+- name: stop dynamic nodes
+  ansible.builtin.systemd:
+    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
+    state: stopped
+    enabled: false
+  loop: "{{ ydb_dynnodes }}"
