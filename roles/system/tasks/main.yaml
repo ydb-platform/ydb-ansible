@@ -1,23 +1,10 @@
 - name: configure clock
+  when: system_timezone is defined
   block:
-    - name: assert required variables are defined
-      ansible.builtin.assert:
-        that:
-          - system_timezone is defined
-
-    - name: set system timezone
-      community.general.timezone:
-        name: "{{ system_timezone }}"
-        hwclock: UTC
+    - name: "set system timezone to {{ system_timezone }}"
+      shell: "timedatectl set-timezone {{ system_timezone }}"
       notify:
         - restart cron
-      when: ansible_os_family != "Altlinux"
-
-    - name: set system timezone [Alt]
-      shell: timedatectl set-timezone UTC
-      notify:
-        - restart cron
-      when: ansible_os_family == "Altlinux"
 
     - name: flush handlers
       meta: flush_handlers
@@ -82,9 +69,7 @@
         dest: /etc/modules-load.d/conntrack.conf
 
     - name: load conntrack module
-      community.general.modprobe:
-        name: nf_conntrack
-        state: present
+      shell: "/sbin/modprobe nf_conntrack"
 
     - name: setup sysctl files
       template:
