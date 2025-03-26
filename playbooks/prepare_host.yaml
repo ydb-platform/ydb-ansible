@@ -1,0 +1,35 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.prepare_host
+# PROPOSE : This playbook is designed to prepare host for YDB cluster.
+#           
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.prepare_host
+#
+
+- hosts: "{{ playbook_hosts | default('ydb') }}"
+  become: true
+  vars:
+    - ydb_tools_install: true
+
+  tasks:
+    - name: check connectivity
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.check_connectivity
+      tags:
+        - checks
+
+    - name: setup packages
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.packages
+      tags:
+        - setup
+        - packages
+
+    - name: configure system
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.system
+      tags:
+        - setup
+        - system

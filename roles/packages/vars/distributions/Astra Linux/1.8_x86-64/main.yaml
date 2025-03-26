@@ -1,28 +1,35 @@
----
-
 repositories: []
 
 preferences: []
 
-configs: []
+configs:
+  - dest: /etc/apt/apt.conf.d/50ydb
+    content: |
+      Acquire::Languages "none";
+      APT::Cache-Limit "251658240";
+      APT::Periodic::AutocleanInterval "1";
+      APT::Periodic::MinAge "3";
+      APT::Periodic::MaxAge "3";
 
 packages:
+  - atop
   - bash-completion
-  - bind
+  - bind9-host
   - ca-certificates
-  - chrony
   - curl
   - dnsutils
   - gdisk
-  - iperf3
+  - iperf
   - iptables
   - jq
   - logrotate
   - lsof
   - nvme-cli
   - procps
+  - python3-apt
   - python3-pip
   - python3-requests
+  - python3-virtualenv
   - rsync
   - strace
   - tar
@@ -33,4 +40,4 @@ packages:
   - xfsprogs
 
 packages_required:
-  - libaio
+  - libaio1

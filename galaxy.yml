@@ -8,7 +8,7 @@ namespace: ydb_platform
 name: ydb
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.0.1
+version: 1.0.1
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -17,6 +17,7 @@ readme: README.md
 # @nicks:irc/im.site#channel'
 authors:
 - Artem Gromov <artgromov@ydb.tech> artgromov
+- Eugene Arbatsky <elabpro@ydb.tech> elabpro
 - Maksim Zinal <zinal@ydb.tech> zinal
 
 
@@ -37,7 +38,6 @@ tags: []
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
 dependencies:
-  community.general: 7.2.0
 
 # The URL of the originating SCM repository
 repository: https://github.com/ydb-platform/ydb-ansible

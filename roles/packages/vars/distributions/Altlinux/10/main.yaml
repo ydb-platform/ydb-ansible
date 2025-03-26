@@ -12,25 +12,15 @@ packages:
   - ca-certificates
   - chrony
   - curl
-  - dnsutils
   - gdisk
   - iperf3
   - iptables
   - jq
   - logrotate
   - lsof
-  - nvme-cli
   - procps
-  - python3-pip
-  - python3-requests
   - rsync
   - strace
   - tar
-  - tmux
-  - tzdata
-  - unzip
-  - wget
-  - xfsprogs
 
-packages_required:
-  - libaio
+packages_required: []  
