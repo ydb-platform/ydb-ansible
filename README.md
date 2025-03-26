@@ -1,6 +1,6 @@
 # Deploying YDB cluster with Ansible
 
-Ansible playbooks supporting the deployment of [YDB](https://ydb.tech) clusters into VM or baremetal servers.
+Ansible playbooks supporting the deployment of [YDB](https://ydb.tech) clusters into VMs or baremetal servers.
 
 Currently, the playbooks support the following scenarios:
 
@@ -18,22 +18,22 @@ The following scenarios are yet to be implemented (TODO):
 
 Current limitations:
 
-* supported python interpreter version on managed should must be >= 3.7
+* supported python interpreter version on managed servers must be >= 3.7
 * configuration file customization depends on the support of automatic actor system threads management, which requires YDB version 23.1.26.hotfix1 or later;
 * the cluster configuration file has to be manually created;
 * there are no examples for configuring the storage nodes with different disk layouts (it seems to be doable by defining different `ydb_disks` values for different host groups).
 
-## Supported operation system
+## Supported operation systems
 
-- Ubuntu 20.04, 22.04, 24.04
-- Debian 11.11, 12.7
-- AstraLinux 1.7, 1.8
-- AlmaLinux 8.9, 9.4, 9.5
-- Altlinux 8.4, 10, 10.1
-- RedHat 9.3
-- RedOS 7.3, 8
-- CentOS 8
-- SberLinux 9.0* (Special requirements for isolated install)
+* Ubuntu 20.04, 22.04, 24.04
+* Debian 11.11, 12.7
+* AstraLinux 1.7, 1.8
+* AlmaLinux 8.9, 9.4, 9.5
+* Altlinux 8.4, 10, 10.1
+* RedHat 9.3
+* RedOS 7.3, 8
+* CentOS 8
+* SberLinux 9.0* (Special requirements for isolated install)
 
 ## Ansible Collection - ydb_platform.ydb
 
@@ -81,11 +81,11 @@ Overall installation is performed according to the [official instruction](https:
     ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git
     ```
 
-    Alternatively, download the current releases of Ansible collections for [YDB](https://github.com/ydb-platform/ydb-ansible/releases), [community.general](https://github.com/ansible-collections/community.general/releases) and [Prometheus](https://github.com/prometheus-community/ansible/releases), and install the collections from the archives:
+    Alternatively, download the current releases of Ansible collection for [YDB](https://github.com/ydb-platform/ydb-ansible/releases). In addition, [Prometheus](https://github.com/prometheus-community/ansible/releases) and [Grafana](https://github.com/grafana/grafana-ansible-collection) collections can be used to automatically deploy the monitoring services (optionally). Install the collections from the archives:
 
     ```bash
-    ansible-galaxy collection install community.general-X.Y.Z.tar.gz
     ansible-galaxy collection install prometheus-prometheus-X.Y.Z.tar.gz
+    ansible-galaxy collection install grafana-ansible-collection-X.Y.Z.tar.gz
     ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
     ```
 
@@ -158,13 +158,14 @@ Notes:
 1. Rolling restart is performed for YDB database nodes, server by server, restarting all nodes sitting in the single server at a time, and waiting for the specified number of seconds after each server's nodes restart.
 
 ## List of playbooks
-- ydb_platform.ydb.initial_setup - Install cluster from scratch
-- ydb_platform.ydb.binaries_all - Install YDB binaries to all nodes
-- ydb_platform.ydb.binaries_static - Install YDB binaries to all static/storage nodes
-- ydb_platform.ydb.binaries_dynamic - Install YDB binaries to all dynamic nodes
-- ydb_platform.ydb.restart - Restart static (weak mode) and after that dynamic nodes
-- ydb_platform.ydb.rolling_restart_static - Restart static nodes in weak mode
-- ydb_platform.ydb.rolling_restart_dynamic - Restart dynamic nodes
+
+* ydb_platform.ydb.initial_setup - Install cluster from scratch
+* ydb_platform.ydb.binaries_all - Install YDB binaries to all nodes
+* ydb_platform.ydb.binaries_static - Install YDB binaries to all static/storage nodes
+* ydb_platform.ydb.binaries_dynamic - Install YDB binaries to all dynamic nodes
+* ydb_platform.ydb.restart - Restart static (weak mode) and after that dynamic nodes
+* ydb_platform.ydb.rolling_restart_static - Restart static nodes in weak mode
+* ydb_platform.ydb.rolling_restart_dynamic - Restart dynamic nodes
 
 ```mermaid
 graph TD;
@@ -182,7 +183,9 @@ graph TD;
 ```
 
 # Install in isolated mode
-Isolated mode - situation when hosts are isolated from Internet (intranet, secure environment). There two possible way to install:
+
+Isolated mode - situation when hosts are isolated from Internet (intranet, secure environment). There two possible ways to install:
+
 1. Use bastion / jump host
 2. Use internal preconfigured host
 
@@ -192,6 +195,7 @@ For SberLinux9.0 package libxcrypt-compat is required. It can be placed as `file
 ```
 
 ## Install with bastion
+
 The procedure of install is just the same like common install. But there're some limitations and recomendations.
 
 - Required settings in inventory (50-inventory.yaml)
@@ -230,6 +234,7 @@ graph LR
 WARNING: Cluster restart doesn't work with bastion without direct access to FQDN nodes via 2135/tcp.
 
 ## Install with preconfigured host
+
 1) Prepare binaries:
     - create docker image for Ansible by using Dockerfile (Internet connection is required, for example: `docker build . -t ydb-ansible`) and save it as a binary file (`docker save ydb-ansible -o ydb-ansible.image`)
     - download YDB archive or build binaries from sources
@@ -259,7 +264,8 @@ sudo docker run -it --rm \
 	ydb-ansible ansible-playbook ydb_platform.ydb.initial_setup
 ```
 
-### Control hosts by ansilbe via console
+### Control hosts by ansible via console
+
 ```
 sudo docker run -it --rm \
         -v $(pwd):/ansible \
@@ -268,6 +274,7 @@ sudo docker run -it --rm \
 ```
 
 ### Use different ansible collection
+
 You can download another version of YDB Ansible collection or get official archive and change it in your own way.
 
 ```
@@ -285,6 +292,7 @@ sudo docker run -it --rm \
 ```
 
 # FAQ
+
 1) Q: How to install on Linux with kernel 5.15.0-1073-kvm, which does not contain the tcp_htcp module?
    A1: define empty variable `ydb_congestion_module` in inventory
    A2: define variable in command line:
@@ -294,9 +302,10 @@ sudo docker run -it --rm \
    A1: Manually stop YDB instances on the hosts for new YDB installation
    A2: Use other hosts without YDB
    A3: Use ansible-console to stop YDB instances:
-   ```
-   ansible-console ydb
-   $ sudo systemctl stop ydbd-storage
-   $ sudo systemctl stop ydbd-database-a
-   $ sudo systemctl stop ydbd-database-b
-   ```
+
+    ```bash
+    ansible-console ydb
+    $ sudo systemctl stop ydbd-storage
+    $ sudo systemctl stop ydbd-database-a
+    $ sudo systemctl stop ydbd-database-b
+    ```
