@@ -33,6 +33,7 @@ Current limitations:
 - RedHat 9.3
 - RedOS 7.3, 8
 - CentOS 8
+- SberLinux 9.0* (Special requirements for isolated install)
 
 ## Ansible Collection - ydb_platform.ydb
 
@@ -184,6 +185,11 @@ graph TD;
 Isolated mode - situation when hosts are isolated from Internet (intranet, secure environment). There two possible way to install:
 1. Use bastion / jump host
 2. Use internal preconfigured host
+
+For SberLinux9.0 package libxcrypt-compat is required. It can be placed as `files/libxcrypt-compat.rpm` or you can define your own URL to download it via ansible variable `package_libxcrypt_url`. Example
+```
+`ansible-playbook ydb_platform.ydb.initial_setup --extra-vars "package_libxcrypt_url=https://localrepo/AppStream/x86_64/os/Packages/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm"`
+```
 
 ## Install with bastion
 The procedure of install is just the same like common install. But there're some limitations and recomendations.

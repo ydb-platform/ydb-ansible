@@ -1,2 +1,4 @@
 ydb_dpkg_configure: true
 ydb_tools_install: false
+package_libxcrypt: "{{ ansible_config_file | dirname }}/files/libxcrypt-compat.rpm"
+package_libxcrypt_url: "https://mirror.yandex.ru/centos-stream/9-stream/AppStream/x86_64/os/Packages/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm"

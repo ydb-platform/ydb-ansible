@@ -5,6 +5,40 @@
     file: "{{ vars_for_distribution_version_file }}"
     name: vars_for_distribution_version
 
+- name: Manual install packages for SberLinux
+  when: ansible_distribution == "SberLinux" and ansible_distribution_version == "9.0"
+  block:
+
+    - name: check if libxcrypt-compat is present
+      delegate_to: 127.0.0.1
+      run_once: true
+      become: false
+      stat:
+        path: "{{ package_libxcrypt }}"
+      register: package_libxcrypt_stat
+    
+    - name: Download libxcrypt
+      delegate_to: 127.0.0.1
+      run_once: true
+      become: false
+      ansible.builtin.get_url:
+        url: "{{ package_libxcrypt_url }}"
+        dest: "{{ package_libxcrypt }}"
+      when: not package_libxcrypt_stat.stat.exists|bool
+
+    - name: Copy libxcrypt-compat
+      ansible.builtin.copy:
+        src: "{{ package_libxcrypt }}"
+        dest: /tmp/libxcrypt-compat.rpm
+      
+    - name: Install libxcrypt-compat
+      become: true
+      shell: "rpm --replacepkgs -i --nodeps /tmp/libxcrypt-compat.rpm"
+
+    - name: Copy libxcrypt-compat
+      shell: "rm /tmp/libxcrypt-compat.rpm"
+  tags: libxcrypt-compat
+
 - name: install required packages
   ansible.builtin.package:
     pkg: "{{ vars_for_distribution_version.packages_required }}"
