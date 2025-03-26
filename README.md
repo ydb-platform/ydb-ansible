@@ -33,6 +33,7 @@ Current limitations:
 - RedHat 9.3
 - RedOS 7.3, 8
 - CentOS 8
+- SberLinux 9.0
 
 ## Ansible Collection - ydb_platform.ydb
 
