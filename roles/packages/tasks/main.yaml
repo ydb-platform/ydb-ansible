@@ -9,7 +9,7 @@
   when: ansible_distribution == "SberLinux" and ansible_distribution_version == "9.0"
   block:
 
-    - name: check if ydbd present
+    - name: check if libxcrypt-compat is present
       delegate_to: 127.0.0.1
       run_once: true
       become: false
@@ -22,21 +22,21 @@
       run_once: true
       become: false
       ansible.builtin.get_url:
-        url: "https://mirror.yandex.ru/centos-stream/9-stream/AppStream/x86_64/os/Packages/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm"
+        url: "{{ package_libxcrypt_url }}"
         dest: "{{ package_libxcrypt }}"
       when: not package_libxcrypt_stat.stat.exists|bool
 
     - name: Copy libxcrypt-compat
       ansible.builtin.copy:
         src: "{{ package_libxcrypt }}"
-        dest: /tmp/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm
+        dest: /tmp/libxcrypt-compat.rpm
       
     - name: Install libxcrypt-compat
       become: true
-      shell: "rpm --replacepkgs -i --nodeps /tmp/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm"
+      shell: "rpm --replacepkgs -i --nodeps /tmp/libxcrypt-compat.rpm"
 
     - name: Copy libxcrypt-compat
-      shell: "rm /tmp/libxcrypt-compat-4.4.18-3.el9.x86_64.rpm"
+      shell: "rm /tmp/libxcrypt-compat.rpm"
   tags: libxcrypt-compat
 
 - name: install required packages
