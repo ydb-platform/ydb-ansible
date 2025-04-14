@@ -29,7 +29,7 @@ Current limitations:
 * Debian 11.11, 12.7
 * AstraLinux 1.7, 1.8
 * AlmaLinux 8.9, 9.4, 9.5
-* Altlinux 8.4, 10, 10.1
+* Altlinux 8.4, 10, 10.1, 10.2
 * RedHat 9.3
 * RedOS 7.3, 8
 * CentOS 8
