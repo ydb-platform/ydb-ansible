@@ -1,4 +1,4 @@
-- name: check if required variables are defined
+- name: Check if required variables are defined
   hosts: "{{ playbook_hosts | default('ydb') }}"
 
   tasks:
