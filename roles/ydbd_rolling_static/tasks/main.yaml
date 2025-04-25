@@ -66,6 +66,20 @@
         mode: 0755
       when: not ydbops_stat.stat.exists|bool
 
+    - name: "run ydbops to gracefully restart part of the cluster, it takes a long time"
+      delegate_to: 127.0.0.1
+      run_once: true
+      ydb_platform.ydb.restart_storage:
+        ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
+        ydbops_endpoint: "grpcs://{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}:2135"
+        # ssh_args: "ssh -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }} -o StrictHostKeyChecking=no -o ProxyCommand=\\\"ssh -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user }}@{{ groups['ydb'] | default(groups['all']) | flatten(levels=1) | first }}\\\""
+        ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }}"
+        ca_file: "{{ ydb_tls_dir }}/ca.crt"
+        token: "{{ ydb_credentials.token }}"
+        availability_mode: "{{ availability_mode }}"
+        hosts: "{{ ansible_play_batch | join(',') }}"
+      when: ansible_limit is defined
+
     - name: "run ydbops to gracefully restart the cluster, it takes a long time"
       delegate_to: 127.0.0.1
       run_once: true
@@ -77,8 +91,8 @@
         ca_file: "{{ ydb_tls_dir }}/ca.crt"
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
-        hosts: "{{ item }}"
-      loop: "{{ ansible_play_batch }}"
+      when: ansible_limit is not defined
+
 
 - name: Restart from static node
   when: not ydbops_local|bool
