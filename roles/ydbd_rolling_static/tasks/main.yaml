@@ -77,6 +77,8 @@
         ca_file: "{{ ydb_tls_dir }}/ca.crt"
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
+        hosts: "{{ item }}"
+      loop: "{{ ansible_play_batch }}"
 
 - name: Restart from static node
   when: not ydbops_local|bool
