@@ -27,6 +27,7 @@
     tags:
       - storage
       - static
+
   - role: ydbd_rolling_dynamic
     tags:
       - database
