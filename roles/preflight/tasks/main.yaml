@@ -37,3 +37,8 @@
 - name: Check current user
   ansible.builtin.command: whoami
   register: current_user
+
+- name: Check conditions in variables (1. dynamic config)
+  ansible.builtin.fail:
+    msg: "Impossible to use ydb_enforce_user_token_requirement and ydb_request_client_certificate together"
+  when: ydb_enforce_user_token_requirement|bool and ydb_request_client_certificate|bool
