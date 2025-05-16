@@ -73,7 +73,7 @@
   loop: "{{ ydb_dynnodes }}"
   retries: 5
 
-- name: Delay for 1 mon
+- name: Delay for 1 min
   pause:
     seconds: 60
 
