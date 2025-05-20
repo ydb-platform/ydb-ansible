@@ -291,6 +291,87 @@ sudo docker run -it --rm \
         ydb-ansible ansible-console ydb
 ```
 
+# Install with separated network
+It's possible to use separeted networks for YDB cluster:
+- front-end network - for communication between YDB clients and YDB cluster
+- back-end network - for inter-communications between YDB cluster nodes
+
+```mermaid
+
+graph LR
+  subgraph client
+  end
+  subgraph node01
+    node01-front-fqdn
+    node01-back-fqdn
+  end
+  subgraph node02
+    node02-front-fqdn
+    node02-back-fqdn
+  end
+  subgraph node03
+    node03-front-fqdn
+    node03-back-fqdn
+  end
+
+  node01-back-fqdn <--> node02-back-fqdn
+  node01-back-fqdn <--> node03-back-fqdn
+  node03-back-fqdn <--> node02-back-fqdn
+  client --> node01-front-fqdn
+  client --> node02-front-fqdn
+  client --> node03-front-fqdn
+  
+```
+
+## Inventory for separated networks
+
+First of all, back-end network is main network for the cluster. 
+That's why back-end FQDN must be configured as hostnames for the nodes.
+Fron-end FQDN must be defined as host-variable `ydb_front`. 
+Also it's possible to define `NodeId` via `ydb_back_number` variable.
+List of brokers is important part for dynamic nodes and it must contain back-end FQDN.
+
+Example inventory part for nodes
+```yaml
+all:
+  children:
+    ydb:
+      hosts:
+        ydb-node01.back.ru-central1.internal:
+            ydb_front: ydb-node01.front.ru-central1.internal
+            ydb_back_number: 1
+        ydb-node02.back.ru-central1.internal: 
+            ydb_front: ydb-node02.front.ru-central1.internal
+            ydb_back_number: 2
+        ydb-node03.back.ru-central1.internal: 
+            ydb_front: ydb-node03.front.ru-central1.internal
+            ydb_back_number: 3
+```
+Example inventory part for brokers
+```yaml
+        ydb_brokers:
+          - ydb-node01.back.ru-central1.internal
+          - ydb-node02.back.ru-central1.internal
+          - ydb-node03.back.ru-central1.internal
+```
+
+## Cluster config
+
+In config only back-end FQDN are used
+```yaml
+hosts:
+- host: ydb-node01.back.ru-central1.internal
+  host_config_id: 1
+  walle_location:
+    body: 1
+    data_center: 'zone-a'
+    rack: '1'
+- host: ydb-node02.back.ru-central1.internal
+  host_config_id: 1
+...
+
+```
+
 # FAQ
 
 1) Q: How to install on Linux with kernel 5.15.0-1073-kvm, which does not contain the tcp_htcp module?
