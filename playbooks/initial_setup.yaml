@@ -18,6 +18,7 @@
 
 - hosts: "{{ playbook_hosts | default('ydb') }}"
   become: true
+  any_errors_fatal: true
   tasks:
     - name: check connectivity
       ansible.builtin.import_role:
