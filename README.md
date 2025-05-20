@@ -291,7 +291,7 @@ sudo docker run -it --rm \
         ydb-ansible ansible-console ydb
 ```
 
-# Install with separated network
+# Install with separated networks
 It's possible to use separeted networks for YDB cluster:
 - front-end network - for communication between YDB clients and YDB cluster
 - back-end network - for inter-communications between YDB cluster nodes
@@ -325,10 +325,8 @@ graph LR
 
 ## Inventory for separated networks
 
-First of all, back-end network is main network for the cluster. 
-That's why back-end FQDN must be configured as hostnames for the nodes.
-Fron-end FQDN must be defined as host-variable `ydb_front`. 
-Also it's possible to define `NodeId` via `ydb_back_number` variable.
+First of all, back-end network is main network for the cluster. That's why back-end FQDN must be configured as hostnames for the nodes.
+Fron-end FQDN must be defined as host-variable `ydb_front`. Also it's possible to define `NodeId` via `ydb_back_number` variable.
 List of brokers is important part for dynamic nodes and it must contain back-end FQDN.
 
 Example inventory part for nodes
