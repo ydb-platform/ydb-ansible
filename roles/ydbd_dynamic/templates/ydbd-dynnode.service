@@ -31,7 +31,13 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --node-broker-use-tls true \
 {% endif %}
 {% if ydb_node_dc is defined %}
-    --data-center {{ ydb_node_dc }} --rack {{ ydb_node_rack }} --body {{ ydb_node_body }} \
+    --data-center {{ ydb_node_dc }} \
+{% endif %}
+{% if ydb_node_rack is defined %}
+    --rack {{ ydb_node_rack }} \
+{% endif %}
+{% if ydb_node_body is defined %}
+    --body {{ ydb_node_body }} \
 {% endif %}
     --grpc-ca {{ ydb_dir }}/certs/ca.crt \
     --ca {{ ydb_dir }}/certs/ca.crt \
