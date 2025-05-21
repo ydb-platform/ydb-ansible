@@ -360,8 +360,16 @@ In config only back-end FQDN are used
 hosts:
 - host: ydb-node01.back.ru-central1.internal
   host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
 - host: ydb-node02.back.ru-central1.internal
   host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
 ...
 
 ```
