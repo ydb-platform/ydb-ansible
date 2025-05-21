@@ -1,4 +1,4 @@
-- hosts: "{{ play_hosts | default('ydb') }}"
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
   become: true
   tasks:
     - name: setup ydb static nodes
