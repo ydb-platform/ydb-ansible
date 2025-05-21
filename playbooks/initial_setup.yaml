@@ -16,7 +16,7 @@
 # ansible-playbook ydb_platform.ydb.initial_setup
 #
 
-- hosts: "{{ play_hosts | default('ydb') }}"
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
   become: true
   any_errors_fatal: true
   tasks:
