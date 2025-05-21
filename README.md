@@ -292,7 +292,7 @@ sudo docker run -it --rm \
 ```
 
 # Install with separated networks
-It's possible to use separeted networks for YDB cluster:
+It's possible to use separated networks for YDB cluster:
 - front-end network - for communication between YDB clients and YDB cluster
 - back-end network - for inter-communications between YDB cluster nodes
 
@@ -329,7 +329,7 @@ First of all, back-end network is main network for the cluster. That's why back-
 Fron-end FQDN must be defined as host-variable `ydb_front`. Also it's possible to define `NodeId` via `ydb_back_number` variable.
 List of brokers is important part for dynamic nodes and it must contain back-end FQDN.
 
-Example inventory part for nodes
+Example. Inventory part for nodes
 ```yaml
 all:
   children:
@@ -345,7 +345,7 @@ all:
             ydb_front: ydb-node03.front.ru-central1.internal
             ydb_back_number: 3
 ```
-Example inventory part for brokers
+Example. Inventory part for brokers
 ```yaml
         ydb_brokers:
           - ydb-node01.back.ru-central1.internal
@@ -360,14 +360,20 @@ In config only back-end FQDN are used
 hosts:
 - host: ydb-node01.back.ru-central1.internal
   host_config_id: 1
-  walle_location:
-    body: 1
-    data_center: 'zone-a'
-    rack: '1'
 - host: ydb-node02.back.ru-central1.internal
   host_config_id: 1
 ...
 
+```
+
+## SSL Certificates (Optional)
+It's required to generate certificated for FQDN in both networks if GRPCS is used.
+
+Example. `ydb-ca-nodes.txt` for generating certificates
+```txt
+ydb-node01 ydb-node01.ru-central1.internal ydb-node01.back.ru-central1.internal
+ydb-node02 ydb-node02.ru-central1.internal ydb-node02.back.ru-central1.internal
+ydb-node03 ydb-node03.ru-central1.internal ydb-node03.back.ru-central1.internal
 ```
 
 # FAQ
