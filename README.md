@@ -386,7 +386,7 @@ ydb-node03 ydb-node03.front.ru-central1.internal ydb-node03.back.ru-central1.int
 
 # Expand cluster
 
-Thera two possible ways to add new nodes into the cluster:
+There are two possible ways to add new nodes into the cluster:
 - Simple  - use `initial_setup` playbook
 - Long - use several playbooks
 
