@@ -384,6 +384,138 @@ ydb-node02 ydb-node02.front.ru-central1.internal ydb-node02.back.ru-central1.int
 ydb-node03 ydb-node03.front.ru-central1.internal ydb-node03.back.ru-central1.internal
 ```
 
+# Expand cluster
+
+Thera two possible ways to add new nodes into the cluster:
+- Simple  - use `initial_setup` playbook
+- Long - use several playbooks
+
+## Simple
+
+1. Update config.yaml - add new nodes into `hosts` section
+before
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+```
+after
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+- host: ydb-node-NEW.ru-central1.internal
+  host_config_id: 100
+  location:
+    unit: srv100
+    data_center: YDB3
+    rack: RACK10
+```
+2. Generate SSL certificates for new nodes
+3. Update configs on the current nodes and restart cluster
+`ansible-playbook ydb_platform.ydb.update_config`
+4. Add new nodes into inventory
+```
+all:
+  children:
+    ydb:
+      hosts:
+        ydb-node01.ru-central1.internal:
+        ydb-node02.ru-central1.internal: 
+        ydb-node03.ru-central1.internal: 
+        ydb-node-NEW.ru-central1.internal:
+```
+5. Install YDB on new nodes and start them
+`ansible-playbook ydb_platform.ydb.initial_setup -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+6. Check the cluster
+
+## Long
+
+1. Update config.yaml - add new nodes into `hosts` section
+before
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+```
+after
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+- host: ydb-node-NEW.ru-central1.internal
+  host_config_id: 100
+  location:
+    unit: srv100
+    data_center: YDB3
+    rack: RACK10
+```
+2. Generate SSL certificates for new nodes
+3. Update configs on the current nodes and restart cluster
+`ansible-playbook ydb_platform.ydb.update_config`
+4. Add new nodes into inventory
+```
+all:
+  children:
+    ydb:
+      hosts:
+        ydb-node01.ru-central1.internal:
+        ydb-node02.ru-central1.internal: 
+        ydb-node03.ru-central1.internal: 
+        ydb-node-NEW.ru-central1.internal:
+```
+5. Prepare nodes for YDB:
+`ydb_platform.ydb.prepare_host -l ydb-node-NEW.ru-central1.internal`
+6. Install YDB on new static nodes and start them
+`ydb_platform.ydb.install_static -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+7. Install YDB on new dynamic nodes and start them
+`ydb_platform.ydb.install_dynamic -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+8. Check the cluster
+
 # FAQ
 
 1) Q: How to install on Linux with kernel 5.15.0-1073-kvm, which does not contain the tcp_htcp module?
