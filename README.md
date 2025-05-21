@@ -392,8 +392,9 @@ There are two possible ways to add new nodes into the cluster:
 
 ## Simple
 
-1. Update config.yaml - add new nodes into `hosts` section
-before
+1. Update config.yaml - add new nodes into `hosts` section.
+
+Example. Before changes
 ```
 hosts:
 - host: ydb-node01.ru-central1.internal
@@ -410,7 +411,8 @@ hosts:
     rack: RACK1
 ...
 ```
-after
+
+Example. After changes
 ```
 hosts:
 - host: ydb-node01.ru-central1.internal
@@ -433,10 +435,12 @@ hosts:
     data_center: YDB3
     rack: RACK10
 ```
+
 2. Generate SSL certificates for new nodes
 3. Update configs on the current nodes and restart cluster
 `ansible-playbook ydb_platform.ydb.update_config`
 4. Add new nodes into inventory
+
 ```
 all:
   children:
@@ -447,14 +451,17 @@ all:
         ydb-node03.ru-central1.internal: 
         ydb-node-NEW.ru-central1.internal:
 ```
+
 5. Install YDB on new nodes and start them
 `ansible-playbook ydb_platform.ydb.initial_setup -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
 6. Check the cluster
 
 ## Long
 
-1. Update config.yaml - add new nodes into `hosts` section
-before
+1. Update config.yaml - add new nodes into `hosts` section.
+
+Example. Before changes
+
 ```
 hosts:
 - host: ydb-node01.ru-central1.internal
@@ -471,7 +478,9 @@ hosts:
     rack: RACK1
 ...
 ```
-after
+
+Example. After changes
+
 ```
 hosts:
 - host: ydb-node01.ru-central1.internal
@@ -494,10 +503,12 @@ hosts:
     data_center: YDB3
     rack: RACK10
 ```
+
 2. Generate SSL certificates for new nodes
 3. Update configs on the current nodes and restart cluster
 `ansible-playbook ydb_platform.ydb.update_config`
 4. Add new nodes into inventory
+
 ```
 all:
   children:
@@ -508,6 +519,7 @@ all:
         ydb-node03.ru-central1.internal: 
         ydb-node-NEW.ru-central1.internal:
 ```
+
 5. Prepare nodes for YDB:
 `ydb_platform.ydb.prepare_host -l ydb-node-NEW.ru-central1.internal`
 6. Install YDB on new static nodes and start them
