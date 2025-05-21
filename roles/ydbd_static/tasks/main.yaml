@@ -174,3 +174,5 @@
     new_password: "{{ ydb_password }}"
     token: "{{ ydb_credentials.token }}"
   run_once: true
+  tags:
+    - password

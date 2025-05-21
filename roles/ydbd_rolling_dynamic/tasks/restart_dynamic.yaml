@@ -16,12 +16,10 @@
 - name: Wait for dynamic nodes on {{ inventory_hostname }} to start listening
   throttle: 1
   ansible.builtin.wait_for:
-    port: "{{ 2136 + offset }}"
+    port: "{{ 2136 + item.offset }}"
     delay: 3
     sleep: 3
   loop: "{{ ydb_dynnodes }}"
-  loop_control:
-    index_var: offset
 
 - name: Additional delay to settle the dynamic nodes
   ansible.builtin.pause: seconds={{ ydb_dynnode_restart_sleep_seconds | default(5) }}

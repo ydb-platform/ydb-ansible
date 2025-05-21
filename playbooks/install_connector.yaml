@@ -1,4 +1,4 @@
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ play_hosts | default('ydb') }}"
   become: true
   tasks:
     - name: setup fq-connector
