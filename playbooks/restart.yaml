@@ -18,7 +18,7 @@
 #   ansible-playbook ydb_platform.ydb.restart -t dynamic
 #
 
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ play_hosts | default('ydb') }}"
   become: true
 
   roles:

@@ -16,8 +16,9 @@
 # ansible-playbook ydb_platform.ydb.initial_setup
 #
 
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ play_hosts | default('ydb') }}"
   become: true
+  any_errors_fatal: true
   tasks:
     - name: check connectivity
       ansible.builtin.import_role:

@@ -35,6 +35,17 @@
     group: ydb
     owner: ydb
 
+- name: Add aliases in bashrc
+  lineinfile:
+    path: "{{ ydb_dir }}/home/.bashrc"
+    line: "alias {{ item.alias }}=\"{{ item.cmd }}\""
+    insertafter: EOF
+    create: yes
+    state: present
+  with_items:
+    - {alias: "ydb", cmd: "{{ ydb_dir }}/bin/ydb"}
+    - {alias: "ydbd", cmd: "{{ ydb_dir }}/bin/ydbd"}
+
 - name: Create the YDB release directory
   file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode='0755'
 

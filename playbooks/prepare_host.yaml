@@ -8,7 +8,7 @@
 # ansible-playbook ydb_platform.ydb.prepare_host
 #
 
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ play_hosts | default('ydb') }}"
   become: true
   vars:
     - ydb_tools_install: true

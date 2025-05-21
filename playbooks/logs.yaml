@@ -1,6 +1,6 @@
 ---
 - name: Get logs of YDB nodes
-  hosts: "{{ playbook_hosts | default('ydb') }}"
+  hosts: "{{ play_hosts | default('ydb') }}"
   tasks:
     - name: Fetch storage nodes logs
       shell: journalctl -u ydbd-storage
