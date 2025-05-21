@@ -379,9 +379,9 @@ It's required to generate certificated for FQDN in both networks if GRPCS is use
 
 Example. `ydb-ca-nodes.txt` for generating certificates
 ```txt
-ydb-node01 ydb-node01.ru-central1.internal ydb-node01.back.ru-central1.internal
-ydb-node02 ydb-node02.ru-central1.internal ydb-node02.back.ru-central1.internal
-ydb-node03 ydb-node03.ru-central1.internal ydb-node03.back.ru-central1.internal
+ydb-node01 ydb-node01.front.ru-central1.internal ydb-node01.back.ru-central1.internal
+ydb-node02 ydb-node02.front.ru-central1.internal ydb-node02.back.ru-central1.internal
+ydb-node03 ydb-node03.front.ru-central1.internal ydb-node03.back.ru-central1.internal
 ```
 
 # FAQ
