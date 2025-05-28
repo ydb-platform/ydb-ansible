@@ -12,7 +12,11 @@ UMask=077
 PermissionsStartOnly=true
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
+{% if ydb_config_v2 | default(false) %}
+    --config-dir {{ ydb_dir }}/cfg \
+{% else %}
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
+{% endif %}
 {% if ydb_back_name is defined %}
     --node-host {{ ydb_back_name }} \
 {% endif %}

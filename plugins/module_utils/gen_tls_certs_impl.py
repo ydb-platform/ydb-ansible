@@ -108,12 +108,20 @@ organizationName = YDB
 subjectAltName = @alt_names
 
 [ alt_names ]
-IP.1=127.0.1.1
-DNS.1={node}
+IP.1=127.0.0.1
+IP.2=127.0.1.1
+IP.3=::1
+DNS.1=localhost
+DNS.2={node}
 """
             if extra_nodes:
-                for i, nn in enumerate(extra_nodes.split(), start=2):
-                    node_config_content += f"DNS.{i}={nn}\n"
+                dns_counter = 3
+                for nn in extra_nodes.split():
+                    # Remove trailing dots and add the clean FQDN
+                    clean_name = nn.rstrip('.')
+                    if clean_name != node:  # Avoid duplicates
+                        node_config_content += f"DNS.{dns_counter}={clean_name}\n"
+                        dns_counter += 1
             write_file(cfile, node_config_content)
 
     def make_node_key(safe_node, node):
@@ -162,10 +170,15 @@ DNS.1={node}
     create_directory(dest_dir)
     run_command(f'cp -v {os.path.join(certs_dir, "ca.crt")} {dest_dir}/')
 
-    node = fqdn.strip() + "."
-    short_node = node.split(".")[0]
+    # Clean up the FQDN and prepare variations
+    clean_fqdn = fqdn.strip().rstrip('.')
+    short_node = clean_fqdn.split(".")[0]
     safe_node = short_node.replace("*", "_").replace("$", "_").replace("/", "_")
-    make_node_conf(safe_node, short_node, node)
+
+    # Include both short hostname and full FQDN as extra names
+    extra_names = f"{clean_fqdn} {short_node}"
+
+    make_node_conf(safe_node, short_node, extra_names)
     make_node_key(safe_node, short_node)
     make_node_csr(safe_node, short_node)
     make_node_cert(safe_node, short_node)

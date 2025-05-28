@@ -14,14 +14,25 @@ def main():
     try:
         ydb_cli = cli.YDB.from_module(module)
         end_ts = time.time() + module.params.get('timeout')
+
+        # Variables to track last attempt output
+        last_rc = None
+        last_stdout = None
+        last_stderr = None
+
         while time.time() < end_ts:
-            rc, _, _ = ydb_cli(['discovery', 'list'])
+            rc, stdout, stderr = ydb_cli(['discovery', 'list'])
+            last_rc, last_stdout, last_stderr = rc, stdout, stderr
             if rc == 0:
                 result['msg'] = 'ydb discovery is working'
                 module.exit_json(**result)
             time.sleep(1)
         else:
-            result['msg'] = 'ydb discovery not answered in time'
+            # Build detailed failure message with last attempt output
+            failure_msg = 'ydb discovery not answered in time'
+            if last_rc is not None:
+                failure_msg += f'. Last attempt: rc={last_rc}, stdout="{last_stdout}", stderr="{last_stderr}"'
+            result['msg'] = failure_msg
             module.fail_json(**result)
 
     except Exception as e:
