@@ -18,6 +18,76 @@
     - ydb_domain
     - ydb_user
 
+# Simple default broker selection (case 1)
+- name: Set default ydb_brokers (first three nodes)
+  set_fact:
+    ydb_brokers: "{{ groups['all'] | list | sort }}"
+  run_once: true
+  when: ydb_brokers is not defined
+
+- name: Limit default brokers to three nodes
+  set_fact:
+    ydb_brokers: "{{ ydb_brokers[:3] }}"
+  run_once: true
+  when: ydb_brokers is defined and ydb_brokers | length > 3
+
+# Collect information about data_centers
+- name: Create empty datacenter dictionary
+  set_fact:
+    datacenter_dict: {}
+  run_once: true
+  when: ydb_brokers is defined
+
+- name: Collect data_center information
+  set_fact:
+    datacenter_dict: "{{ datacenter_dict | default({}) | combine({hostvars[item].data_center: datacenter_dict[hostvars[item].data_center] | default([]) + [item]}) }}"
+  with_items: "{{ groups['all'] }}"
+  run_once: true
+  when:
+    - ydb_brokers is defined
+    - "'data_center' in hostvars[item]"
+    - hostvars[item].data_center is defined
+
+# Collect information about racks
+- name: Create empty rack dictionary
+  set_fact:
+    rack_dict: {}
+  run_once: true
+  when: ydb_brokers is defined
+
+- name: Collect rack information
+  set_fact:
+    rack_dict: "{{ rack_dict | default({}) | combine({hostvars[item].rack: rack_dict[hostvars[item].rack] | default([]) + [item]}) }}"
+  with_items: "{{ groups['all'] }}"
+  run_once: true
+  when:
+    - ydb_brokers is defined
+    - "'rack' in hostvars[item]"
+    - hostvars[item].rack is defined
+
+# Case 3: Multiple data centers (highest priority)
+- name: Select one node from each data center (case 3)
+  set_fact:
+    ydb_brokers: "{{ dc_brokers }}"
+  vars:
+    dc_brokers: "{% set brokers = [] %}{% for dc in datacenter_dict.keys() | sort %}{% if datacenter_dict[dc] | length > 0 %}{% set _ = brokers.append((datacenter_dict[dc] | sort)[0]) %}{% endif %}{% endfor %}{{ brokers }}"
+  run_once: true
+  when:
+    - datacenter_dict is defined
+    - datacenter_dict | length > 1
+
+# Case 2: One data center but multiple racks
+- name: Select one node from each rack in the same data center (case 2)
+  set_fact:
+    ydb_brokers: "{{ rack_brokers }}"
+  vars:
+    rack_brokers: "{% set brokers = [] %}{% for rack in rack_dict.keys() | sort %}{% if rack_dict[rack] | length > 0 %}{% set _ = brokers.append((rack_dict[rack] | sort)[0]) %}{% endif %}{% endfor %}{{ brokers }}"
+  run_once: true
+  when:
+    - datacenter_dict is not defined or datacenter_dict | length <= 1
+    - rack_dict is defined
+    - rack_dict | length > 1
+
 - name: check if required secrets are defined
   no_log: true
   ansible.builtin.assert:
