@@ -107,7 +107,7 @@ class YDB(CLI):
             self.common_environ['YDB_PASSWORD'] = password
         elif user is not None and password is not None and password == '':
             self.common_options.extend(['--user', user])
-            self.common_options.extend(['--no-password', token_file])
+            self.common_options.extend(['--no-password'])
 
 
 class DsTool(CLI):

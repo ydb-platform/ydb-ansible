@@ -20,11 +20,66 @@ def _ensure_config_path(config, path, default_value):
     if final_key not in current:
         current[final_key] = default_value
 
+def _generate_hosts_section(hostvars, ydb_disks, default_disk_type=None):
+    """Generate hosts section from inventory data when it's missing from config."""
+    hosts = []
 
-def patch_config_v2(config):
+    # Get the list of YDB hosts from the inventory
+    # We assume that hostvars contains only the relevant YDB hosts
+    for hostname, host_data in hostvars.items():
+        host_entry = {'host': hostname}
+
+        # Generate drive section from ydb_disks
+        if ydb_disks:
+            drives = []
+            for disk in ydb_disks:
+                # Use the disk type from the disk definition, or fall back to default
+                disk_type = disk.get('type')
+                if not disk_type:
+                    disk_type = default_disk_type or 'SSD'
+
+                drive = {
+                    'path': f"/dev/disk/by-partlabel/{disk.get('label', disk.get('name', '').replace('/dev/', ''))}",
+                    'type': disk_type
+                }
+                drives.append(drive)
+            host_entry['drive'] = drives
+
+        # Add location information if available in host_data
+        # Handle case where host_data might be None or not a dict
+        if isinstance(host_data, dict):
+            location_data = host_data.get('location', {})
+            if location_data and isinstance(location_data, dict):
+                location = {}
+                if 'body' in location_data:
+                    location['body'] = location_data['body']
+                if 'data_center' in location_data:
+                    location['data_center'] = location_data['data_center']
+                if 'rack' in location_data:
+                    location['rack'] = location_data['rack']
+                if location:
+                    host_entry['location'] = location
+
+        hosts.append(host_entry)
+
+    return hosts
+
+def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None):
     _ensure_config_path(config, 'yaml_config_enabled', True)
     _ensure_config_path(config, 'self_management_config.enabled', True)
     _ensure_config_path(config, 'actor_system_config.use_auto_config', True)
+
+    # Generate hosts section if it's missing and we have the required data
+    if 'hosts' not in config and hostvars and ydb_disks:
+        # Filter hostvars to only include YDB group hosts if groups is provided
+        if groups and 'ydb' in groups:
+            filtered_hostvars = {host: hostvars.get(host, {}) for host in groups['ydb'] if host in hostvars}
+        else:
+            # Fallback: use all hostvars if no groups filtering is available
+            filtered_hostvars = hostvars
+
+        default_disk_type = config.get('default_disk_type', 'SSD')
+        config['hosts'] = _generate_hosts_section(filtered_hostvars, ydb_disks, default_disk_type)
 
     return config
 
@@ -32,6 +87,9 @@ def main():
     argument_spec = dict(
         config=dict(type='raw', required=True),
         output_file=dict(type='str', required=False),
+        hostvars=dict(type='dict', required=False),
+        ydb_disks=dict(type='list', required=False),
+        groups=dict(type='dict', required=False),
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -40,6 +98,9 @@ def main():
     try:
         config_input = module.params.get('config')
         output_file = module.params.get('output_file')
+        hostvars = module.params.get('hostvars')
+        ydb_disks = module.params.get('ydb_disks')
+        groups = module.params.get('groups')
 
         # Handle different input types
         if isinstance(config_input, dict):
@@ -61,9 +122,9 @@ def main():
 
         # Apply the patch to the config section only
         if 'config' in config:
-            config['config'] = patch_config_v2(config['config'])
+            config['config'] = patch_config_v2(config['config'], hostvars, ydb_disks, groups)
         else:
-            config = patch_config_v2(config)
+            config = patch_config_v2(config, hostvars, ydb_disks, groups)
 
 
         result['changed'] = True

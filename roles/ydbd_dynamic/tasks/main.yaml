@@ -43,13 +43,14 @@
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
+    retry_on_ssl_error: true
   become: true
   become_user: ydb
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
-  retries: 10
-  delay: 10
+  retries: 15
+  delay: 15
 
 - name: create YDB database
   ydb_platform.ydb.create_database:

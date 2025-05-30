@@ -52,7 +52,7 @@ def create_directory(directory):
         os.makedirs(directory)
 
 
-def gen_tls_certs(fqdn, folder, dest, run_command, write_file, debug_info):
+def gen_tls_certs(fqdn, folder, dest, run_command, write_file, debug_info, extra_ips=''):
     key_bits = 4096
     secure_dir = os.path.join(folder, "secure")
     certs_dir = os.path.join(folder, "certs")
@@ -89,12 +89,31 @@ def gen_tls_certs(fqdn, folder, dest, run_command, write_file, debug_info):
         with open("serial.txt", "w") as f:
             f.write("01\n")
 
-    def make_node_conf(safe_node, node, extra_nodes):
+    def make_node_conf(safe_node, node, extra_nodes, extra_ips_list):
         node_dir = os.path.join(nodes_dir, safe_node)
         create_directory(node_dir)
         cfile = os.path.join(node_dir, "options.cnf")
         if not os.path.isfile(cfile):
             print(f"** Creating node configuration file for {node}...", file=debug_info)
+
+            # Start with extra IPs provided from the host facts
+            all_ips = []
+            if extra_ips_list:
+                all_ips.extend(extra_ips_list.split())
+
+            # Try to resolve the node FQDN to IP addresses
+            try:
+                import socket
+                # Get all IP addresses for the hostname
+                addr_info = socket.getaddrinfo(node, None, family=socket.AF_UNSPEC, type=socket.SOCK_STREAM)
+                for info in addr_info:
+                    ip = info[4][0]
+                    if ip not in all_ips and ip not in ['127.0.0.1', '::1']:
+                        all_ips.append(ip)
+            except Exception:
+                # If resolution fails, continue without resolved IPs
+                pass
+
             node_config_content = f"""# OpenSSL node configuration file
 [ req ]
 prompt=no
@@ -114,6 +133,15 @@ IP.3=::1
 DNS.1=localhost
 DNS.2={node}
 """
+
+            # Add all collected IPs to the SAN list
+            ip_counter = 4
+            for ip in all_ips:
+                if ip and ip.strip():  # Skip empty IPs
+                    node_config_content += f"IP.{ip_counter}={ip.strip()}\n"
+                    ip_counter += 1
+
+            # Add extra DNS names
             if extra_nodes:
                 dns_counter = 3
                 for nn in extra_nodes.split():
@@ -176,12 +204,14 @@ DNS.2={node}
     safe_node = short_node.replace("*", "_").replace("$", "_").replace("/", "_")
 
     # Include both short hostname and full FQDN as extra names
-    extra_names = f"{clean_fqdn} {short_node}"
+    # Use the full FQDN as the primary node name for certificate generation
+    primary_node = clean_fqdn
+    extra_names = f"{short_node} {clean_fqdn}"
 
-    make_node_conf(safe_node, short_node, extra_names)
-    make_node_key(safe_node, short_node)
-    make_node_csr(safe_node, short_node)
-    make_node_cert(safe_node, short_node)
+    make_node_conf(safe_node, primary_node, extra_names, extra_ips)
+    make_node_key(safe_node, primary_node)
+    make_node_csr(safe_node, primary_node)
+    make_node_cert(safe_node, primary_node)
     move_node_files(safe_node)
 
     print(f"All done. Certificates are in {dest_dir}", file=debug_info)
@@ -203,13 +233,17 @@ def main():
     parser.add_argument(
         "--dest", metavar="dest", type=str, help="name of the destination directory"
     )
+    parser.add_argument(
+        "--extra-ips", metavar="extra_ips", type=str, default="", help="additional IP addresses for SAN"
+    )
 
     args = parser.parse_args()
     gen_tls_certs(
         args.fqdn, args.folder, args.dest,
         run_command=run_command,
         write_file=write_file,
-        debug_info=sys.stdout
+        debug_info=sys.stdout,
+        extra_ips=args.extra_ips
     )
 
 if __name__ == "__main__":

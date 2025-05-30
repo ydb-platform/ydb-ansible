@@ -49,11 +49,12 @@
       database: "/{{ ydb_domain }}"
       user: "{{ ydb_user }}"
       password: "{{ ydb_password }}"
+      retry_on_ssl_error: true
     run_once: true
     register: ydb_credentials
     until: "'token' in ydb_credentials"
-    retries: 10
-    delay: 10
+    retries: 15
+    delay: 15
     when: ydb_config_v2 | default(false)
     become: true
     become_method: sudo
@@ -125,6 +126,9 @@
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
           config: "{{ parsed_ansible_config }}"
+          hostvars: "{{ hostvars }}"
+          ydb_disks: "{{ ydb_disks }}"
+          groups: "{{ groups }}"
         run_once: true
         register: patched_config_result
 

@@ -24,6 +24,7 @@ def main():
         fqdn=dict(type='str', required=True),
         folder=dict(type='str', required=True),
         dest=dict(type='str', required=True),
+        extra_ips=dict(type='str', required=False, default=''),
     )
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
     try:
@@ -33,6 +34,7 @@ def main():
             fqdn=module.params.get('fqdn'),
             folder=module.params.get('folder'),
             dest=module.params.get('dest'),
+            extra_ips=module.params.get('extra_ips'),
             run_command=module.run_command,
             write_file=write_file(module.atomic_move),
             debug_info=string_stream

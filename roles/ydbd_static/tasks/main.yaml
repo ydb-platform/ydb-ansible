@@ -125,6 +125,9 @@
       ydb_platform.ydb.patch_config:
         config: "{{ ydb_temp_config_path }}"
         output_file: "{{ ydb_temp_config_path }}"
+        hostvars: "{{ hostvars }}"
+        ydb_disks: "{{ ydb_disks }}"
+        groups: "{{ groups }}"
       become: true
       become_user: ydb
   when: ydb_config_v2
@@ -147,17 +150,6 @@
     state: absent
   when: ydb_config_v2
 
-- name: start storage node
-  ansible.builtin.systemd:
-    name: ydbd-storage
-    state: started
-    enabled: true
-  any_errors_fatal: true
-
-- name: give storage node some time to start
-  pause:
-    seconds: 10
-
 - name: Check ydb-dstool presence
   stat:
     path: "{{ ydb_dir }}/bin/ydb-dstool"
@@ -177,7 +169,67 @@
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
 
-- name: init YDB storage if not initialized
+- name: get initial root token for storage initialization (non-v2 configuration)
+  ydb_platform.ydb.get_token:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "root"
+    password: ""
+    retry_on_ssl_error: true
+  run_once: true
+  register: root_token
+  until: "'token' in root_token"
+  retries: 5
+  delay: 5
+  become: true
+  become_user: ydb
+  when: not ydb_config_v2
+
+- name: init YDB storage if not initialized (non-v2 configuration)
+  ydb_platform.ydb.init_storage:
+    config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    database: "/{{ ydb_domain }}"
+    token: "{{ root_token.token | default('') }}"
+    use_config_v2: "{{ ydb_config_v2 }}"
+  register: init_storage_nonv2
+  run_once: true
+  when: not ydb_config_v2
+  become_user: ydb
+
+- name: start storage node
+  ansible.builtin.systemd:
+    name: ydbd-storage
+    state: started
+    enabled: true
+  any_errors_fatal: true
+
+- name: give storage node some time to start
+  pause:
+    seconds: 15
+
+- name: wait for YDB TLS service to be ready
+  wait_for:
+    port: 2135
+    host: "{{ ydb_front | default(inventory_hostname) }}"
+    timeout: 120
+    delay: 5
+  run_once: true
+
+- name: additional wait for TLS handshake readiness
+  pause:
+    seconds: 45
+  run_once: true
+
+# For v2 configs, initialize storage after the server is running
+- name: init YDB storage if not initialized (v2 configuration)
   ydb_platform.ydb.init_storage:
     config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
@@ -187,12 +239,15 @@
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     use_config_v2: "{{ ydb_config_v2 }}"
-  register: init_storage
+  register: init_storage_v2
   run_once: true
   when: ydb_config_v2
   become_user: ydb
 
-- name: get ydb token
+# CRITICAL STEP: Getting auth token with user credentials
+# - For v2: This happens after storage initialization
+# - For non-v2: This happens after storage initialization but is done with root token first
+- name: get ydb token with user credentials
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
@@ -200,11 +255,12 @@
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
+    retry_on_ssl_error: true
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
-  retries: 10
-  delay: 10
+  retries: 25
+  delay: 20
   become: true
   become_user: ydb
 
@@ -217,23 +273,6 @@
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
   become: true
-  become_user: ydb
-
-- name: init YDB storage if not initialized
-  ydb_platform.ydb.init_storage:
-    config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
-    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
-    ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
-    dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    database: "/{{ ydb_domain }}"
-    token: "{{ ydb_credentials.token }}"
-    use_config_v2: "{{ ydb_config_v2 }}"
-  register: init_storage
-  run_once: true
-  when: not ydb_config_v2
   become_user: ydb
 
 - name: wait for ydb healthcheck switch to "GOOD" status

@@ -70,12 +70,20 @@
       run_once: true
       set_fact:
         current_time: "{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}"
+
+    - name: gather host IP addresses for certificate generation
+      set_fact:
+        host_ip_addresses: "{{ (ansible_all_ipv4_addresses + [ansible_default_ipv4.address]) | unique | join(' ') }}"
+      delegate_to: "{{ inventory_hostname }}"
+      delegate_facts: false
+
     - name: generate TLS certificates
       throttle: 1
       ydb_platform.ydb.gen_tls_certs:
         fqdn: "{{ inventory_hostname }}"
         folder: "{{ ansible_config_file | dirname }}/files/TLS"
         dest: "{{ current_time }}"
+        extra_ips: "{{ host_ip_addresses }}"
     - name: set ydb_tls_dir
       set_fact:
         ydb_tls_dir: "{{ ansible_config_file | dirname }}/files/TLS/certs/{{ current_time }}"
