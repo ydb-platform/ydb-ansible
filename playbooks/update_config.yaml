@@ -1,5 +1,8 @@
-- name: Check if required variables are defined
-  hosts: "{{ playbook_hosts | default('ydb') }}"
+---
+
+- name: check if required variables are defined
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
   tasks:
   - ansible.builtin.assert:
       that:
@@ -14,7 +17,7 @@
     - database
     - dynamic
     - no_restart
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
   roles:
   - role: preflight
   tags:
@@ -23,7 +26,7 @@
     - database
     - dynamic
     - no_restart
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
   tasks:
   - name: copy original configuration file
     copy:

@@ -29,7 +29,7 @@ Current limitations:
 * Debian 11.11, 12.7
 * AstraLinux 1.7, 1.8
 * AlmaLinux 8.9, 9.4, 9.5
-* Altlinux 8.4, 10, 10.1
+* Altlinux 8.4, 10, 10.1, 10.2
 * RedHat 9.3
 * RedOS 7.3, 8
 * CentOS 8
@@ -305,6 +305,243 @@ You can define your own dynamic config. In this case you can take `roles/ydb_sta
         # Default value: false
         ydb_use_dynamic_config: true
 ```
+
+# Install with separated networks
+It's possible to use separated networks for YDB cluster:
+- front-end network - for communication between YDB clients and YDB cluster
+- back-end network - for inter-communications between YDB cluster nodes
+
+```mermaid
+
+graph LR
+  subgraph client
+  end
+  subgraph node01
+    node01-front-fqdn
+    node01-back-fqdn
+  end
+  subgraph node02
+    node02-front-fqdn
+    node02-back-fqdn
+  end
+  subgraph node03
+    node03-front-fqdn
+    node03-back-fqdn
+  end
+
+  node01-back-fqdn <--> node02-back-fqdn
+  node01-back-fqdn <--> node03-back-fqdn
+  node03-back-fqdn <--> node02-back-fqdn
+  client --> node01-front-fqdn
+  client --> node02-front-fqdn
+  client --> node03-front-fqdn
+  
+```
+
+## Inventory for separated networks
+
+First of all, back-end network is main network for the cluster. That's why back-end FQDN must be configured as hostnames for the nodes.
+Fron-end FQDN must be defined as host-variable `ydb_front`. Also it's possible to define `NodeId` via `ydb_back_number` variable.
+List of brokers is important part for dynamic nodes and it must contain back-end FQDN.
+
+Example. Inventory part for nodes
+```yaml
+all:
+  children:
+    ydb:
+      hosts:
+        ydb-node01.back.ru-central1.internal:
+            ydb_front: ydb-node01.front.ru-central1.internal
+            ydb_back_number: 1
+        ydb-node02.back.ru-central1.internal: 
+            ydb_front: ydb-node02.front.ru-central1.internal
+            ydb_back_number: 2
+        ydb-node03.back.ru-central1.internal: 
+            ydb_front: ydb-node03.front.ru-central1.internal
+            ydb_back_number: 3
+```
+Example. Inventory part for brokers
+```yaml
+        ydb_brokers:
+          - ydb-node01.back.ru-central1.internal
+          - ydb-node02.back.ru-central1.internal
+          - ydb-node03.back.ru-central1.internal
+```
+
+## Cluster config
+
+In config only back-end FQDN are used
+```yaml
+hosts:
+- host: ydb-node01.back.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.back.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+
+```
+
+## SSL Certificates (Optional)
+It's required to generate certificated for FQDN in both networks if GRPCS is used.
+
+Example. `ydb-ca-nodes.txt` for generating certificates
+```txt
+ydb-node01 ydb-node01.front.ru-central1.internal ydb-node01.back.ru-central1.internal
+ydb-node02 ydb-node02.front.ru-central1.internal ydb-node02.back.ru-central1.internal
+ydb-node03 ydb-node03.front.ru-central1.internal ydb-node03.back.ru-central1.internal
+```
+
+# Expand cluster
+
+There are two possible ways to add new nodes into the cluster:
+- Simple  - use `initial_setup` playbook
+- Long - use several playbooks
+
+## Simple
+
+1. Update config.yaml - add new nodes into `hosts` section.
+
+Example. Before changes
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+```
+
+Example. After changes
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+- host: ydb-node-NEW.ru-central1.internal
+  host_config_id: 100
+  location:
+    unit: srv100
+    data_center: YDB3
+    rack: RACK10
+```
+
+2. Generate SSL certificates for new nodes
+3. Update configs on the current nodes and restart cluster
+`ansible-playbook ydb_platform.ydb.update_config`
+4. Add new nodes into inventory
+
+```
+all:
+  children:
+    ydb:
+      hosts:
+        ydb-node01.ru-central1.internal:
+        ydb-node02.ru-central1.internal: 
+        ydb-node03.ru-central1.internal: 
+        ydb-node-NEW.ru-central1.internal:
+```
+
+5. Install YDB on new nodes and start them
+`ansible-playbook ydb_platform.ydb.initial_setup -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+6. Check the cluster
+
+## Long
+
+1. Update config.yaml - add new nodes into `hosts` section.
+
+Example. Before changes
+
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+```
+
+Example. After changes
+
+```
+hosts:
+- host: ydb-node01.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv001
+    data_center: YDB1
+    rack: RACK1
+- host: ydb-node02.ru-central1.internal
+  host_config_id: 1
+  location:
+    unit: srv002
+    data_center: YDB1
+    rack: RACK1
+...
+- host: ydb-node-NEW.ru-central1.internal
+  host_config_id: 100
+  location:
+    unit: srv100
+    data_center: YDB3
+    rack: RACK10
+```
+
+2. Generate SSL certificates for new nodes
+3. Update configs on the current nodes and restart cluster
+`ansible-playbook ydb_platform.ydb.update_config`
+4. Add new nodes into inventory
+
+```
+all:
+  children:
+    ydb:
+      hosts:
+        ydb-node01.ru-central1.internal:
+        ydb-node02.ru-central1.internal: 
+        ydb-node03.ru-central1.internal: 
+        ydb-node-NEW.ru-central1.internal:
+```
+
+5. Prepare nodes for YDB:
+`ydb_platform.ydb.prepare_host -l ydb-node-NEW.ru-central1.internal`
+6. Install YDB on new static nodes and start them
+`ydb_platform.ydb.install_static -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+7. Install YDB on new dynamic nodes and start them
+`ydb_platform.ydb.install_dynamic -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+8. Check the cluster
 
 # FAQ
 

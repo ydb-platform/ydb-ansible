@@ -27,6 +27,7 @@
 - name: Set local path to ydb_archive variable
   set_fact:
     ydb_archive: "{{ ydb_archive_dest }}ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
+    ydb_archive_from_version: "{{ ydb_archive_dest }}ydbd-{{ ydb_version }}-linux-amd64.tar.gz"
   when: ydb_archive is not defined
 
 - name: install YDB server binary package from a downloaded archive

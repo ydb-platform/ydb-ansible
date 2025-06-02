@@ -81,7 +81,7 @@
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     allow_format: "{{ ydb_allow_format_drives }}"
   with_items: "{{ ydb_disks }}"
 
@@ -95,9 +95,8 @@
 - name: wait for ydb healthcheck switch to "GOOD" status
   ydb_platform.ydb.wait_healthcheck:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
@@ -107,9 +106,8 @@
 - name: get ydb token
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
@@ -122,9 +120,8 @@
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
@@ -152,9 +149,8 @@
   ydb_platform.ydb.init_storage:
     config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     token: "{{ ydb_credentials.token }}"
   register: init_storage
   run_once: true
@@ -162,9 +158,8 @@
 - name: wait for ydb healthcheck switch to "GOOD" status
   ydb_platform.ydb.wait_healthcheck:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
@@ -173,15 +168,16 @@
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ inventory_hostname }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     new_password: "{{ ydb_password }}"
     token: "{{ ydb_credentials.token }}"
   run_once: true
-
+  tags:
+    - password
+    
 - name: Dynamic configs
   block:
   - name: Get the current dynconfig version
@@ -209,3 +205,4 @@
       config: "{{ ydb_dir }}/cfg/ydbd-dyn-config.yaml"
   when: ydb_use_dynamic_config|bool
   run_once: true
+

@@ -8,10 +8,10 @@
 # ansible-playbook ydb_platform.ydb.prepare_host
 #
 
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
   become: true
   vars:
-    - ydb_tools_install: true
+    ydb_tools_install: true
 
   tasks:
     - name: check connectivity

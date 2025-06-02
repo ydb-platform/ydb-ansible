@@ -12,3 +12,5 @@
     - name: Cleanup the transferred secrets
       file: state=absent path={{ ydb_dir }}/certs/secret
   run_once: true
+  tags:
+    - create_database

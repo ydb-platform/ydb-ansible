@@ -1,5 +1,7 @@
-- name: Check if required variables are defined
-  hosts: "{{ playbook_hosts | default('ydb') }}"
+---
+
+- name: check if required variables are defined
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
 
   tasks:
   - ansible.builtin.assert:
@@ -16,7 +18,7 @@
     - dynamic
     - no_restart
 
-- hosts: "{{ playbook_hosts | default('ydb') }}"
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
   become: true
 
   roles:
