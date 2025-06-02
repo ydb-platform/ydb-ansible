@@ -372,8 +372,8 @@
     token: "{{ ydb_credentials.token }}"
   run_once: true
   register: password_result
-  retries: 10
-  delay: 5
+  retries: 30
+  delay: 15
   until: password_result is succeeded
   tags:
     - password

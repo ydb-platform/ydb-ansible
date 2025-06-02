@@ -6,6 +6,6 @@
   targets:
   {% for host in ydb_monitoring_target_hosts %}
   {% for item in ydb_dynnodes %}
-  - "{{ host }}:{{ 8766 + item.offset }}"
+  - "{{ host }}:{{ 8766 + (item.offset | default(ydb_dynnodes.index(item))) }}"
   {% endfor %}
   {% endfor %}

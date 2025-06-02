@@ -75,7 +75,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + item.offset }}"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
     token: "{{ ydb_credentials.token }}"
   become: true
@@ -92,7 +92,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + item.offset }}"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"

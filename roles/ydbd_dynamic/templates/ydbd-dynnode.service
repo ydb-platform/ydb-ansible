@@ -28,7 +28,9 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --ic-port {{ 19002 + item.offset }} \
     --mon-port {{ 8766 + item.offset }} \
 {% else %}
-    --grpcs-port 2136 --ic-port 19002 --mon-port 8766  \
+    --grpcs-port {{ 2136 + ydb_dynnodes.index(item) }} \
+    --ic-port {{ 19002 + ydb_dynnodes.index(item) }} \
+    --mon-port {{ 8766 + ydb_dynnodes.index(item) }} \
 {% endif %}
     --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
 {% if ydb_request_client_certificate|bool %}
