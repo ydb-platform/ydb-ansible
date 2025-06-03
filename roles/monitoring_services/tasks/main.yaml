@@ -7,12 +7,16 @@
         prometheus_config_file: '{{ ydb_prometheus_config_file }}'
         prometheus_config_dir: '{{ ydb_prometheus_config_dir }}'
         prometheus_web_config: '{{ ydb_prometheus_web_config }}'
+      tags:
+        - install
 
     - name: add prometheus user to certs group
       ansible.builtin.user:
         name: prometheus
         groups: [certs]
         append: true
+      tags:
+        - install
 
     - name: create node exporter file_sd targets
       ansible.builtin.template:
@@ -22,6 +26,8 @@
         owner: root
         group: prometheus
         mode: 0640
+      tags:
+        - targets
 
     - name: create storage file_sd targets
       ansible.builtin.template:
@@ -31,6 +37,8 @@
         owner: root
         group: prometheus
         mode: 0640
+      tags:
+        - targets
 
     - name: create database file_sd targets
       ansible.builtin.template:
@@ -40,6 +48,8 @@
         owner: root
         group: prometheus
         mode: 0640
+      tags:
+        - targets
 
     - name: create /etc/systemd/system/prometheus.service.d/ directory
       file:
@@ -48,6 +58,8 @@
         owner: root
         group: root
         mode: 0755
+      tags:
+        - install
 
     - name: create prometheus.service override for astra linux
       copy:
@@ -61,6 +73,8 @@
       notify:
         - daemon reload
         - restart prometheus
+      tags:
+        - install
 
     - name: flush_handlers
       meta: flush_handlers
@@ -70,18 +84,24 @@
         name: prometheus.service
         state: started
         enabled: true
+      tags:
+        - install
 
 - name: setup grafana
   block:
     - name: install grafana
       ansible.builtin.apt:
         deb: https://dl.grafana.com/oss/release/grafana_10.2.2_amd64.deb
+      tags:
+        - install
 
     - name: add grafana user to certs group
       ansible.builtin.user:
         name: grafana
         groups: [certs]
         append: true
+      tags:
+        - install
 
     - name: create config file
       ansible.builtin.template:
@@ -93,6 +113,8 @@
         mode: 0640
       notify:
         - restart grafana
+      tags:
+        - install
 
     - name: create datasources provisioning file
       ansible.builtin.template:
@@ -104,6 +126,8 @@
         mode: 0640
       notify:
         - restart grafana
+      tags:
+        - config
 
     - name: create dashboards provisioning file
       ansible.builtin.template:
@@ -115,6 +139,8 @@
         mode: 0640
       notify:
         - restart grafana
+      tags:
+        - config
 
     - name: create dashboard data dir
       ansible.builtin.file:
@@ -123,6 +149,8 @@
         owner: grafana
         group: grafana
         mode: 0750
+      tags:
+        - config
 
     - name: list dashboards
       ansible.builtin.find:
@@ -130,6 +158,8 @@
       delegate_to: localhost
       run_once: true
       register: dashboards
+      tags:
+        - config
 
     - name: setup dashboards
       copy:
@@ -141,6 +171,8 @@
       with_items: '{{ dashboards.files }}'
       notify:
         - restart grafana
+      tags:
+        - config
 
     - name: flush_handlers
       meta: flush_handlers
@@ -150,3 +182,5 @@
         name: grafana-server.service
         state: started
         enabled: true
+      tags:
+        - install

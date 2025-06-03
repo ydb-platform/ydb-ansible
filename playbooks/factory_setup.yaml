@@ -41,3 +41,5 @@
     - name: setup monitoring service
       ansible.builtin.import_role:
         name: ydb_platform.ydb.monitoring_services
+      tags:
+        - monitoring

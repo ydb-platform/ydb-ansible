@@ -26,3 +26,14 @@
       tags:
         - database
         - dynamic
+    - name: Get syslog logs
+      ansible.builtin.shell: tail -n 1000 /var/log/syslog | grep ydbd
+      register: tail
+      become: true
+      tags:
+        - syslog
+    - name: Show syslog logs
+      debug: var=tail.stdout_lines
+      tags:
+        - syslog
+
