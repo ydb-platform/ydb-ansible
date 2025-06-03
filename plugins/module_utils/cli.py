@@ -35,10 +35,7 @@ class CLI:
             raise ValueError('cmd must be list')
         cmd = self.common_options + cmd
         if self.use_unsafe_shell:
-            if hasattr(self, "cmd_format"):
-                cmd_format = self.cmd_format
-            else:
-                cmd_format = "{cmd}"
+            cmd_format = getattr(self, "cmd_format", "{cmd}")
             cmd = cmd_format.format(cmd=shlex.join(cmd))
         environ_update = copy.deepcopy(self.common_environ)
         if isinstance(env, dict):
@@ -181,6 +178,5 @@ class YdbOps(CLI):
         elif token_file is not None:
             self.common_options.extend(['--token-file', token_file])
         if log == "True" and logfile is not None:
-            # self.common_options.extend(['>>',logfile])
-            self.cmd_format = "{cmd} >> " + logfile
+            self.cmd_format = "{cmd} >> " + shlex.quote(logfile)
             self.use_unsafe_shell = True
