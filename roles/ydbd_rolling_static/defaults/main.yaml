@@ -13,3 +13,6 @@ ydb_enforce_user_token_requirement: true
 ydbops_release_url: https://github.com/ydb-platform/ydbops/releases/latest/download
 
 ansible_ssh_common_args: ""
+
+ydbops_log: false
+ydbops_logfile: /tmp/ydbops.log
