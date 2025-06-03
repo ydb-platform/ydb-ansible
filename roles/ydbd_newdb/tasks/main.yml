@@ -4,9 +4,11 @@
 - name: YDB database creation
   block:
     - name: Transfer the secrets
-      copy: src=secret dest={{ ydb_dir }}/certs/secret
+      become: true
+      become_user: ydb
+      copy: src={{ ansible_config_file | dirname }}/secret dest={{ ydb_dir }}/certs/secret
     - name: Run the database creation script
-      command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_dbname }} {{ ydb_default_groups }}"
+      command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_domain }}/{{ ydb_dbname }} {{ ydb_default_groups }}"
       become: true
       become_user: ydb
     - name: Cleanup the transferred secrets
