@@ -151,6 +151,7 @@
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     token: "{{ ydb_credentials.token }}"
+    update_config: "{{ ydb_storage_update_config }}"
   register: init_storage
   run_once: true
 

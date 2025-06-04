@@ -150,12 +150,12 @@ class YdbOps(CLI):
         token=dict(type='str', default=None, no_log=True),
         token_file=dict(type='str', default=None),
         hosts=dict(type='str',default=None),
-        log=dict(type='str',default=None),
+        log=dict(type='bool',default=False),
         logfile=dict(type='str',default=None),
     )
 
     def __init__(self, module, ydbops_bin, ydbops_endpoint, ydbops_systemd_unit=None,
-                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, hosts=None, log=None, logfile=None):
+                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, hosts=None, log=False, logfile=None):
         self.module = module
 
         self.common_options = [ydbops_bin, 'restart', '--storage']
@@ -177,6 +177,6 @@ class YdbOps(CLI):
             self.common_environ['YDB_TOKEN'] = token
         elif token_file is not None:
             self.common_options.extend(['--token-file', token_file])
-        if log == "True" and logfile is not None:
+        if log and logfile is not None:
             self.cmd_format = "{cmd} >> " + shlex.quote(logfile)
             self.use_unsafe_shell = True
