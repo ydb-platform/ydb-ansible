@@ -7,6 +7,7 @@ import yaml
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
 
 def check_node_config_exists(config_dir, result):
@@ -38,7 +39,7 @@ def init_node_config(ydb_cli, config_file, config_dir, result):
         temp_fd, temp_file = tempfile.mkstemp(suffix='.yaml', text=True)
         try:
             with os.fdopen(temp_fd, 'w') as f:
-                yaml.dump(original_config, f, default_flow_style=False)
+                safe_dump(original_config, f)
         except:
             os.close(temp_fd)
             raise

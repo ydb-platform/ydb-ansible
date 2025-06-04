@@ -2,6 +2,7 @@ import yaml
 import os
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
 def _ensure_config_path(config, path, default_value):
     """Helper function to ensure a nested config path exists with a default value."""
@@ -140,7 +141,7 @@ def main():
         # Write to output file if specified
         if output_file and not module.check_mode:
             with open(output_file, 'w') as f:
-                yaml.dump({'config': config}, f, default_flow_style=False)
+                safe_dump({'config': config}, f)
             result['msg'] = f'patched configuration written to {output_file}'
         else:
             result['msg'] = 'configuration patched successfully'

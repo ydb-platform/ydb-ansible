@@ -4,6 +4,7 @@ import yaml
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
 
 def fetch_cluster_config(ydb_cli, result):
@@ -130,7 +131,7 @@ def main():
             if not module.check_mode:
                 # Create temporary file with merged config on the target machine
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as temp_file:
-                    yaml.dump(merged_config, temp_file, default_flow_style=False)
+                    safe_dump(merged_config, temp_file)
                     temp_config_file = temp_file.name
 
                 try:

@@ -1,11 +1,12 @@
 import os
 import yaml
 try:
-    from yaml import CSafeLoader as SafeLoader, CSafeDumper as SafeDumper
+    from yaml import CSafeLoader as SafeLoader
 except ImportError:
-    from yaml import SafeLoader, SafeDumper
+    from yaml import SafeLoader
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
 
 def run_module():
@@ -125,20 +126,8 @@ def run_module():
     # Write the updated config if changes were made
     if result['changed'] and not module.check_mode:
         try:
-            # Preserve YAML tags with !inherit
-            class MyDumper(SafeDumper):
-                pass
-
-            def represent_undefined(dumper, data):
-                if data == '!inherit':
-                    return dumper.represent_scalar('!inherit', '')
-                return dumper.represent_scalar('tag:yaml.org,2002:str', str(data))
-
-            # Register custom representer for handling !inherit tags
-            MyDumper.add_representer(type(None), represent_undefined)
-
             with open(output_file, 'w') as f:
-                yaml.dump(config, f, Dumper=MyDumper, default_flow_style=False)
+                safe_dump(config, f)
         except Exception as e:
             module.fail_json(msg=f'Failed to write config: {str(e)}')
 
