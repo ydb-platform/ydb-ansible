@@ -1,5 +1,4 @@
 import yaml
-import tempfile
 import os
 
 from ansible.module_utils.basic import AnsibleModule
@@ -64,10 +63,16 @@ def _generate_hosts_section(hostvars, ydb_disks, default_disk_type=None):
 
     return hosts
 
-def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None):
+def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None, ydb_dir=None):
     _ensure_config_path(config, 'yaml_config_enabled', True)
     _ensure_config_path(config, 'self_management_config.enabled', True)
     _ensure_config_path(config, 'actor_system_config.use_auto_config', True)
+
+    # Add TLS configuration fields
+    if ydb_dir is not None:
+        _ensure_config_path(config, 'tls.cert', f"{ydb_dir}/certs/node.crt")
+        _ensure_config_path(config, 'tls.key', f"{ydb_dir}/certs/node.key")
+        _ensure_config_path(config, 'tls.ca', f"{ydb_dir}/certs/ca.crt")
 
     # Generate hosts section if it's missing and we have the required data
     if 'hosts' not in config and hostvars and ydb_disks:
@@ -90,6 +95,7 @@ def main():
         hostvars=dict(type='dict', required=False),
         ydb_disks=dict(type='list', required=False),
         groups=dict(type='dict', required=False),
+        ydb_dir=dict(type='str', required=False, default=None),
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -101,6 +107,7 @@ def main():
         hostvars = module.params.get('hostvars')
         ydb_disks = module.params.get('ydb_disks')
         groups = module.params.get('groups')
+        ydb_dir = module.params.get('ydb_dir')
 
         # Handle different input types
         if isinstance(config_input, dict):
@@ -122,9 +129,9 @@ def main():
 
         # Apply the patch to the config section only
         if 'config' in config:
-            config['config'] = patch_config_v2(config['config'], hostvars, ydb_disks, groups)
+            config['config'] = patch_config_v2(config['config'], hostvars, ydb_disks, groups, ydb_dir)
         else:
-            config = patch_config_v2(config, hostvars, ydb_disks, groups)
+            config = patch_config_v2(config, hostvars, ydb_disks, groups, ydb_dir)
 
 
         result['changed'] = True
@@ -133,7 +140,7 @@ def main():
         # Write to output file if specified
         if output_file and not module.check_mode:
             with open(output_file, 'w') as f:
-                yaml.dump(config, f, default_flow_style=False)
+                yaml.dump({'config': config}, f, default_flow_style=False)
             result['msg'] = f'patched configuration written to {output_file}'
         else:
             result['msg'] = 'configuration patched successfully'

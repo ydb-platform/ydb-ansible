@@ -57,12 +57,12 @@ The meaning and format of the variables used are specified in the table below.
 | `ydb_disks` | Disk layout of storage nodes, defined as `ydbd_static` in the hosts file. Defined as list of structures having the following fields:<br/> `name` - physical device name (like `/dev/sdb` or `/dev/vdb`);<br/> `label` - the desired YDB data partition label, as used in the cluster configuration file (like `ydb_disk_1`) |
 | `ydb_dynnodes` | Set of dynamic nodes to be ran on each host listed as `ydbd_dynamic` in the hosts file. Defined as list of structures having the following fields:<br/> `dbname` - name of the YDB database handled by the corresponding dynamic node;<br/> `instance` - dynamic node service instance name, allowing to distinguish between multiple dynamic nodes for the same database running in the same host;<br/> `offset` - integer number `0-N`, used as the offset for the standard network port numbers (`0` means using the standard ports). |
 | `ydb_brokers` | List of host names running the YDB static nodes, exactly 3 (three) host names must be specified |
-| `ydb_cores_static` | Number of cores to be used by thread pools of the static nodes |
-| `ydb_cores_dynamic` | Number of cores to be used by thread pools of the dynamic nodes |
+| `ydb_storage_node_cores` | Number of cores to be used by thread pools of the storage nodes (alias: `ydb_cores_static`) |
+| `ydb_database_node_cores` | Number of cores to be used by thread pools of the database nodes (alias: `ydb_cores_dynamic`) |
 | `ydb_config_v2` | Controls initialization method and configuration management: if `true` uses YDB configuratiuon V2 with `node init` + `bootstrap` and `--config-dir` arg, if `false` uses configuratiom V1 with `actor_system_config` injection and `--yaml-config` arg. If not set, automatically determined based on YDB version (`true` for version 25.1 and abovr) |
-| `ydb_dbname` | Database name, for database creation, dynamic nodes deployment and dynamic nodes rolling restart |
+| `ydb_database_name` | Database name, for database creation, dynamic nodes deployment and dynamic nodes rolling restart (alias: `ydb_dbname`) |
 | `ydb_pool_kind` | YDB default storage pool kind, as specified in the static nodes configuration file in the `storage_pool_types.kind` field |
-| `ydb_database_groups` | Initial number of storage groups in the newly created database |
+| `ydb_database_storage_groups` | Initial number of storage groups in the newly created database (alias: `ydb_database_groups`) |
 | `ydb_dynnode_restart_sleep_seconds` | Number of seconds to sleep after startup of each dynamic node during the rolling restart. |
 
 ### Installing the YDB cluster using Ansible

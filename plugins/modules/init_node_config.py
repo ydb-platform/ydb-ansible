@@ -1,4 +1,5 @@
 import json
+from logging import basicConfig
 import os
 import tempfile
 import yaml
@@ -26,21 +27,18 @@ def init_node_config(ydb_cli, config_file, config_dir, result):
         with open(config_file, 'r') as f:
             original_config = yaml.safe_load(f)
 
-        # Create the new structure
-        new_config = {
-            'metadata': {
-                'kind': 'MainConfig',
-                'cluster': '',
-                'version': 0
-            },
-            'config': original_config
+        # Create the initial metadata structure
+        original_config['metadata'] = {
+            'kind': 'basicConfig',
+            'cluster': '',
+            'version': 0
         }
 
         # Create temporary file
         temp_fd, temp_file = tempfile.mkstemp(suffix='.yaml', text=True)
         try:
             with os.fdopen(temp_fd, 'w') as f:
-                yaml.dump(new_config, f, default_flow_style=False)
+                yaml.dump(original_config, f, default_flow_style=False)
         except:
             os.close(temp_fd)
             raise

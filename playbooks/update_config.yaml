@@ -3,11 +3,11 @@
   tasks:
   - ansible.builtin.assert:
       that:
-        - "{{ item }} is defined"
-      fail_msg: "{{ item }} variable is required"
+        - "{{ item.var1 is defined or item.var2 is defined }}"
+      fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
     loop:
-      - ydb_cores_static
-      - ydb_cores_dynamic
+      - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
+      - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
   tags:
     - storage
     - static
@@ -19,7 +19,7 @@
   - role: preflight
   tasks:
   - name: get ydb version if not defined
-    shell: "{{ ydb_dir }}/bin/ydbd --compatibility-info | grep 'Version' | cut -f 2 -d ':' | tr '-' '.' | awk '{ print $1;}'"
+    shell: "{{ ydb_dir }}/release/archive/bin/ydbd --compatibility-info | awk '$1 ~ \"Version:\" { gsub(/-/, \".\", $2); print $2 }'"
     register: cmd_version
     run_once: true
     when: ydb_version is not defined
@@ -53,7 +53,7 @@
     run_once: true
     register: ydb_credentials
     until: "'token' in ydb_credentials"
-    retries: 15
+    retries: 30
     delay: 15
     when: ydb_config_v2 | default(false)
     become: true
@@ -86,14 +86,16 @@
           ld_library_path: "{{ ydb_dir }}/lib"
           ca_file: "{{ ydb_dir }}/certs/ca.crt"
           endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-          database: "/{{ ydb_domain }}"
           token: "{{ ydb_credentials.token }}"
-          state: get
+          mode: fetch
         run_once: true
         become: true
         become_method: sudo
         become_user: ydb
         register: current_cluster_config
+        until: current_cluster_config is succeeded
+        retries: 30
+        delay: 15
 
       - name: check if ydb_config is a map
         set_fact:
@@ -126,33 +128,53 @@
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
           config: "{{ parsed_ansible_config }}"
+          output_file: "{{ ydb_temp_config_path }}"
           hostvars: "{{ hostvars }}"
           ydb_disks: "{{ ydb_disks }}"
           groups: "{{ groups }}"
+          ydb_dir: "{{ ydb_dir }}"
         run_once: true
         register: patched_config_result
 
-      - name: create V2 configuration structure with updated metadata
-        set_fact:
-          v2_config:
-            config: "{{ patched_config_result.config }}"
-            metadata: "{{ current_cluster_config.metadata | combine({'version': (current_cluster_config.metadata.version | int) + 1}) }}"
-        run_once: true
-
-      - name: write V2 configuration to file
-        copy:
-          content: "{{ v2_config | to_nice_yaml }}"
-          dest: "{{ ydb_temp_config_path }}"
-          mode: 0640
-        run_once: true
-
-      - name: set ownership of V2 configuration file
+      - name: set ownership of temporary file
         file:
           path: "{{ ydb_temp_config_path }}"
           owner: ydb
           group: ydb
         run_once: true
         become: true
+        register: set_temp_ownership_result
+        until: set_temp_ownership_result is succeeded
+        retries: 5
+        delay: 5
+
+      - name: update configuration with selectors
+        ydb_platform.ydb.apply_config_selectors:
+          config: "{{ ydb_temp_config_path }}"
+          output_file: "{{ ydb_temp_config_path }}"
+          database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
+          storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
+        become: true
+        become_user: ydb
+        run_once: true
+        when: ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined
+        register: selectors_result
+        until: selectors_result is succeeded
+        retries: 5
+        delay: 5
+
+      - name: update metadata in configuration
+        ydb_platform.ydb.update_metadata:
+          config: "{{ ydb_temp_config_path }}"
+          output_file: "{{ ydb_temp_config_path }}"
+          current_metadata: "{{ current_cluster_config.metadata }}"
+        run_once: true
+        become: true
+        become_user: ydb
+        register: v2_config_result
+        until: v2_config_result is succeeded
+        retries: 5
+        delay: 5
 
       - name: update cluster configuration using YDB config management V2
         ydb_platform.ydb.cluster_config:
@@ -160,14 +182,17 @@
           ld_library_path: "{{ ydb_dir }}/lib"
           ca_file: "{{ ydb_dir }}/certs/ca.crt"
           endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-          database: "/{{ ydb_domain }}"
           token: "{{ ydb_credentials.token }}"
           config_file: "{{ ydb_temp_config_path }}"
-          state: present
+          mode: replace
         run_once: true
         become: true
         become_method: sudo
         become_user: ydb
+        register: update_cluster_config_result
+        until: update_cluster_config_result is succeeded
+        retries: 30
+        delay: 15
 
     always:
       - name: cleanup temporary config file
@@ -221,7 +246,7 @@
       - no_restart
 
   - name: update static node configuration file (V1 configuration only)
-    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
+    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static, true) }}"
     changed_when: false
     when: not ydb_config_v2 | default(false)
     tags:
@@ -229,7 +254,7 @@
       - static
       - no_restart
   - name: create dynamic node configuration file (V1 configuration only)
-    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
+    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
     changed_when: false
     when: not ydb_config_v2 | default(false)
     tags:

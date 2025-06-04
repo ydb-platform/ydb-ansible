@@ -4,22 +4,124 @@
       - "{{ item }} is defined"
     fail_msg: "{{ item }} variable is required"
   loop:
+    - ydb_dir
     - ydb_domain
-    - ydb_pool_kind
-    - ydb_cores_dynamic
-    - ydb_brokers
-    - ydb_dbname
-    - ydb_dynnodes
+    - ydb_database_node_cores | default(ydb_cores_dynamic, true)
+    - ydb_database_name | default(ydb_dbname, true)
+
+# Simple default broker selection
+- name: Set default ydb_brokers (first three nodes)
+  ansible.builtin.set_fact:
+    ydb_brokers: "{{ groups['all'] | list | sort }}"
+  run_once: true
+  when: ydb_brokers is not defined
+
+- name: Limit default brokers to three nodes
+  ansible.builtin.set_fact:
+    ydb_brokers: "{{ ydb_brokers[:3] }}"
+  run_once: true
+  when: ydb_brokers is defined and ydb_brokers | length > 3
+
+- name: Set default database nodes per server
+  ansible.builtin.set_fact:
+    ydb_database_nodes_per_server: 1
+  when: ydb_database_nodes_per_server is not defined and ydb_dynnodes is not defined
+
+- name: Check if ydb_database_nodes_per_server is not too large
+  ansible.builtin.assert:
+    that:
+      - "ydb_database_nodes_per_server <= 26"
+    fail_msg: "ydb_database_nodes_per_server ({{ ydb_database_nodes_per_server }}) exceeds alphabet length (26). Please configure ydb_dynnodes explicitly."
+  when: ydb_dynnodes is not defined and ydb_database_nodes_per_server is defined
+
+- name: Prepare alphabet for node naming
+  ansible.builtin.set_fact:
+    alphabet: "abcdefghijklmnopqrstuvwxyz"
+  when: ydb_dynnodes is not defined and ydb_database_nodes_per_server is defined
+
+- name: Create empty dynnodes list
+  ansible.builtin.set_fact:
+    ydb_dynnodes: []
+  when: ydb_dynnodes is not defined and ydb_database_nodes_per_server is defined
+
+- name: Populate dynnodes list from ydb_database_nodes_per_server
+  ansible.builtin.set_fact:
+    ydb_dynnodes: "{{ ydb_dynnodes + [{'instance': alphabet[item]}] }}"
+  loop: "{{ range(0, ydb_database_nodes_per_server) | list }}"
+  when: ydb_database_nodes_per_server is defined
+
+- name: check if ydb_dynnodes is defined
+  ansible.builtin.assert:
+    that:
+      - ydb_dynnodes is defined
+    fail_msg: "ydb_dynnodes variable with dynamic node instances list is required"
+
+- name: check if ydb_config is a map
+  ansible.builtin.set_fact:
+    ydb_config_is_map: "{{ ydb_config is defined and ydb_config is mapping }}"
+  when: ydb_config is defined
+
+- name: check if ydb_config is a string (path)
+  ansible.builtin.set_fact:
+    ydb_config_is_path: "{{ ydb_config is defined and ydb_config is string }}"
+  when: ydb_config is defined
+
+- name: read config file when ydb_config is a path
+  ansible.builtin.slurp:
+    src: "{{ ydb_config }}"
+  register: ydb_config_content
+  when:
+    - ydb_pool_kind is not defined
+    - ydb_config_is_path is defined and ydb_config_is_path
+
+- name: parse config file content
+  ansible.builtin.set_fact:
+    ydb_config_parsed: "{{ ydb_config_content['content'] | b64decode | from_yaml }}"
+  when:
+    - ydb_pool_kind is not defined
+    - ydb_config_is_path is defined and ydb_config_is_path
+    - ydb_config_content is defined
+
+- name: set default for ydb_pool_kind from parsed config file
+  ansible.builtin.set_fact:
+    ydb_pool_kind: "{{ ydb_config_parsed.default_disk_type | lower }}"
+  when:
+    - ydb_pool_kind is not defined
+    - ydb_config_parsed is defined
+    - ydb_config_parsed.default_disk_type is defined
+
+- name: set default for ydb_pool_kind when ydb_config is a map
+  ansible.builtin.set_fact:
+    ydb_pool_kind: "{{ ydb_config.default_disk_type | lower }}"
+  when:
+    - ydb_pool_kind is not defined
+    - ydb_config_is_map is defined and ydb_config_is_map
+    - ydb_config.default_disk_type is defined
+
+- name: require ydb_pool_kind if not specified and can't determine from ydb_config
+  ansible.builtin.assert:
+    that:
+      - ydb_pool_kind is defined
+    fail_msg: "ydb_pool_kind variable is required when it can't be determined from ydb_config"
+  when:
+    - ydb_pool_kind is not defined
+
+- name: get ydbd_dynamic cores
+  set_fact:
+    ydbd_dynamic_cores: >
+      {{
+      ydb_database_node_cores | default(ydb_cores_dynamic, true)
+      }}
 
 - name: create dynamic node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
   changed_when: false
   when: not ydb_config_v2
 
 - name: create dynamic node systemd unit
   template:
     src: ydbd-dynnode.service
-    dest: "/etc/systemd/system/ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
+    dest: "/etc/systemd/system/ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}.service"
   loop: "{{ ydb_dynnodes }}"
   notify:
     - daemon reload
@@ -29,7 +131,7 @@
 
 - name: start dynamic nodes
   ansible.builtin.systemd:
-    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
+    name: "ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}.service"
     state: started
     enabled: true
   loop: "{{ ydb_dynnodes }}"
@@ -58,10 +160,10 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+    database: "/{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }}"
     token: "{{ ydb_credentials.token }}"
     pool_kind: "{{ ydb_pool_kind }}"
-    groups: "{{ ydb_database_groups }}"
+    groups: "{{ ydb_database_storage_groups | default(ydb_database_groups) }}"
   become: true
   become_user: ydb
   run_once: true
@@ -76,7 +178,7 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
-    database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+    database: "/{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }}"
     token: "{{ ydb_credentials.token }}"
   become: true
   become_user: ydb
@@ -93,7 +195,7 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
-    database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+    database: "/{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
   become: true

@@ -1,5 +1,5 @@
 [Unit]
-Description=YDB FQ connector for YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
+Description=YDB FQ connector for YDB dynamic node / {{ ydb_database_name | default(ydb_dbname, true) }} / {{ item.instance }}
 StartLimitInterval=10
 StartLimitBurst=15
 After=network-online.target

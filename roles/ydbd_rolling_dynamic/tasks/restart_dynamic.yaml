@@ -6,7 +6,7 @@
   delay: 5
   ansible.builtin.systemd:
     state: restarted
-    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
+    name: "ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}"
   any_errors_fatal: true
   become: true
   become_method: sudo

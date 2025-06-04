@@ -83,7 +83,6 @@
         fqdn: "{{ inventory_hostname }}"
         folder: "{{ ansible_config_file | dirname }}/files/TLS"
         dest: "{{ current_time }}"
-        extra_ips: "{{ host_ip_addresses }}"
     - name: set ydb_tls_dir
       set_fact:
         ydb_tls_dir: "{{ ansible_config_file | dirname }}/files/TLS/certs/{{ current_time }}"

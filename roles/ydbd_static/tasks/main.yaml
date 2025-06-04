@@ -10,13 +10,44 @@
 - name: check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
-    fail_msg: "{{ item }} variable is required"
+      - "{{ item.var1 is defined or item.var2 is defined }}"
+    fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
   loop:
-    - ydb_cores_static
-    - ydb_disks
-    - ydb_domain
-    - ydb_user
+    - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
+    - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
+    - { var1: "ydb_disks", var2: "ydb_disks" }
+    - { var1: "ydb_domain", var2: "ydb_domain" }
+    - { var1: "ydb_user", var2: "ydb_user" }
+
+# Handle ydb_pool_kind if not defined
+- name: handle ydb_pool_kind if not defined
+  block:
+    - name: check if ydb_config is a map
+      set_fact:
+        ydb_config_is_map: "{{ ydb_config is mapping }}"
+      when: ydb_config is defined
+
+    - name: set ydb_pool_kind from ydb_config when it's a map
+      set_fact:
+        ydb_pool_kind: "{{ ydb_config.default_disk_type | lower }}"
+      when: ydb_config is defined and ydb_config_is_map and ydb_config.default_disk_type is defined
+
+    - name: read ydb_config from file when it's a path
+      include_vars:
+        file: "{{ ydb_config }}"
+        name: ydb_config_content
+      when: ydb_config is defined and not ydb_config_is_map
+
+    - name: set ydb_pool_kind from ydb_config_content when it's from a file
+      set_fact:
+        ydb_pool_kind: "{{ ydb_config_content.default_disk_type | lower }}"
+      when: ydb_config is defined and not ydb_config_is_map and ydb_config_content is defined and ydb_config_content.default_disk_type is defined
+
+    - name: fail if ydb_pool_kind cannot be determined
+      fail:
+        msg: "Either ydb_pool_kind must be defined or ydb_config must contain default_disk_type"
+      when: ydb_pool_kind is not defined
+  when: ydb_pool_kind is not defined
 
 # Simple default broker selection (case 1)
 - name: Set default ydb_brokers (first three nodes)
@@ -121,7 +152,7 @@
   run_once: true
 
 - name: create static node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static) }}"
   changed_when: false
   when: not ydb_config_v2
 
@@ -198,9 +229,19 @@
         hostvars: "{{ hostvars }}"
         ydb_disks: "{{ ydb_disks }}"
         groups: "{{ groups }}"
+        ydb_dir: "{{ ydb_dir }}"
       become: true
       become_user: ydb
-  when: ydb_config_v2
+
+    - name: update configuration with selectors
+      ydb_platform.ydb.apply_config_selectors:
+        config: "{{ ydb_temp_config_path }}"
+        output_file: "{{ ydb_temp_config_path }}"
+        database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
+        storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
+      become: true
+      become_user: ydb
+      when: ydb_config_v2 and (ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined)
 
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:
@@ -314,9 +355,6 @@
   when: ydb_config_v2
   become_user: ydb
 
-# CRITICAL STEP: Getting auth token with user credentials
-# - For v2: This happens after storage initialization
-# - For non-v2: This happens after storage initialization but is done with root token first
 - name: get ydb token with user credentials
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"

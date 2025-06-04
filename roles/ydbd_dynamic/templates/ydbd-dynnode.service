@@ -1,5 +1,5 @@
 [Unit]
-Description=YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
+Description=YDB dynamic node / {{ ydb_database_name | default(ydb_dbname, true) }} / {{ item.instance }}
 StartLimitInterval=10
 StartLimitBurst=15
 After=network-online.target rc-local.service ydb-transparent-hugepages.service
@@ -32,7 +32,7 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --ic-port {{ 19002 + ydb_dynnodes.index(item) }} \
     --mon-port {{ 8766 + ydb_dynnodes.index(item) }} \
 {% endif %}
-    --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
+    --tenant /{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }} \
 {% if ydb_request_client_certificate|bool %}
     --node-broker-use-tls true \
 {% endif %}
