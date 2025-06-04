@@ -3,43 +3,35 @@ import io
 from ansible.errors import AnsibleFilterError
 from ansible.module_utils.six import string_types
 from ansible.utils.display import Display
-from ansible.module_utils.common._collections_compat import MutableMapping
 
 display = Display()
 
-# First try a relative import (for development)
-try:
-    from ..module_utils.yaml_utils import CustomYAMLDumper
-    HAS_CUSTOM_DUMPER = True
-except ImportError:
-    # Then try the collection-qualified import (for installed collection)
-    try:
-        from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import CustomYAMLDumper
-        HAS_CUSTOM_DUMPER = True
-    except ImportError:
-        display.warning("Unable to import CustomYAMLDumper from yaml_utils module, falling back to standard dumper")
-        HAS_CUSTOM_DUMPER = False
-
-
-def custom_to_nice_yaml(a, indent=4, *args, **kw):
+class CustomYAMLDumper(yaml.SafeDumper):
     """
-    A custom variant of to_nice_yaml that preserves !inherit tags
+    Custom YAML Dumper with improved formatting
     """
-    if not HAS_CUSTOM_DUMPER:
-        display.warning("ydb_platform.ydb.yaml_utils module not available, falling back to standard YAML dumper")
-        try:
-            transformed = yaml.dump(
-                a,
-                Dumper=yaml.SafeDumper,
-                indent=indent,
-                allow_unicode=True,
-                default_flow_style=False,
-                **kw
-            )
-        except Exception as e:
-            raise AnsibleFilterError(f"custom_to_nice_yaml filter error: {e}")
-        return transformed
+    def increase_indent(self, flow=False, indentless=False):
+        return super(CustomYAMLDumper, self).increase_indent(flow, False)
 
+# Add representers for Python types if needed
+def dict_representer(dumper, data):
+    return dumper.represent_mapping('tag:yaml.org,2002:map', data.items())
+
+CustomYAMLDumper.add_representer(dict, dict_representer)
+
+def custom_to_nice_yaml(a, indent=2, *args, **kw):
+    """
+    A custom variant of to_nice_yaml that ensures proper formatting
+    and preserves structure of the input data.
+
+    Args:
+        a: The data to convert to YAML
+        indent: The indentation level (default: 2)
+        *args, **kw: Additional arguments passed to yaml.dump
+
+    Returns:
+        A formatted YAML string
+    """
     try:
         output = io.StringIO()
         yaml.dump(
@@ -49,17 +41,41 @@ def custom_to_nice_yaml(a, indent=4, *args, **kw):
             indent=indent,
             allow_unicode=True,
             default_flow_style=False,
+            sort_keys=False,  # Preserve key order
+            width=80,  # Line width
             **kw
         )
         return output.getvalue()
     except Exception as e:
-        raise AnsibleFilterError(f"custom_to_nice_yaml filter error: {e}")
+        # Fallback to basic string representation if YAML dumping fails
+        try:
+            # Try with safe dumper
+            output = io.StringIO()
+            yaml.dump(
+                a,
+                output,
+                Dumper=yaml.SafeDumper,
+                indent=indent,
+                allow_unicode=True,
+                default_flow_style=False,
+                **kw
+            )
+            return output.getvalue()
+        except Exception as e2:
+            # Last resort - return string representation
+            display.warning(f"YAML dumping failed twice: {e}, {e2}")
+            return str(a)
 
 
 class FilterModule(object):
-    """Custom YAML filter plugins for Ansible"""
+    """
+    Custom YAML filter plugins for Ansible
+    """
 
     def filters(self):
+        display.vvv("Registering ydb_platform.ydb.custom_to_nice_yaml filter")
+        # Register the filter both with and without collection prefix for maximum compatibility
         return {
             'custom_to_nice_yaml': custom_to_nice_yaml,
+            'ydb_platform.ydb.custom_to_nice_yaml': custom_to_nice_yaml,
         }

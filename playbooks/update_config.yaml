@@ -221,7 +221,7 @@
 
       - name: copy configuration from map for V1
         copy:
-          content: "{{ ydb_config | custom_to_nice_yaml }}"
+          content: "{{ ydb_config | ydb_platform.ydb.custom_to_nice_yaml }}"
           dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
           owner: ydb
           group: ydb
