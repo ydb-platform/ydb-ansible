@@ -1,9 +1,5 @@
 - 
 
-- name: Check if timesyncd exists
-  ansible.builtin.systemd:
-    name: systemd-timesyncd.service
-  register: timesyncd_status
 
 - name: restart timesyncd
   ansible.builtin.systemd:

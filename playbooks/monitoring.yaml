@@ -1,0 +1,11 @@
+---
+
+- name: setup YDB monitoring on appliance factory
+  hosts: monitoring
+  become: true
+  tasks:
+    - name: setup monitoring service
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.monitoring_services
+      tags:
+        - monitoring
