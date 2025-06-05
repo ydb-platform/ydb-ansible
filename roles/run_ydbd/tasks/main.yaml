@@ -9,11 +9,12 @@
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
+    retry_on_ssl_error: true
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
-  retries: 10
-  delay: 10
+  retries: 15
+  delay: 15
 
 - name: Execute command
   ydb_platform.ydb.ydbd_cmd:

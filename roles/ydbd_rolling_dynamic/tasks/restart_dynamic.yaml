@@ -6,7 +6,7 @@
   delay: 5
   ansible.builtin.systemd:
     state: restarted
-    name: "ydbd-{{ ydb_dbname }}-{{ item.instance }}"
+    name: "ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}"
   any_errors_fatal: true
   become: true
   become_method: sudo
@@ -16,7 +16,7 @@
 - name: Wait for dynamic nodes on {{ inventory_hostname }} to start listening
   throttle: 1
   ansible.builtin.wait_for:
-    port: "{{ 2136 + item.offset }}"
+    port: "{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     delay: 3
     sleep: 3
   loop: "{{ ydb_dynnodes }}"

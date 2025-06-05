@@ -28,7 +28,7 @@ actor_system_config:
   cpu_count: $CONF_CORES
 EOF
 
-chown root:ydb ${CONF_DST}
+chown ydb:ydb ${CONF_DST}
 chmod 440 $CONF_DST
 
 # End Of File

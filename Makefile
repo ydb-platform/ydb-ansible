@@ -18,3 +18,7 @@ run:
 	--mount type=bind,src=/var/run/libvirt/libvirt-sock,dst=/var/run/libvirt/libvirt-sock \
 	$(image) /bin/bash
 .PHONY: run
+
+test:
+	python3 -m unittest discover -v tests/unit
+.PHONY: test

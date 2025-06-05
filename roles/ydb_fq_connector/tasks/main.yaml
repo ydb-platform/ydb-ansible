@@ -47,7 +47,7 @@
     owner: root
     group: root
     mode: 0755
-  
+
 - name: create ydb-fq-connector group
   group:
     name: ydb-fq-connector
@@ -90,7 +90,7 @@
 
 - name: set ydb-fq-connector instance list
   ansible.builtin.set_fact:
-    ydb_fq_connectors_list: 
+    ydb_fq_connectors_list:
       - instance: "{{ ydb_dynnodes[0].instance }}"
         offset: 0
   when: not ydb_fq_connector_multislot
@@ -107,7 +107,7 @@
 - name: create ydb-fq-connector instance systemd units
   template:
     src: ydb-fq-connector.service
-    dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    dest: "/etc/systemd/system/ydb-fq-connector-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}.service"
   loop: "{{ ydb_fq_connectors_list }}"
   notify:
     - daemon reload
@@ -117,7 +117,7 @@
 
 - name: start ydb-fq-connector instances
   ansible.builtin.systemd:
-    name: "ydb-fq-connector-{{ ydb_dbname }}-{{ item.instance }}.service"
+    name: "ydb-fq-connector-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}.service"
     state: started
     enabled: true
   loop: "{{ ydb_fq_connectors_list }}"

@@ -35,7 +35,7 @@
     - name: create database file_sd targets
       ansible.builtin.template:
         src: "file-sd-ydbd-database.yml"
-        dest: "{{ ydb_prometheus_config_dir }}/file_sd/ydbd-database-{{ ydb_dbname }}.yml"
+        dest: "{{ ydb_prometheus_config_dir }}/file_sd/ydbd-database-{{ ydb_database_name | default(ydb_dbname, true) }}.yml"
         force: true
         owner: root
         group: prometheus

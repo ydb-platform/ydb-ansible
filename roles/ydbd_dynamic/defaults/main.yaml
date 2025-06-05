@@ -1,2 +1,3 @@
-ydb_database_groups: 1
+ydb_database_storage_groups: 1
+ydb_database_groups: "{{ ydb_database_storage_groups }}"
 ydb_request_client_certificate: false
