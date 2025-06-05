@@ -555,10 +555,10 @@ all:
    A2: Add `ydb_storage_update_config: True` in inventory
 
 4) Q: Restart takes a lot of time, no output, no activities. What to do?
-   A: You can switch on logging in this case - add --extra-vars "ydbops_log=True" to your command and logs will be recorded into `/tmp/ydbops.log`
+   A: You can switch on logging in this case - add --extra-vars "ydbops_log=/tmp/ydbops.log" to your command and logs will be recorded into `/tmp/ydbops.log`
    A: Also you can change availability mode from `weak` to `force`. Be aware - this option could lead to cluster unavailability for some time.
 
    ```bash
-   ansible-playbook ydb_platform.ydb.restart --extra-vars "ydbops_log=True"
+   ansible-playbook ydb_platform.ydb.restart --extra-vars "ydbops_log=/tmp/ydbops.log"
    ansible-playbook ydb_platform.ydb.restart --extra-vars "availability_mode=force"
    ```

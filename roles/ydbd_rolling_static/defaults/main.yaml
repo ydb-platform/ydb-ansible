@@ -14,5 +14,4 @@ ydbops_release_url: https://github.com/ydb-platform/ydbops/releases/latest/downl
 
 ansible_ssh_common_args: ""
 
-ydbops_log: false
-ydbops_logfile: /tmp/ydbops.log
+ydbops_log:

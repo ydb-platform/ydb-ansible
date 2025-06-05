@@ -78,7 +78,6 @@
         availability_mode: "{{ availability_mode }}"
         hosts: "{{ ansible_play_batch | join(',') }}"
         log: "{{ ydbops_log }}"
-        logfile: "{{ ydbops_logfile }}"
       when: ansible_limit is defined
 
     - name: "run ydbops to gracefully restart the cluster, it takes a long time"
@@ -92,7 +91,6 @@
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
         log: "{{ ydbops_log }}"
-        logfile: "{{ ydbops_logfile }}"
       when: ansible_limit is not defined
 
 
@@ -135,7 +133,6 @@
         availability_mode: "{{ availability_mode }}"
         hosts: "{{ inventory_hostname }}"
         log: "{{ ydbops_log }}"
-        logfile: "{{ ydbops_logfile }}"
 
 - name: ydb storage check
   include_tasks: "check_static.yaml"
