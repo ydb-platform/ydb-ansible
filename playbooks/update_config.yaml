@@ -1,6 +1,22 @@
-- name: check if required variables are defined
+---
+# PLAYBOOK: ydb_platform.ydb.update_config
+# PROPOSE : This playbook is designed for updating configs and restarting cluster
+#           
+# EXAMPLE:
+#
+# Update and restart all nodes
+#   ansible-playbook ydb_platform.ydb.update_config
+#
+# Only update configs on all nodes 
+#   ansible-playbook ydb_platform.ydb.update_config -t no_restart
+#
+# Update and restart all nodes with FORCE mode
+#   ansible-playbook ydb_platform.ydb.update_config --extra-vars "availability_mode=force"
+
+- name: Check if required variables are defined
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
   tasks:
+
   - ansible.builtin.assert:
       that:
         - "{{ item }} is defined"
@@ -14,7 +30,9 @@
     - database
     - dynamic
     - no_restart
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
+- name: Load presettings
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
   roles:
   - role: preflight
   tags:
@@ -23,8 +41,16 @@
     - database
     - dynamic
     - no_restart
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
+- name: Update configs
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  become: true
+  become_method: sudo
+  become_user: root
+  vars:
+    ydb_storage_update_config: True
   tasks:
+
   - name: copy original configuration file
     copy:
       src: "{{ ydb_config }}"
@@ -48,9 +74,6 @@
       - storage
       - static
       - no_restart
-    become: true
-    become_method: sudo
-    become_user: root
   - name: create dynamic node configuration file
     command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
     changed_when: false
@@ -60,6 +83,53 @@
       - no_restart
     become: true
     become_method: sudo
-    become_user: root
+
+  - name: Get ydb token
+    ydb_platform.ydb.get_token:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      database: "/{{ ydb_domain }}"
+      user: "{{ ydb_user }}"
+      password: "{{ ydb_password }}"
+    register: ydb_credentials
+    until: "'token' in ydb_credentials"
+    retries: 10
+    delay: 10
+    when: ydb_storage_update_config|bool
+    run_once: true
+    tags:
+      - storage
+      - no_restart
+
+  - name: init YDB storage if not initialized
+    ydb_platform.ydb.init_storage:
+      config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+      ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      update_config: "{{ ydb_storage_update_config }}"
+    register: init_storage
+    run_once: true
+    when: ydb_storage_update_config|bool
+    tags:
+      - storage
+      - no_restart
+
+  - name: wait for ydb healthcheck switch to "GOOD" status
+    ydb_platform.ydb.wait_healthcheck:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      database: "/{{ ydb_domain }}"
+      token: "{{ ydb_credentials.token }}"
+      enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+    run_once: true
+    when: ydb_storage_update_config|bool
+    tags:
+      - storage
+      - no_restart
+
 - name: Restart YDB cluster
   ansible.builtin.import_playbook: restart.yaml
