@@ -15,7 +15,8 @@ from module_utils.yaml_utils import (
     safe_load,
     CustomYAMLDumper,
     InheritableDict,
-    represent_undefined
+    represent_undefined,
+    represent_none
 )
 
 
@@ -78,8 +79,95 @@ class TestYamlUtils(unittest.TestCase):
         safe_dump(data, output)
         result = output.getvalue()
 
-        self.assertIn('key:', result)
-        self.assertNotIn('key: null', result)
+        # With the new represent_none function, None should be properly serialized as null
+        self.assertIn('key: null', result)
+        # Ensure it's actually null, not the string "None"
+        self.assertNotIn('key: None', result)
+
+    def test_represent_none_function(self):
+        """Test the represent_none function directly."""
+        dumper = CustomYAMLDumper(io.StringIO())
+        node = represent_none(dumper, None)
+
+        self.assertEqual(node.tag, 'tag:yaml.org,2002:null')
+        self.assertEqual(node.value, 'null')
+
+    def test_none_value_round_trip(self):
+        """Test round-trip serialization and parsing of None values."""
+        original_data = {'key': None, 'other': 'value'}
+
+        # Serialize to YAML
+        output = io.StringIO()
+        safe_dump(original_data, output)
+        yaml_string = output.getvalue()
+
+        # Should contain proper null representation
+        self.assertIn('key: null', yaml_string)
+        self.assertIn('other: value', yaml_string)
+
+        # Parse back from YAML
+        parsed_data = safe_load(yaml_string)
+
+        # Should get back the original structure
+        self.assertEqual(parsed_data['key'], None)
+        self.assertEqual(parsed_data['other'], 'value')
+        self.assertEqual(original_data, parsed_data)
+
+    def test_mixed_none_and_inherit_values(self):
+        """Test that None values and !inherit tags can coexist properly."""
+        # Create data with both None and !inherit
+        inherit_dict = InheritableDict({'nested': 'value'})
+        inherit_dict.tag = '!inherit'
+
+        data = {
+            'none_value': None,
+            'inherit_value': inherit_dict,
+            'regular_value': 'test'
+        }
+
+        # Serialize
+        output = io.StringIO()
+        safe_dump(data, output)
+        result = output.getvalue()
+
+        # Check that both are handled correctly
+        self.assertIn('none_value: null', result)
+        self.assertIn('inherit_value: !inherit', result)
+        self.assertIn('regular_value: test', result)
+
+        # Parse back and verify
+        parsed = safe_load(result)
+        self.assertEqual(parsed['none_value'], None)
+        self.assertIsInstance(parsed['inherit_value'], InheritableDict)
+        self.assertEqual(parsed['inherit_value'].tag, '!inherit')
+        self.assertEqual(parsed['regular_value'], 'test')
+
+    def test_nested_none_values(self):
+        """Test None values in nested structures."""
+        data = {
+            'level1': {
+                'level2': {
+                    'none_key': None,
+                    'valid_key': 'value'
+                },
+                'list_with_none': [1, None, 'string', None]
+            }
+        }
+
+        # Serialize
+        output = io.StringIO()
+        safe_dump(data, output)
+        result = output.getvalue()
+
+        # Should contain multiple null values
+        null_count = result.count('null')
+        self.assertEqual(null_count, 3)  # Two in list, one in nested dict
+
+        # Parse back and verify structure
+        parsed = safe_load(result)
+        self.assertEqual(parsed['level1']['level2']['none_key'], None)
+        self.assertEqual(parsed['level1']['level2']['valid_key'], 'value')
+        self.assertEqual(parsed['level1']['list_with_none'], [1, None, 'string', None])
 
     def test_round_trip_with_inherit_tag(self):
         """Test round-trip parsing and serialization of YAML with !inherit tag."""

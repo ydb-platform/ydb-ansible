@@ -52,6 +52,14 @@ def represent_undefined(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', str(data))
 
 
+def represent_none(dumper, data):
+    """
+    Custom representer for None values.
+    Represents None as null in YAML.
+    """
+    return dumper.represent_scalar('tag:yaml.org,2002:null', 'null')
+
+
 # Add a representer for InheritableDict
 def represent_inheritable_dict(dumper, data):
     """
@@ -61,7 +69,7 @@ def represent_inheritable_dict(dumper, data):
 
 
 # Register custom representers
-CustomYAMLDumper.add_representer(type(None), represent_undefined)
+CustomYAMLDumper.add_representer(type(None), represent_none)
 CustomYAMLDumper.add_representer(InheritableDict, represent_inheritable_dict)
 
 

@@ -96,6 +96,10 @@ def main():
 
         initialized, should_fail = check_storage_initialization(ydb_dstool, result)
 
+        if should_fail:
+            result['msg'] = 'Failed to parse storage initialization status'
+            module.fail_json(**result)
+
         if initialized:
             result['msg'] = 'storage already initialized'
             module.exit_json(**result)

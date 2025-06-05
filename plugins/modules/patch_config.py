@@ -1,5 +1,6 @@
 import yaml
 import os
+import copy
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
@@ -129,13 +130,15 @@ def main():
 
 
         # Apply the patch to the config section only
+        original_config = copy.deepcopy(config)
         if 'config' in config:
-            config['config'] = patch_config_v2(config['config'], hostvars, ydb_disks, groups, ydb_dir)
+            patched_config_section = patch_config_v2(config['config'], hostvars, ydb_disks, groups, ydb_dir)
+            config['config'] = patched_config_section
         else:
             config = patch_config_v2(config, hostvars, ydb_disks, groups, ydb_dir)
 
-
-        result['changed'] = True
+        # Determine if changes were actually made
+        result['changed'] = config != original_config
         result['config'] = config
 
         # Write to output file if specified
