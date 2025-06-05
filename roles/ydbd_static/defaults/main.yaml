@@ -4,3 +4,4 @@ ydb_enforce_user_token_requirement: true
 # ydb_use_dynamic_config - define how to configure dynamic nodes - static or dynamic configs
 # Default value: false
 ydb_use_dynamic_config: false
+ydb_custom_dynconfig: ydbd-dyn-config.yaml.j2

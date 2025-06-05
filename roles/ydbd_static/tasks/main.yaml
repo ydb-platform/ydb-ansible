@@ -191,7 +191,7 @@
     register: ydb_dynconfig_info
 
   - name: Add the dyn config
-    template: src=ydbd-dyn-config.yaml.j2 dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
+    template: src={{ ydb_custom_dynconfig }} dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
 
   - name: Configure dyn config
     ydb_platform.ydb.dynconfig_apply:
