@@ -14,6 +14,7 @@ Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
 {% if not ydb_use_dynamic_config|bool %}
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
+{% endif %}
 {% if ydb_back_name is defined %}
     --node-host {{ ydb_back_name }} \
 {% endif %}
