@@ -31,6 +31,36 @@
     - dynamic
     - no_restart
 
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  become: true
+  tasks:
+    - name: Check ydb-dstool presence
+      stat:
+        path: "{{ ydb_dir }}/bin/ydb-dstool"
+      register: ydb_dstool_exists
+      tags:
+        - no_restart
+
+    - name: install ydb-dstool (from ydb_dstool_binary)
+      ansible.builtin.copy:
+        src: "{{ ydb_dstool_binary }}"
+        dest: "{{ ydb_dir }}/bin/ydb-dstool"
+        mode: 0755
+      when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is defined
+      tags:
+        - no_restart
+
+    - name: install ydb-dstool (from URL)
+      ansible.builtin.get_url:
+        url: https://storage.yandexcloud.net/blinkov-tmp/ydb-dstool # TODO: replace with a release URL
+        dest: "{{ ydb_dir }}/bin/"
+        mode: 0755
+      when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
+      tags:
+        - no_restart
+
 - name: Restart YDB cluster
   become: true
   ansible.builtin.import_playbook: restart.yaml
+  tags:
+    - restart
