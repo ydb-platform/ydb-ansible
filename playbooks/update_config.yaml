@@ -15,6 +15,7 @@
 
 - name: Check if required variables are defined
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
   tasks:
 
   - ansible.builtin.assert:

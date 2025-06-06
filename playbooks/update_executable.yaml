@@ -1,3 +1,5 @@
+---
+
 - name: check if required variables are defined
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
 

@@ -7,7 +7,7 @@
   ansible.builtin.fail:
     msg: "aborting playbook execution. Stop running YDB instances"
 
-- name: check if required variables are defined
+- name: Check if required variables are defined
   ansible.builtin.assert:
     that:
       - "{{ item }} is defined"
@@ -17,6 +17,7 @@
     - ydb_disks
     - ydb_domain
     - ydb_user
+    - ydb_use_dynamic_config
 
 - name: check if required secrets are defined
   no_log: true
@@ -177,3 +178,34 @@
   run_once: true
   tags:
     - password
+    
+- name: Dynamic configs
+  when: ydb_use_dynamic_config|bool
+  run_once: true
+  tags:
+    - dynconfig
+  block:
+    - name: Get the current dynconfig version
+      ydb_platform.ydb.dynconfig_version:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ld_library_path: "{{ ydb_dir }}/lib"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ inventory_hostname }}:2135"
+        database: "/{{ ydb_domain }}"
+        token: "{{ ydb_credentials.token }}"
+      register: ydb_dynconfig_info
+
+    - name: Add the dyn config
+      template: src={{ ydb_custom_dynconfig }} dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
+
+    - name: Configure dyn config
+      ydb_platform.ydb.dynconfig_apply:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ld_library_path: "{{ ydb_dir }}/lib"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ inventory_hostname }}:2135"
+        database: "/{{ ydb_domain }}"
+        user: "{{ ydb_user }}"
+        token: "{{ ydb_credentials.token }}"
+        config: "{{ ydb_dir }}/cfg/ydbd-dyn-config.yaml"
+
