@@ -141,6 +141,11 @@
         group: root
         mode: '0644'
       when: system_ntp_servers is defined
+
+    - name: Check if timesyncd exists
+      ansible.builtin.systemd:
+        name: systemd-timesyncd.service
+      register: timesyncd_status
       notify:
         - restart timesyncd
 

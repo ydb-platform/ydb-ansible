@@ -1,6 +1,7 @@
 ydb_allow_format_drives: false
 ydb_skip_data_loss_confirmation_prompt: false
 ydb_enforce_user_token_requirement: true
+ydb_storage_update_config: false
 # ydb_use_dynamic_config - define how to configure dynamic nodes - static or dynamic configs
 # Default value: false
 ydb_use_dynamic_config: false

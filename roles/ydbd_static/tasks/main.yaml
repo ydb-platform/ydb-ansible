@@ -92,7 +92,7 @@
     enabled: true
   any_errors_fatal: true
 
-- name: wait for ydb healthcheck switch to "GOOD" status
+- name: wait for ydb healthcheck switch to "GOOD" status (use playbook ydb_platform.ydb.logs for more details if failed)
   ydb_platform.ydb.wait_healthcheck:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
@@ -152,6 +152,7 @@
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     token: "{{ ydb_credentials.token }}"
+    update_config: "{{ ydb_storage_update_config }}"
   register: init_storage
   run_once: true
 

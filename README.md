@@ -392,10 +392,11 @@ There are two possible ways to add new nodes into the cluster:
 
 ## Simple
 
-1. Update config.yaml - add new nodes into `hosts` section.
+1. Update config.yaml - add new nodes into `hosts` section and increase value of `storage_config_generation`
 
 Example. Before changes
 ```
+storage_config_generation: 0
 hosts:
 - host: ydb-node01.ru-central1.internal
   host_config_id: 1
@@ -414,6 +415,7 @@ hosts:
 
 Example. After changes
 ```
+storage_config_generation: 1
 hosts:
 - host: ydb-node01.ru-central1.internal
   host_config_id: 1
@@ -453,16 +455,17 @@ all:
 ```
 
 5. Install YDB on new nodes and start them
-`ansible-playbook ydb_platform.ydb.initial_setup -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+`ansible-playbook ydb_platform.ydb.initial_setup -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database --extra-vars "ydb_storage_update_config=True"`
 6. Check the cluster
 
 ## Long
 
-1. Update config.yaml - add new nodes into `hosts` section.
+1. Update config.yaml - add new nodes into `hosts` section and increase value of `storage_config_generation`.
 
 Example. Before changes
 
 ```
+storage_config_generation: 0
 hosts:
 - host: ydb-node01.ru-central1.internal
   host_config_id: 1
@@ -482,6 +485,7 @@ hosts:
 Example. After changes
 
 ```
+storage_config_generation: 1
 hosts:
 - host: ydb-node01.ru-central1.internal
   host_config_id: 1
@@ -523,7 +527,7 @@ all:
 5. Prepare nodes for YDB:
 `ydb_platform.ydb.prepare_host -l ydb-node-NEW.ru-central1.internal`
 6. Install YDB on new static nodes and start them
-`ydb_platform.ydb.install_static -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
+`ydb_platform.ydb.install_static -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database --extra-vars "ydb_storage_update_config=True"`
 7. Install YDB on new dynamic nodes and start them
 `ydb_platform.ydb.install_dynamic -l ydb-node-NEW.ru-central1.internal --skip-tags password,create_database`
 8. Check the cluster
@@ -546,3 +550,15 @@ all:
     $ sudo systemctl stop ydbd-database-a
     $ sudo systemctl stop ydbd-database-b
     ```
+3) Q: How to solve problem with `init YDB storage if not initialized` step with `ItemConfigGenerationExpected` message?
+   A1: Add --extra-vars "ydb_storage_update_config=True" to command line
+   A2: Add `ydb_storage_update_config: True` in inventory
+
+4) Q: Restart takes a lot of time, no output, no activities. What to do?
+   A: You can switch on logging in this case - add --extra-vars "ydbops_log=/tmp/ydbops.log" to your command and logs will be recorded into `/tmp/ydbops.log`
+   A: Also you can change availability mode from `weak` to `force`. Be aware - this option could lead to cluster unavailability for some time.
+
+   ```bash
+   ansible-playbook ydb_platform.ydb.restart --extra-vars "ydbops_log=/tmp/ydbops.log"
+   ansible-playbook ydb_platform.ydb.restart --extra-vars "availability_mode=force"
+   ```

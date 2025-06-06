@@ -1,9 +1,9 @@
 import copy
-import socket
-
+import shlex
 
 class CLI:
     argument_spec = None
+    use_unsafe_shell = False
 
     def __init_subclass__(cls):
         if not isinstance(cls.argument_spec, dict):
@@ -34,12 +34,14 @@ class CLI:
         if not isinstance(cmd, list):
             raise ValueError('cmd must be list')
         cmd = self.common_options + cmd
+        if self.use_unsafe_shell:
+            cmd_format = getattr(self, "cmd_format", "{cmd}")
+            cmd = cmd_format.format(cmd=shlex.join(cmd))
         environ_update = copy.deepcopy(self.common_environ)
         if isinstance(env, dict):
             environ_update.update(env)
         self.module.log(f'calling command: {cmd}')
-        return self.module.run_command(cmd, environ_update=environ_update)
-
+        return self.module.run_command(cmd, environ_update=environ_update, use_unsafe_shell=self.use_unsafe_shell)
 
 class YDBD(CLI):
     argument_spec = dict(
@@ -148,10 +150,11 @@ class YdbOps(CLI):
         token=dict(type='str', default=None, no_log=True),
         token_file=dict(type='str', default=None),
         hosts=dict(type='str',default=None),
+        log_file=dict(type='str',default=None),
     )
 
     def __init__(self, module, ydbops_bin, ydbops_endpoint, ydbops_systemd_unit=None,
-                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, hosts=None):
+                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, hosts=None, log_file=None):
         self.module = module
 
         self.common_options = [ydbops_bin, 'restart', '--storage']
@@ -173,3 +176,6 @@ class YdbOps(CLI):
             self.common_environ['YDB_TOKEN'] = token
         elif token_file is not None:
             self.common_options.extend(['--token-file', token_file])
+        if log_file is not None and log_file != "":
+            self.cmd_format = "{cmd} >> " + shlex.quote(log_file)
+            self.use_unsafe_shell = True

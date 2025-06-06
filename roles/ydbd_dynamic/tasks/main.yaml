@@ -12,12 +12,12 @@
     - ydb_dynnodes
     - ydb_use_dynamic_config
 
-- name: create dynamic node configuration file
+- name: Create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
   changed_when: false
   when: not ydb_use_dynamic_config|bool
 
-- name: create dynamic node systemd unit
+- name: Create dynamic node systemd unit
   template:
     src: ydbd-dynnode.service
     dest: "/etc/systemd/system/ydbd-{{ ydb_dbname }}-{{ item.instance }}.service"
@@ -35,7 +35,7 @@
     enabled: true
   loop: "{{ ydb_dynnodes }}"
 
-- name: get ydb token
+- name: Get YDB token
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
@@ -49,7 +49,7 @@
   retries: 10
   delay: 10
 
-- name: create YDB database
+- name: Create YDB database
   ydb_platform.ydb.create_database:
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ld_library_path: "{{ ydb_dir }}/lib"
@@ -65,7 +65,7 @@
   tags:
     - create_database
 
-- name: wait for ydb discovery to start working locally
+- name: Wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
@@ -80,7 +80,7 @@
   pause:
     seconds: 60
 
-- name: run test queries
+- name: Run test queries
   ydb_platform.ydb.run_test_queries:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
