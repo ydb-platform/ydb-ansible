@@ -49,7 +49,7 @@
   become_method: sudo
   become_user: root
   vars:
-    ydb_storage_update_config: True
+    ydb_storage_update_config: False
   tasks:
 
   - name: copy original configuration file
@@ -102,6 +102,7 @@
     tags:
       - storage
       - no_restart
+      - bs
 
   - name: init YDB storage if not initialized
     ydb_platform.ydb.init_storage:
@@ -117,6 +118,7 @@
     tags:
       - storage
       - no_restart
+      - bs
 
   - name: wait for ydb healthcheck switch to "GOOD" status
     ydb_platform.ydb.wait_healthcheck:
@@ -131,6 +133,7 @@
     tags:
       - storage
       - no_restart
+      - bs
 
 - name: Restart YDB cluster
   ansible.builtin.import_playbook: restart.yaml
