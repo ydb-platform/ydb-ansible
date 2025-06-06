@@ -31,6 +31,7 @@
     - database
     - dynamic
     - no_restart
+    - always
 
 - name: Load presettings
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
@@ -42,6 +43,7 @@
     - database
     - dynamic
     - no_restart
+    - always
 
 - name: Update configs
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
