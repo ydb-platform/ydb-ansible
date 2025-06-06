@@ -1,4 +1,4 @@
-- name: check if required variables are defined
+- name: Check if required variables are defined
   ansible.builtin.assert:
     that:
       - "{{ item }} is defined"
@@ -10,10 +10,12 @@
     - ydb_brokers
     - ydb_dbname
     - ydb_dynnodes
+    - ydb_use_dynamic_config
 
 - name: create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
   changed_when: false
+  when: not ydb_use_dynamic_config|bool
 
 - name: create dynamic node systemd unit
   template:
@@ -36,7 +38,6 @@
 - name: get ydb token
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"

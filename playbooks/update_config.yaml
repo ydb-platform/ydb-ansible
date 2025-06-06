@@ -1,5 +1,8 @@
-- name: check if required variables are defined
+---
+
+- name: Check if required variables are defined
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
   tasks:
   - ansible.builtin.assert:
       that:
@@ -23,6 +26,7 @@
     - database
     - dynamic
     - no_restart
+
 - hosts: "{{ ansible_play_hosts | default('ydb') }}"
   tasks:
   - name: copy original configuration file

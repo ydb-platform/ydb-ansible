@@ -1,4 +1,4 @@
-- name: check if required variables are defined
+- name: Check if required variables are defined
   ansible.builtin.assert:
     that:
       - "{{ item }} is defined"
@@ -115,7 +115,7 @@
         mode: 0440
 
 - name: copy configuration file
-  copy:
+  ansible.builtin.template:
     src: "{{ ydb_config }}"
     dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
     owner: root

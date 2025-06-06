@@ -1,0 +1,16 @@
+metadata:
+  cluster: ""
+  version: {{ ydb_dynconfig_info['version'] }}
+config:
+# This parameter must be set to 'true'
+  yaml_config_enabled: true
+  actor_system_config:
+# Auto configure node by using number of CPU cores
+    use_auto_config: true
+# Type of the node (HYBRID, COMPUTE, STORAGE)
+    node_type: COMPUTE
+# Number of CPU cores
+    cpu_count: {{ ydb_cores_dynamic }}
+{{ lookup('ansible.builtin.template', '{{ ydb_config }}') | indent( width=2, first=True) }}
+allowed_labels: {}
+selector_config: []
