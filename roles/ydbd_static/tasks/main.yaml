@@ -10,14 +10,114 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
-    fail_msg: "{{ item }} variable is required"
+      - "{{ item.var1 is defined or item.var2 is defined }}"
+    fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
   loop:
-    - ydb_cores_static
-    - ydb_disks
-    - ydb_domain
-    - ydb_user
-    - ydb_use_dynamic_config
+    - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
+    - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
+    - { var1: "ydb_disks", var2: "ydb_disks" }
+    - { var1: "ydb_domain", var2: "ydb_domain" }
+    - { var1: "ydb_user", var2: "ydb_user" }
+
+# Handle ydb_pool_kind if not defined
+- name: handle ydb_pool_kind if not defined
+  block:
+    - name: check if ydb_config is a map
+      set_fact:
+        ydb_config_is_map: "{{ ydb_config is mapping }}"
+      when: ydb_config is defined
+
+    - name: set ydb_pool_kind from ydb_config when it's a map
+      set_fact:
+        ydb_pool_kind: "{{ ydb_config.default_disk_type | lower }}"
+      when: ydb_config is defined and ydb_config_is_map and ydb_config.default_disk_type is defined
+
+    - name: read ydb_config from file when it's a path
+      include_vars:
+        file: "{{ ydb_config }}"
+        name: ydb_config_content
+      when: ydb_config is defined and not ydb_config_is_map
+
+    - name: set ydb_pool_kind from ydb_config_content when it's from a file
+      set_fact:
+        ydb_pool_kind: "{{ ydb_config_content.default_disk_type | lower }}"
+      when: ydb_config is defined and not ydb_config_is_map and ydb_config_content is defined and ydb_config_content.default_disk_type is defined
+
+    - name: fail if ydb_pool_kind cannot be determined
+      fail:
+        msg: "Either ydb_pool_kind must be defined or ydb_config must contain default_disk_type"
+      when: ydb_pool_kind is not defined
+  when: ydb_pool_kind is not defined
+
+# Simple default broker selection (case 1)
+- name: Set default ydb_brokers (first three nodes)
+  set_fact:
+    ydb_brokers: "{{ groups['all'] | list | sort }}"
+  run_once: true
+  when: ydb_brokers is not defined
+
+- name: Limit default brokers to three nodes
+  set_fact:
+    ydb_brokers: "{{ ydb_brokers[:3] }}"
+  run_once: true
+  when: ydb_brokers is defined and ydb_brokers | length > 3
+
+# Collect information about data_centers
+- name: Create empty datacenter dictionary
+  set_fact:
+    datacenter_dict: {}
+  run_once: true
+  when: ydb_brokers is defined
+
+- name: Collect data_center information
+  set_fact:
+    datacenter_dict: "{{ datacenter_dict | default({}) | combine({hostvars[item].data_center: datacenter_dict[hostvars[item].data_center] | default([]) + [item]}) }}"
+  with_items: "{{ groups['all'] }}"
+  run_once: true
+  when:
+    - ydb_brokers is defined
+    - "'data_center' in hostvars[item]"
+    - hostvars[item].data_center is defined
+
+# Collect information about racks
+- name: Create empty rack dictionary
+  set_fact:
+    rack_dict: {}
+  run_once: true
+  when: ydb_brokers is defined
+
+- name: Collect rack information
+  set_fact:
+    rack_dict: "{{ rack_dict | default({}) | combine({hostvars[item].rack: rack_dict[hostvars[item].rack] | default([]) + [item]}) }}"
+  with_items: "{{ groups['all'] }}"
+  run_once: true
+  when:
+    - ydb_brokers is defined
+    - "'rack' in hostvars[item]"
+    - hostvars[item].rack is defined
+
+# Case 3: Multiple data centers (highest priority)
+- name: Select one node from each data center (case 3)
+  set_fact:
+    ydb_brokers: "{{ dc_brokers }}"
+  vars:
+    dc_brokers: "{% set brokers = [] %}{% for dc in datacenter_dict.keys() | sort %}{% if datacenter_dict[dc] | length > 0 %}{% set _ = brokers.append((datacenter_dict[dc] | sort)[0]) %}{% endif %}{% endfor %}{{ brokers }}"
+  run_once: true
+  when:
+    - datacenter_dict is defined
+    - datacenter_dict | length > 1
+
+# Case 2: One data center but multiple racks
+- name: Select one node from each rack in the same data center (case 2)
+  set_fact:
+    ydb_brokers: "{{ rack_brokers }}"
+  vars:
+    rack_brokers: "{% set brokers = [] %}{% for rack in rack_dict.keys() | sort %}{% if rack_dict[rack] | length > 0 %}{% set _ = brokers.append((rack_dict[rack] | sort)[0]) %}{% endif %}{% endfor %}{{ brokers }}"
+  run_once: true
+  when:
+    - datacenter_dict is not defined or datacenter_dict | length <= 1
+    - rack_dict is defined
+    - rack_dict | length > 1
 
 - name: check if required secrets are defined
   no_log: true
@@ -46,9 +146,15 @@
 - name: Add the database creation script
   template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode='755'
 
+- name: set ydb_config_v2 based on version if not explicitly set
+  set_fact:
+    ydb_config_v2: "{{ ydb_config_v2 | default(ydb_version is defined and ydb_version is version('25.0', '>=')) }}"
+  run_once: true
+
 - name: create static node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static) }}"
   changed_when: false
+  when: not ydb_config_v2
 
 - name: create static node systemd unit
   template:
@@ -84,47 +190,76 @@
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     allow_format: "{{ ydb_allow_format_drives }}"
   with_items: "{{ ydb_disks }}"
+  become: true
+  become_user: ydb
 
-- name: start storage node
-  ansible.builtin.systemd:
-    name: ydbd-storage
-    state: started
-    enabled: true
-  any_errors_fatal: true
+- name: generate random temporary config file path for v2 node init
+  set_fact:
+    ydb_temp_config_path: "/tmp/ydbd-config-{{ ansible_date_time.epoch }}-{{ 999999 | random }}.yaml"
+  when: ydb_config_v2
 
-- name: wait for ydb healthcheck switch to "GOOD" status (use playbook ydb_platform.ydb.logs for more details if failed)
-  ydb_platform.ydb.wait_healthcheck:
+- name: handle ydb_config for v2 node init
+  block:
+    - name: check if ydb_config is a map
+      set_fact:
+        ydb_config_is_map: "{{ ydb_config is mapping }}"
+
+    - name: write ydb_config map to temporary file for v2 node init
+      copy:
+        content: "{{ ydb_config | ydb_platform.ydb.custom_to_nice_yaml }}"
+        dest: "{{ ydb_temp_config_path }}"
+        owner: ydb
+        group: ydb
+        mode: 0644
+      when: ydb_config_is_map
+
+    - name: copy original config file to temp location for v2 node init
+      copy:
+        src: "{{ ydb_config }}"
+        dest: "{{ ydb_temp_config_path }}"
+        owner: ydb
+        group: ydb
+        mode: 0644
+      when: not ydb_config_is_map
+
+    - name: apply patch_config_v2 to configuration
+      ydb_platform.ydb.patch_config:
+        config: "{{ ydb_temp_config_path }}"
+        output_file: "{{ ydb_temp_config_path }}"
+        hostvars: "{{ hostvars }}"
+        ydb_disks: "{{ ydb_disks }}"
+        groups: "{{ groups }}"
+        ydb_dir: "{{ ydb_dir }}"
+      become: true
+      become_user: ydb
+
+    - name: update configuration with selectors
+      ydb_platform.ydb.apply_config_selectors:
+        config: "{{ ydb_temp_config_path }}"
+        output_file: "{{ ydb_temp_config_path }}"
+        database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
+        storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
+      become: true
+      become_user: ydb
+      when: ydb_config_v2 and (ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined)
+
+- name: init YDB node configuration (V2 only - before ydbd start)
+  ydb_platform.ydb.init_node_config:
+    config_file: "{{ ydb_temp_config_path }}"
+    config_dir: "{{ ydb_dir }}/cfg"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    ld_library_path: "{{ ydb_dir }}/lib"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
-    user: "{{ ydb_user }}"
-    password: "{{ ydb_password }}"
-    enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
-  run_once: true
+  become: true
+  become_user: ydb
+  when: ydb_config_v2
 
-- name: get ydb token
-  ydb_platform.ydb.get_token:
-    ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    database: "/{{ ydb_domain }}"
-    user: "{{ ydb_user }}"
-    password: "{{ ydb_password }}"
-  run_once: true
-  register: ydb_credentials
-  until: "'token' in ydb_credentials"
-  retries: 10
-  delay: 10
-
-- name: wait for ydb discovery to start working locally
-  ydb_platform.ydb.wait_discovery:
-    ydb_bin: "{{ ydb_dir }}/bin/ydb"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    database: "/{{ ydb_domain }}"
-    token: "{{ ydb_credentials.token }}"
-  any_errors_fatal: true
+- name: cleanup temp config file after node init
+  file:
+    path: "{{ ydb_temp_config_path }}"
+    state: absent
+  when: ydb_config_v2
 
 - name: Check ydb-dstool presence
   stat:
@@ -145,16 +280,108 @@
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
 
-- name: init YDB storage if not initialized
+- name: get initial root token for storage initialization (non-v2 configuration)
+  ydb_platform.ydb.get_token:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "root"
+    password: ""
+    retry_on_ssl_error: true
+  run_once: true
+  register: root_token
+  until: "'token' in root_token"
+  retries: 5
+  delay: 5
+  become: true
+  become_user: ydb
+  when: not ydb_config_v2
+
+- name: init YDB storage if not initialized (non-v2 configuration)
   ydb_platform.ydb.init_storage:
     config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    token: "{{ ydb_credentials.token }}"
-    update_config: "{{ ydb_storage_update_config }}"
-  register: init_storage
+    database: "/{{ ydb_domain }}"
+    token: "{{ root_token.token | default('') }}"
+    use_config_v2: "{{ ydb_config_v2 }}"
+  register: init_storage_nonv2
   run_once: true
+  when: not ydb_config_v2
+  become_user: ydb
+
+- name: start storage node
+  ansible.builtin.systemd:
+    name: ydbd-storage
+    state: started
+    enabled: true
+  any_errors_fatal: true
+
+- name: give storage node some time to start
+  pause:
+    seconds: 15
+
+- name: wait for YDB TLS service to be ready
+  wait_for:
+    port: 2135
+    host: "{{ ydb_front | default(inventory_hostname) }}"
+    timeout: 120
+    delay: 5
+  run_once: true
+
+- name: additional wait for TLS handshake readiness
+  pause:
+    seconds: 45
+  run_once: true
+
+# For v2 configs, initialize storage after the server is running
+- name: init YDB storage if not initialized (v2 configuration)
+  ydb_platform.ydb.init_storage:
+    config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    use_config_v2: "{{ ydb_config_v2 }}"
+  register: init_storage_v2
+  run_once: true
+  when: ydb_config_v2
+  become_user: ydb
+
+- name: get ydb token with user credentials
+  ydb_platform.ydb.get_token:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    database: "/{{ ydb_domain }}"
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
+    retry_on_ssl_error: true
+  run_once: true
+  register: ydb_credentials
+  until: "'token' in ydb_credentials"
+  retries: 25
+  delay: 20
+  become: true
+  become_user: ydb
+
+- name: wait for ydb discovery to start working locally
+  ydb_platform.ydb.wait_discovery:
+    ydb_bin: "{{ ydb_dir }}/bin/ydb"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    database: "/{{ ydb_domain }}"
+    token: "{{ ydb_credentials.token }}"
+  any_errors_fatal: true
+  become: true
+  become_user: ydb
 
 - name: wait for ydb healthcheck switch to "GOOD" status
   ydb_platform.ydb.wait_healthcheck:
@@ -165,6 +392,12 @@
     token: "{{ ydb_credentials.token }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
   run_once: true
+  register: healthcheck_result
+  until: healthcheck_result is succeeded
+  retries: 30
+  delay: 10
+  become: true
+  become_user: ydb
 
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:
@@ -176,36 +409,11 @@
     new_password: "{{ ydb_password }}"
     token: "{{ ydb_credentials.token }}"
   run_once: true
+  register: password_result
+  retries: 30
+  delay: 15
+  until: password_result is succeeded
   tags:
     - password
-    
-- name: Dynamic configs
-  when: ydb_use_dynamic_config|bool
-  run_once: true
-  tags:
-    - dynconfig
-  block:
-    - name: Get the current dynconfig version
-      ydb_platform.ydb.dynconfig_version:
-        ydb_bin: "{{ ydb_dir }}/bin/ydb"
-        ld_library_path: "{{ ydb_dir }}/lib"
-        ca_file: "{{ ydb_dir }}/certs/ca.crt"
-        endpoint: "grpcs://{{ inventory_hostname }}:2135"
-        database: "/{{ ydb_domain }}"
-        token: "{{ ydb_credentials.token }}"
-      register: ydb_dynconfig_info
-
-    - name: Add the dyn config
-      template: src={{ ydb_custom_dynconfig }} dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
-
-    - name: Configure dyn config
-      ydb_platform.ydb.dynconfig_apply:
-        ydb_bin: "{{ ydb_dir }}/bin/ydb"
-        ld_library_path: "{{ ydb_dir }}/lib"
-        ca_file: "{{ ydb_dir }}/certs/ca.crt"
-        endpoint: "grpcs://{{ inventory_hostname }}:2135"
-        database: "/{{ ydb_domain }}"
-        user: "{{ ydb_user }}"
-        token: "{{ ydb_credentials.token }}"
-        config: "{{ ydb_dir }}/cfg/ydbd-dyn-config.yaml"
-
+  become: true
+  become_user: ydb
