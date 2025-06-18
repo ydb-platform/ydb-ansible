@@ -1,7 +1,7 @@
 metadata:
   kind: MainConfig
   cluster: ""
-  version: 6
+  version: 0
 config:
   yaml_config_enabled: true
   log_config:
