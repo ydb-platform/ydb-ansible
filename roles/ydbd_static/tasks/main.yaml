@@ -199,6 +199,7 @@
   when: ydb_config_v2
 
 - name: handle ydb_config for v2 node init
+  when: ydb_config_v2|bool
   block:
     - name: check if ydb_config is a map
       set_fact:
@@ -253,13 +254,13 @@
     database: "/{{ ydb_domain }}"
   become: true
   become_user: ydb
-  when: ydb_config_v2
+  when: ydb_config_v2|bool
 
 - name: cleanup temp config file after node init
   file:
     path: "{{ ydb_temp_config_path }}"
     state: absent
-  when: ydb_config_v2
+  when: ydb_config_v2|bool
 
 - name: Check ydb-dstool presence
   stat:
@@ -279,6 +280,30 @@
     dest: "{{ ydb_dir }}/bin/"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
+
+- name: start storage node
+  ansible.builtin.systemd:
+    name: ydbd-storage
+    state: started
+    enabled: true
+  any_errors_fatal: true
+
+- name: give storage node some time to start
+  pause:
+    seconds: 15
+
+- name: wait for YDB TLS service to be ready
+  wait_for:
+    port: 2135
+    host: "{{ ydb_front | default(inventory_hostname) }}"
+    timeout: 120
+    delay: 5
+  run_once: true
+
+- name: additional wait for TLS handshake readiness
+  pause:
+    seconds: 45
+  run_once: true
 
 - name: get initial root token for storage initialization (non-v2 configuration)
   ydb_platform.ydb.get_token:
@@ -314,30 +339,6 @@
   run_once: true
   when: not ydb_config_v2
   become_user: ydb
-
-- name: start storage node
-  ansible.builtin.systemd:
-    name: ydbd-storage
-    state: started
-    enabled: true
-  any_errors_fatal: true
-
-- name: give storage node some time to start
-  pause:
-    seconds: 15
-
-- name: wait for YDB TLS service to be ready
-  wait_for:
-    port: 2135
-    host: "{{ ydb_front | default(inventory_hostname) }}"
-    timeout: 120
-    delay: 5
-  run_once: true
-
-- name: additional wait for TLS handshake readiness
-  pause:
-    seconds: 45
-  run_once: true
 
 # For v2 configs, initialize storage after the server is running
 - name: init YDB storage if not initialized (v2 configuration)

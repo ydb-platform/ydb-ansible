@@ -24,6 +24,11 @@ def main():
         ydb_cli = cli.YDB.from_module(module)
         rc, stdout, stderr = ydb_cli(['auth', 'get-token', '-f'])
 
+        if rc != 0 and INVALID_PASSWORD in stderr and module.params.get('fallback_to_default_user'):
+            module.log('falling back to default user')
+            ydb_cli = cli.YDB.from_module(module, user='root', password='')
+            rc, stdout, stderr = ydb_cli(['auth', 'get-token', '-f'])
+
         # Check for SSL handshake errors
         if rc != 0 and any(error in stderr for error in SSL_HANDSHAKE_ERRORS):
             if module.params.get('retry_on_ssl_error'):
@@ -72,11 +77,6 @@ def main():
                     ]
                 }
                 module.fail_json(**result)
-
-        if rc != 0 and INVALID_PASSWORD in stderr and module.params.get('fallback_to_default_user'):
-            module.log('falling back to default user')
-            ydb_cli = cli.YDB.from_module(module, user='root', password='')
-            rc, stdout, stderr = ydb_cli(['auth', 'get-token', '-f'])
 
         if rc != 0:
             result['msg'] = f'command: "ydb auth get-token" failed'
