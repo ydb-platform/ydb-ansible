@@ -1,0 +1,20 @@
+---
+- name: Format storage drives, erase metadata 
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  tasks:
+
+    - name: ask user confirmation for format drives
+      ansible.builtin.pause:
+        prompt: 'DATA LOSS: this will cause data loss if not handled with care! Enter "yes" to continue.'
+      register: prompt
+      run_once: true
+
+    - name: stop execution
+      ansible.builtin.fail:
+        msg: "aborting playbook execution"
+      when: prompt.user_input != "yes"
+
+    - name: Erase disk with dd
+      become: true
+      shell: dd if=/dev/zero of={{ item.name }} bs=1M count=100 status=none 
+      loop: "{{ ydb_disks }}"
