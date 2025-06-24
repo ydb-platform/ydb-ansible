@@ -75,6 +75,10 @@ def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None, ydb_dir=
         _ensure_config_path(config, 'tls.cert', f"{ydb_dir}/certs/node.crt")
         _ensure_config_path(config, 'tls.key', f"{ydb_dir}/certs/node.key")
         _ensure_config_path(config, 'tls.ca', f"{ydb_dir}/certs/ca.crt")
+        _ensure_config_path(config, 'grpc_config.cert', f"{ydb_dir}/certs/node.crt")
+        _ensure_config_path(config, 'grpc_config.key', f"{ydb_dir}/certs/node.key")
+        _ensure_config_path(config, 'grpc_config.ca', f"{ydb_dir}/certs/ca.crt")
+        _ensure_config_path(config, 'grpc_config.services_enabled', ['legacy','discovery'])
 
     # Generate hosts section if it's missing and we have the required data
     if 'hosts' not in config and hostvars and ydb_disks:
