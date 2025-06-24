@@ -67,6 +67,7 @@
   become_user: root
   vars:
     ydb_storage_update_config: False
+
   tasks:
   - name: get ydb token for cluster config management
     ydb_platform.ydb.get_token:
@@ -83,7 +84,7 @@
     until: "'token' in ydb_credentials"
     retries: 30
     delay: 15
-    when: ydb_config_v2 | default(false)
+    when: ydb_config_v2 | default(false) or ydb_storage_update_config|bool
     become: true
     become_method: sudo
     become_user: ydb
@@ -92,6 +93,22 @@
       - static
       - database
       - dynamic
+      - no_restart
+
+  - name: init YDB storage if not initialized
+    ydb_platform.ydb.init_storage:
+      config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+      ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      update_config: "{{ ydb_storage_update_config }}"
+    register: init_storage
+    run_once: true
+    when: ydb_storage_update_config|bool and ydb_config_v2|bool != True
+    tags:
+      - storage
+      - static
       - no_restart
 
   - name: generate random temporary config file path

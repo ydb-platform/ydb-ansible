@@ -1,5 +1,6 @@
 import json
-import os
+import re
+import yaml
 import uuid
 
 
@@ -38,16 +39,46 @@ def set_pdisk_active_status(ydb_dstool):
             pass
 
 
-def init_storage_using_config_v1(ydbd_cli, config_file, result):
+def init_storage_using_config_v1(ydbd_cli, config_file, result, update_config):
     """Initialize storage using YDB configuration V1 (blobstorage config init)"""
     cmd = ['admin', 'blobstorage', 'config', 'init', '--yaml-file', config_file]
     rc, stdout, stderr = ydbd_cli(cmd)
     if rc != 0:
         result['msg'] = 'blobstorage config init failed'
-        result['cmd'] = ' '.join(ydbd_cli.common_options + cmd)
-        result['stdout'] = stdout
-        result['stderr'] = stderr
-        return False
+        if update_config:
+                # Detect required config generation
+                pattern = r'ItemConfigGenerationExpected: (\d+)'
+                match = re.search(pattern, stdout)
+                if match:
+                    expected_value = int(match.group(1))
+                    # Replace current generation in config
+                    with open(config_file, 'r') as file:
+                        data = yaml.safe_load(file)
+                    if data is not None:
+                        if 'storage_config_generation' in data:
+                            data['storage_config_generation'] = expected_value
+                            new_config_file = config_file + '-ansible'
+                            with open(new_config_file, 'w') as file:
+                                yaml.dump(data, file, default_flow_style=False)
+                                rc, stdout, stderr = ydbd_cli([
+                                    'admin', 'blobstorage', 'config', 'init', '--yaml-file', new_config_file
+                                ])
+                                if rc != 0:
+                                    result['msg'] = f"blobstorage config init failed with expected config"
+                                else:
+                                    result['msg'] = 'blobstorage config init succeeded'
+                                    result['stdout'] = stdout
+                                    result['stderr'] = stderr
+                                    return True
+                    else:
+                        result['msg'] = f"blobstorage config init failed, Expected value of ItemConfigGenerationExpected: {expected_value}"
+                else:
+                    result['msg'] = f"blobstorage config init failed, Expected value was not found"
+        if rc != 0:
+            result['cmd'] = ' '.join(ydbd_cli.common_options + cmd)
+            result['stdout'] = stdout
+            result['stderr'] = stderr
+            return False
     else:
         result['msg'] = 'blobstorage config init succeeded'
         result['stdout'] = stdout
@@ -79,6 +110,7 @@ def init_storage_using_config_v2(ydb_cli_with_db, result):
 def main():
     argument_spec=dict(
         config_file=dict(type='str', required=True),
+        update_config=dict(type='bool', default=False),
         use_config_v2=dict(type='bool', default=False),
     )
     cli.YDBD.add_arguments(argument_spec)
@@ -93,6 +125,7 @@ def main():
         ydb_dstool = cli.DsTool.from_module(module)
         config_file = module.params.get('config_file')
         use_config_v2 = module.params.get('use_config_v2')
+        update_config = module.params.get('update_config')
 
         initialized, should_fail = check_storage_initialization(ydb_dstool, result)
 
@@ -108,7 +141,7 @@ def main():
         if use_config_v2:
             success = init_storage_using_config_v2(ydb_cli, result)
         else:
-            success = init_storage_using_config_v1(ydbd_cli, config_file, result)
+            success = init_storage_using_config_v1(ydbd_cli, config_file, result, update_config)
 
         if not success:
             module.fail_json(**result)
