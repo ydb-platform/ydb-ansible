@@ -311,8 +311,8 @@
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
-    user: "root"
-    password: ""
+    user: "{{ ydb_user }}"
+    password: "{{ ydb_password }}"
     retry_on_ssl_error: true
   run_once: true
   register: root_token
@@ -335,6 +335,7 @@
     database: "/{{ ydb_domain }}"
     token: "{{ root_token.token | default('') }}"
     use_config_v2: "{{ ydb_config_v2 }}"
+    update_config: "{{ ydb_storage_update_config }}"
   register: init_storage_nonv2
   run_once: true
   when: not ydb_config_v2
@@ -410,11 +411,11 @@
     new_password: "{{ ydb_password }}"
     token: "{{ ydb_credentials.token }}"
   run_once: true
+  become: true
+  become_user: ydb
   register: password_result
   retries: 30
   delay: 15
   until: password_result is succeeded
   tags:
     - password
-  become: true
-  become_user: ydb
