@@ -30,7 +30,7 @@ def main():
             rc, stdout, stderr = ydb_cli(['auth', 'get-token', '-f'])
 
         # Check for SSL handshake errors
-        if rc != 0 and any(error in stderr for error in SSL_HANDSHAKE_ERRORS):
+        if rc != 0 and any(error in stderr.lower() for error in SSL_HANDSHAKE_ERRORS):
             if module.params.get('retry_on_ssl_error'):
                 # Return a result that will trigger Ansible retry mechanism
                 result['msg'] = (
