@@ -20,6 +20,8 @@
 
 - hosts: "{{ ansible_play_hosts | default('ydb') }}"
   become: true
+  vars:
+    ydb_force_update: true
 
   roles:
   - role: preflight
