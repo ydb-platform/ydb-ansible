@@ -6,7 +6,7 @@
   loop:
     - ydb_dir
     - ydb_domain
-    - ydb_database_node_cores | default(ydb_cores_dynamic, true)
+    - ydb_database_node_cores | default(ydb_cores_dynamic, 1)
     - ydb_database_name | default(ydb_dbname, true)
 
 # Simple default broker selection
