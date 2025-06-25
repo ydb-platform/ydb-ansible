@@ -86,10 +86,10 @@ def init_storage_using_config_v1(ydbd_cli, config_file, result, update_config):
         return True
 
 
-def init_storage_using_config_v2(ydb_cli_with_db, result):
+def init_storage_using_config_v2(ydb_cli, result):
     """Initialize storage using YDB configuration V2 (bootstrap only)"""
 
-    ydb_cli = cli.YDB.from_module(ydb_cli_with_db.module)
+    # ydb_cli = cli.YDB.from_module(ydb_cli_with_db.module)
 
     # Run bootstrap with config directory (node init should have been done before ydbd start)
     cmd = ['--assume-yes', 'admin', 'cluster', 'bootstrap', '--uuid', str(uuid.uuid4())]

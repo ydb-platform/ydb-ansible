@@ -334,7 +334,7 @@
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ root_token.token | default('') }}"
-    use_config_v2: "{{ ydb_config_v2 }}"
+    use_config_v2: "false"
     update_config: "{{ ydb_storage_update_config }}"
   register: init_storage_nonv2
   run_once: true
@@ -344,14 +344,14 @@
 # For v2 configs, initialize storage after the server is running
 - name: init YDB storage if not initialized (v2 configuration)
   ydb_platform.ydb.init_storage:
-    config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+    config_file: "{{ ydb_dir }}/cfg/config.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    use_config_v2: "{{ ydb_config_v2 }}"
+    use_config_v2: "true"
   register: init_storage_v2
   run_once: true
   when: ydb_config_v2
