@@ -9,11 +9,12 @@
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
+    retry_on_ssl_error: true
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
-  retries: 10
-  delay: 10
+  retries: 15
+  delay: 15
 
 # ydbops_source_bin - source binary for ydbops
 # values: ydbops - Linux x86_64
@@ -32,7 +33,7 @@
     - name: Check ydbops is present
       stat:
         path: "{{ ansible_config_file | dirname }}/bin/ydbops"
-      register: ydbops_stat 
+      register: ydbops_stat
 
     - name: create bin directory
       delegate_to: 127.0.0.1
@@ -41,7 +42,7 @@
         path: "{{ ansible_config_file | dirname }}/bin/"
         state: directory
       when: not ydbops_stat.stat.exists|bool
-    
+
     - name: "Gather"
       delegate_to: 127.0.0.1
       ansible.builtin.setup:
@@ -101,7 +102,7 @@
     - name: Check ydbops is present
       stat:
         path: "{{ ydb_dir }}/bin/ydbops"
-      register: ydbops_stat 
+      register: ydbops_stat
 
     - name: "MacOS"
       when: ansible_facts.os_family == "Darwin" and not ydbops_stat.stat.exists|bool

@@ -1,5 +1,5 @@
 [Unit]
-Description=YDB dynamic node / {{ ydb_dbname }} / {{ item.instance }}
+Description=YDB dynamic node / {{ ydb_database_name | default(ydb_dbname, true) }} / {{ item.instance }}
 StartLimitInterval=10
 StartLimitBurst=15
 After=network-online.target rc-local.service ydb-transparent-hugepages.service
@@ -12,7 +12,9 @@ UMask=077
 PermissionsStartOnly=true
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
-{% if not ydb_use_dynamic_config|bool %}
+{% if ydb_config_v2 | default(false) %}
+    --config-dir {{ ydb_dir }}/cfg \
+{% else %}
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
 {% endif %}
 {% if ydb_back_name is defined %}
@@ -26,9 +28,11 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --ic-port {{ 19002 + item.offset }} \
     --mon-port {{ 8766 + item.offset }} \
 {% else %}
-    --grpcs-port 2136 --ic-port 19002 --mon-port 8766  \
+    --grpcs-port {{ 2136 + ydb_dynnodes.index(item) }} \
+    --ic-port {{ 19002 + ydb_dynnodes.index(item) }} \
+    --mon-port {{ 8766 + ydb_dynnodes.index(item) }} \
 {% endif %}
-    --tenant /{{ ydb_domain }}/{{ ydb_dbname }} \
+    --tenant /{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }} \
 {% if ydb_request_client_certificate|bool %}
     --node-broker-use-tls true \
 {% endif %}

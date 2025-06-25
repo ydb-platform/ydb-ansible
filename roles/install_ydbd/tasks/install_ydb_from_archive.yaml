@@ -17,9 +17,9 @@
       group: root
       extra_opts: "{{ ydb_archive_unpack_options }}"
   - name: Get version
-    shell: "{{ ydb_dir }}/release/archive/bin/ydbd --compatibility-info | grep 'Version' | cut -f 2 -d ':' | tr '-' '.' | awk '{ print $1;}'"
+    shell: "{{ ydb_dir }}/release/archive/bin/ydbd --compatibility-info | awk '$1 ~ \"Version:\" { gsub(/-/, \".\", $2); print $2 }'"
     register: cmd_version
-  - set_fact: 
+  - set_fact:
       ydb_version: "{{ cmd_version.stdout }}"
 
 - name: check if ydbd present

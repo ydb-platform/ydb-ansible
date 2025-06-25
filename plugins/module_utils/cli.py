@@ -78,7 +78,7 @@ class YDB(CLI):
         ld_library_path=dict(type='str', default='/opt/ydb/lib'),
         ca_file=dict(type='str', default=None),
         endpoint=dict(type='str', required=True),
-        database=dict(type='str', required=True),
+        database=dict(type='str', required=False),
         user=dict(type='str', default=None),
         password=dict(type='str', default=None, no_log=True),
         token=dict(type='str', default=None, no_log=True),
@@ -109,7 +109,7 @@ class YDB(CLI):
             self.common_environ['YDB_PASSWORD'] = password
         elif user is not None and password is not None and password == '':
             self.common_options.extend(['--user', user])
-            self.common_options.extend(['--no-password', token_file])
+            self.common_options.extend(['--no-password'])
 
 
 class DsTool(CLI):

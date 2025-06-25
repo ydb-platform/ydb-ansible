@@ -8,7 +8,7 @@
       become_user: ydb
       copy: src={{ ansible_config_file | dirname }}/secret dest={{ ydb_dir }}/certs/secret
     - name: Run the database creation script
-      command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_domain }}/{{ ydb_dbname }} {{ ydb_default_groups }}"
+      command: "{{ ydb_dir }}/home/create_database.sh {{ inventory_hostname }} {{ ydb_database_name | default(ydb_dbname, true) }} {{ ydb_default_groups }}"
       become: true
       become_user: ydb
     - name: Cleanup the transferred secrets
