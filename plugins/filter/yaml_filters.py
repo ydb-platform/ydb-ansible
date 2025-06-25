@@ -6,20 +6,20 @@ from ansible.utils.display import Display
 
 display = Display()
 
-class CustomYAMLDumper(yaml.SafeDumper):
+class YDBDynCustomYAMLDumper(yaml.SafeDumper):
     """
     Custom YAML Dumper with improved formatting
     """
     def increase_indent(self, flow=False, indentless=False):
-        return super(CustomYAMLDumper, self).increase_indent(flow, False)
+        return super(YDBDynCustomYAMLDumper, self).increase_indent(flow, False)
 
 # Add representers for Python types if needed
 def dict_representer(dumper, data):
     return dumper.represent_mapping('tag:yaml.org,2002:map', data.items())
 
-CustomYAMLDumper.add_representer(dict, dict_representer)
+YDBDynCustomYAMLDumper.add_representer(dict, dict_representer)
 
-def custom_to_nice_yaml(a, indent=2, *args, **kw):
+def ydb_config_to_yaml(a, indent=2, *args, **kw):
     """
     A custom variant of to_nice_yaml that ensures proper formatting
     and preserves structure of the input data.
@@ -37,7 +37,7 @@ def custom_to_nice_yaml(a, indent=2, *args, **kw):
         yaml.dump(
             a,
             output,
-            Dumper=CustomYAMLDumper,
+            Dumper=YDBDynCustomYAMLDumper,
             indent=indent,
             allow_unicode=True,
             default_flow_style=False,
@@ -73,9 +73,9 @@ class FilterModule(object):
     """
 
     def filters(self):
-        display.vvv("Registering ydb_platform.ydb.custom_to_nice_yaml filter")
+        display.vvv("Registering ydb_platform.ydb.ydb_config_to_yaml filter")
         # Register the filter both with and without collection prefix for maximum compatibility
         return {
-            'custom_to_nice_yaml': custom_to_nice_yaml,
-            'ydb_platform.ydb.custom_to_nice_yaml': custom_to_nice_yaml,
+            'ydb_config_to_yaml': ydb_config_to_yaml,
+            'ydb_platform.ydb.ydb_config_to_yaml': ydb_config_to_yaml,
         }

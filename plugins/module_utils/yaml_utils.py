@@ -5,7 +5,7 @@ except ImportError:
     from yaml import SafeDumper
 
 
-class CustomYAMLDumper(SafeDumper):
+class YDBDynCustomYAMLDumper(SafeDumper):
     """
     Custom YAML Dumper that preserves !inherit tags.
     """
@@ -69,8 +69,8 @@ def represent_inheritable_dict(dumper, data):
 
 
 # Register custom representers
-CustomYAMLDumper.add_representer(type(None), represent_none)
-CustomYAMLDumper.add_representer(InheritableDict, represent_inheritable_dict)
+YDBDynCustomYAMLDumper.add_representer(type(None), represent_none)
+YDBDynCustomYAMLDumper.add_representer(InheritableDict, represent_inheritable_dict)
 
 
 def safe_dump(data, file_obj, **kwargs):
@@ -82,7 +82,7 @@ def safe_dump(data, file_obj, **kwargs):
         file_obj: A file-like object to dump to
         **kwargs: Additional arguments to pass to yaml.dump
     """
-    kwargs.setdefault('Dumper', CustomYAMLDumper)
+    kwargs.setdefault('Dumper', YDBDynCustomYAMLDumper)
     kwargs.setdefault('default_flow_style', False)
     return yaml.dump(data, file_obj, **kwargs)
 

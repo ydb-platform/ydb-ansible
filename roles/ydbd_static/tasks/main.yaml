@@ -207,7 +207,7 @@
 
     - name: write ydb_config map to temporary file for v2 node init
       copy:
-        content: "{{ ydb_config | ydb_platform.ydb.custom_to_nice_yaml }}"
+        content: "{{ ydb_config | ydb_platform.ydb.ydb_config_to_yaml }}"
         dest: "{{ ydb_temp_config_path }}"
         owner: ydb
         group: ydb

@@ -13,7 +13,7 @@ sys.path.insert(0, plugins_dir)
 from module_utils.yaml_utils import (
     safe_dump,
     safe_load,
-    CustomYAMLDumper,
+    YDBDynCustomYAMLDumper,
     InheritableDict,
     represent_undefined,
     represent_none
@@ -49,7 +49,7 @@ class TestYamlUtils(unittest.TestCase):
 
     def test_represent_undefined_inherit(self):
         """Test the represent_undefined function with !inherit value."""
-        dumper = CustomYAMLDumper(io.StringIO())
+        dumper = YDBDynCustomYAMLDumper(io.StringIO())
         node = represent_undefined(dumper, '!inherit')
 
         self.assertEqual(node.tag, '!inherit')
@@ -57,7 +57,7 @@ class TestYamlUtils(unittest.TestCase):
 
     def test_represent_undefined_regular_string(self):
         """Test the represent_undefined function with a regular string."""
-        dumper = CustomYAMLDumper(io.StringIO())
+        dumper = YDBDynCustomYAMLDumper(io.StringIO())
         node = represent_undefined(dumper, 'regular_string')
 
         self.assertEqual(node.tag, 'tag:yaml.org,2002:str')
@@ -86,7 +86,7 @@ class TestYamlUtils(unittest.TestCase):
 
     def test_represent_none_function(self):
         """Test the represent_none function directly."""
-        dumper = CustomYAMLDumper(io.StringIO())
+        dumper = YDBDynCustomYAMLDumper(io.StringIO())
         node = represent_none(dumper, None)
 
         self.assertEqual(node.tag, 'tag:yaml.org,2002:null')
