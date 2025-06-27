@@ -54,7 +54,6 @@ RUN mkdir /ansible && \
     echo 'localhost' > /etc/ansible/hosts
 
 WORKDIR /ansible
-COPY entrypoint.sh /entrypoint.sh
 
 RUN ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git
 
