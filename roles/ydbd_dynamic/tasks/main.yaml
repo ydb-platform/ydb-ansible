@@ -153,6 +153,17 @@
   retries: 15
   delay: 15
 
+- name: Make sure PDisks are ACTIVE
+  ydb_platform.ydb.pdisk_active:
+    dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    token: "{{ root_token.token | default('') }}"
+  run_once: true
+  become_user: ydb
+  tags:
+    - create_database
+
 - name: Create YDB database
   ydb_platform.ydb.create_database:
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
