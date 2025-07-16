@@ -384,6 +384,8 @@
   any_errors_fatal: true
   become: true
   become_user: ydb
+  tags:
+    - discovery
 
 - name: wait for ydb healthcheck switch to "GOOD" status
   ydb_platform.ydb.wait_healthcheck:
@@ -400,6 +402,8 @@
   delay: 10
   become: true
   become_user: ydb
+  tags:
+    - healthcheck
 
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:
