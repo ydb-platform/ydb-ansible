@@ -33,7 +33,6 @@
 - name: set collection level constants
   set_fact:
     ydb_dir: /opt/ydb
-    ydb_config_v2: false
 
 - name: Check current user
   ansible.builtin.command: whoami

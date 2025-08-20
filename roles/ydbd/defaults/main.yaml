@@ -1,1 +1,2 @@
 ydb_transparent_hugepages_enable: true
+ydb_config_v2: false

@@ -6,3 +6,4 @@ ydb_storage_update_config: false
 # Default value: false
 ydb_use_dynamic_config: false
 ydb_custom_dynconfig: ydbd-dyn-config.yaml.j2
+ydb_config_v2: false

@@ -23,3 +23,5 @@
     token: "{{ ydb_credentials.token }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
   run_once: true
+  tags:
+    - healthcheck
