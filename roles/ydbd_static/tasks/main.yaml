@@ -150,6 +150,7 @@
   set_fact:
     ydb_config_v2: "{{ ydb_config_v2 | default(ydb_version is defined and ydb_version is version('25.0', '>=')) }}"
   run_once: true
+  when: ydb_config_v2 is not defined
 
 - name: create static node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static) }}"
@@ -187,7 +188,7 @@
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     allow_format: "{{ ydb_allow_format_drives }}"
   with_items: "{{ ydb_disks }}"
   become: true
@@ -250,7 +251,7 @@
     config_dir: "{{ ydb_dir }}/cfg"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
   become: true
   become_user: ydb
@@ -295,7 +296,7 @@
 - name: wait for YDB TLS service to be ready
   wait_for:
     port: 2135
-    host: "{{ ydb_front | default(inventory_hostname) }}"
+    host: "{{ ydb_brokers | flatten(levels=1) | first }}"
     timeout: 120
     delay: 5
   run_once: true
@@ -309,7 +310,7 @@
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
@@ -331,7 +332,7 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ root_token.token | default('') }}"
     use_config_v2: "false"
@@ -350,7 +351,7 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     use_config_v2: "true"
   register: init_storage_v2
   run_once: true
@@ -361,7 +362,7 @@
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
@@ -378,7 +379,7 @@
   ydb_platform.ydb.wait_discovery:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
@@ -391,7 +392,7 @@
   ydb_platform.ydb.wait_healthcheck:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
@@ -409,7 +410,7 @@
   ydb_platform.ydb.set_user_password:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     new_password: "{{ ydb_password }}"
@@ -435,7 +436,7 @@
         ydb_bin: "{{ ydb_dir }}/bin/ydb"
         ld_library_path: "{{ ydb_dir }}/lib"
         ca_file: "{{ ydb_dir }}/certs/ca.crt"
-        endpoint: "grpcs://{{ inventory_hostname }}:2135"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
         database: "/{{ ydb_domain }}"
         token: "{{ ydb_credentials.token }}"
       register: ydb_dynconfig_info
@@ -448,7 +449,7 @@
         ydb_bin: "{{ ydb_dir }}/bin/ydb"
         ld_library_path: "{{ ydb_dir }}/lib"
         ca_file: "{{ ydb_dir }}/certs/ca.crt"
-        endpoint: "grpcs://{{ inventory_hostname }}:2135"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
         database: "/{{ ydb_domain }}"
         user: "{{ ydb_user }}"
         token: "{{ ydb_credentials.token }}"
