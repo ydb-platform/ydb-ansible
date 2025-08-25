@@ -34,7 +34,7 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --ic-port {{ 19002 + ydb_dynnodes.index(item) }} \
     --mon-port {{ 8766 + ydb_dynnodes.index(item) }} \
 {% endif %}
-    --tenant /{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }} \
+    --tenant /{{ ydb_domain }}/{{ item.dbname | default(ydb_database_name, true) }} \
 {% if ydb_request_client_certificate|bool %}
     --node-broker-use-tls true \
 {% endif %}
