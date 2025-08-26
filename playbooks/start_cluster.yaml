@@ -17,6 +17,15 @@
     - name: start static
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_static_start
+      tags:
+        - static
+        - storage
+
+    - name: Delay for 1 min
+      pause:
+        seconds: 60
+      tags:
+        - delay
 
 - hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
   become: true
@@ -26,3 +35,5 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic_start
       ignore_errors: True
+      tags:
+        - dynamic

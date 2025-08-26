@@ -192,7 +192,6 @@
     allow_format: "{{ ydb_allow_format_drives }}"
   with_items: "{{ ydb_disks }}"
   become: true
-  become_user: ydb
 
 - name: generate random temporary config file path for v2 node init
   set_fact:
