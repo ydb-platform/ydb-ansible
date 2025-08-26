@@ -172,7 +172,7 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
-    database: "/{{ ydb_domain }}/{{ default(ydb_database_name, true) }}"
+    database: "/{{ ydb_domain }}/{{ ydb_dbname | default(ydb_database_name, true) }}"
     token: "{{ ydb_credentials.token }}"
     pool_kind: "{{ ydb_pool_kind }}"
     groups: "{{ ydb_database_storage_groups | default(ydb_database_groups) }}"
