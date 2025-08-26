@@ -1,6 +1,5 @@
 ---
 
-
 # PLAYBOOK: ydb_platform.ydb.create_database
 # PROPOSE : This playbook is designed to create YDB database in YDB cluster.
 #           
