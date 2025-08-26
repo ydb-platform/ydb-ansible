@@ -1,0 +1,8 @@
+---
+
+- name: start storage node
+  ansible.builtin.systemd:
+    name: ydbd-storage
+    state: started
+    enabled: true
+  any_errors_fatal: true
