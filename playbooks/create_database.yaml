@@ -1,3 +1,27 @@
+---
+
+
+# PLAYBOOK: ydb_platform.ydb.create_database
+# PROPOSE : This playbook is designed to create YDB database in YDB cluster.
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#     - YDB config
+#     - SSL certificates
+#
+# EXAMPLE:
+#
+# Create DB with name from inventory `ydb_dbname`
+# ansible-playbook ydb_platform.ydb.create_database
+#
+# Create DB with new name
+# ansible-playbook ydb_platform.ydb.create_database --extra-vars "ydb_database_name=newdbname"
+#
+# WARNING: There will be no dynamic nodes for the new database. You have to create them by using
+# playbook `install_dynamic`
+
 - hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
   roles:
   - role: ydbd_newdb

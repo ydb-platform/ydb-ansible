@@ -1,4 +1,33 @@
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+---
+
+
+# PLAYBOOK: ydb_platform.ydb.install_dynamic
+# PROPOSE : This playbook is designed to create YDB database in YDB cluster.
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#     - YDB config
+#     - SSL certificates
+#
+# EXAMPLE:
+#
+# Install and start dynamic nodes on all hosts (hostgroup `ydb` or `ydbd_dynamic`)
+# ansible-playbook ydb_platform.ydb.install_dynamic
+#
+# Install and start dynamic nodes with several DB
+# ansible-playbook ydb_platform.ydb.install_dynamic --extra-vars --extra-vars '{
+#   "ydb_dynnodes": [
+#     {"instance": "a", "offset": 1, "dbname": "db"},
+#     {"instance": "b", "offset": 2, "dbname": "db"}
+#     {"instance": "c", "offset": 3, "dbname": "db2"}
+#     {"instance": "d", "offset": 4, "dbname": "db2"}
+#   ]
+# }'
+#
+
+- hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
   become: true
   tasks:
     - name: setup ydb dynamic nodes
