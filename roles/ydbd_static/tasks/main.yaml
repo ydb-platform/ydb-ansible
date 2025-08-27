@@ -277,7 +277,7 @@
 
 - name: install ydb-dstool (from URL)
   ansible.builtin.get_url:
-    url: https://storage.yandexcloud.net/blinkov-tmp/ydb-dstool # TODO: replace with a release URL
+    url: https://storage.yandexcloud.net/yandexcloud-ydb-dstool/release/0.0.14/linux/amd64/ydb-dstool
     dest: "{{ ydb_dir }}/bin/"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
