@@ -56,6 +56,9 @@ def _generate_hosts_section(hostvars, ydb_disks, default_disk_type=None):
                     location['body'] = location_data['body']
                 if 'data_center' in location_data:
                     location['data_center'] = location_data['data_center']
+                # For 2DC scheme
+                if 'pile' in location_data:
+                    location['bridge_pile_name'] = location_data['pile']
                 if 'rack' in location_data:
                     location['rack'] = location_data['rack']
                 if location:

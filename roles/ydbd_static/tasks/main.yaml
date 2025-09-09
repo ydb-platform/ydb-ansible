@@ -261,6 +261,8 @@
     path: "{{ ydb_temp_config_path }}"
     state: absent
   when: ydb_config_v2|bool
+  tags:
+    - cleanup
 
 - name: Check ydb-dstool presence
   stat:

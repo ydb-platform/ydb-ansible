@@ -10,7 +10,7 @@ from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
 def check_storage_initialization(ydb_dstool, result):
     """Check if storage is already initialized using dstool"""
-    rc, stdout, stderr = ydb_dstool(['box', 'list', '--format=json'])
+    rc, stdout, stderr = ydb_dstool(['--http-timeout 5', 'box', 'list', '--format=json'])
     if rc != 0:
         # If dstool box list fails, assume storage is not initialized
         return False, False
