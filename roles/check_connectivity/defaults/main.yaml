@@ -1,7 +1,8 @@
 ---
 
-ydb_ports:
+ydb_static_ports:
   - 2135
-  - 2136
   - 8765
+
+ydb_dynamic_ports:
   - 19001
