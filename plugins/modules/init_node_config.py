@@ -46,7 +46,7 @@ def init_node_config(ydb_cli, config_file, config_dir, result):
 
         # Run node init with config directory using the temporary file
         rc, stdout, stderr = ydb_cli([
-            'admin', 'node', 'config', 'init', '--config-dir', config_dir, '--from-config', temp_file
+            '--assume-yes', 'admin', 'node', 'config', 'init', '--config-dir', config_dir, '--from-config', temp_file
         ])
 
         if rc != 0:

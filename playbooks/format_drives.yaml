@@ -18,3 +18,5 @@
       become: true
       shell: dd if=/dev/zero of={{ item.name }} bs=1M count=100 status=none 
       loop: "{{ ydb_disks }}"
+      tags:
+        - format

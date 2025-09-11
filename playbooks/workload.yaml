@@ -1,0 +1,45 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.workload
+# PROPOSE : This playbook is designed to create simple workload for YDB cluster.
+#
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#     - YDB config
+#     - SSL certificates
+#
+# EXAMPLE:
+#
+# 
+# ansible-playbook ydb_platform.ydb.workload
+#
+
+- name: Workload cluster
+  hosts: "{{ ansible_play_hosts | default(groups['ydbd_static']) }}"
+  run_once: true
+  tasks:
+
+    - name: prepare
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.preflight
+
+    - name: get ydb token with user credentials
+      ydb_platform.ydb.get_token:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
+        database: "/{{ ydb_domain }}"
+        user: "{{ ydb_user }}"
+        password: "{{ ydb_password }}"
+        retry_on_ssl_error: true
+      run_once: true
+      register: ydb_credentials
+      until: "'token' in ydb_credentials"
+      retries: 25
+      delay: 20
+      become: true
+      become_user: ydb
+      tags:
+        - token

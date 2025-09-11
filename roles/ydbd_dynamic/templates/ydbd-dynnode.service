@@ -14,6 +14,9 @@ Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
 {% if ydb_config_v2 | default(false) %}
     --config-dir {{ ydb_dir }}/cfg \
+{% if location is defined and 'pile' in location %}
+    --bridge-pile-name {{ location['pile'] }} \
+{% endif %}
 {% else %}
 {% if not ydb_use_dynamic_config|bool %}
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml \
@@ -34,7 +37,7 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --ic-port {{ 19002 + ydb_dynnodes.index(item) }} \
     --mon-port {{ 8766 + ydb_dynnodes.index(item) }} \
 {% endif %}
-    --tenant /{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }} \
+    --tenant /{{ ydb_domain }}/{{ item.dbname | default(ydb_database_name, true) }} \
 {% if ydb_request_client_certificate|bool %}
     --node-broker-use-tls true \
 {% endif %}

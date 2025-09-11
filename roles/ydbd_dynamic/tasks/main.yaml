@@ -113,6 +113,8 @@
       ydb_database_node_cores | default(ydb_cores_dynamic, true)
       }}
 
+
+
 - name: create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
   changed_when: false
@@ -121,7 +123,7 @@
 - name: Create dynamic node systemd unit
   template:
     src: ydbd-dynnode.service
-    dest: "/etc/systemd/system/ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}.service"
+    dest: "/etc/systemd/system/ydbd-{{ item.dbname | default(ydb_database_name, true) }}-{{ item.instance }}.service"
   loop: "{{ ydb_dynnodes }}"
   notify:
     - daemon reload
@@ -131,7 +133,7 @@
 
 - name: start dynamic nodes
   ansible.builtin.systemd:
-    name: "ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}.service"
+    name: "ydbd-{{ item.dbname | default(ydb_database_name, true) }}-{{ item.instance }}.service"
     state: started
     enabled: true
   loop: "{{ ydb_dynnodes }}"
@@ -140,7 +142,7 @@
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
@@ -157,7 +159,7 @@
   ydb_platform.ydb.pdisk_active:
     dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
     token: "{{ root_token.token | default('') }}"
   run_once: true
   become_user: ydb
@@ -169,8 +171,8 @@
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-    database: "/{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }}"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
+    database: "/{{ ydb_domain }}/{{ ydb_dbname | default(ydb_database_name, true) }}"
     token: "{{ ydb_credentials.token }}"
     pool_kind: "{{ ydb_pool_kind }}"
     groups: "{{ ydb_database_storage_groups | default(ydb_database_groups) }}"
@@ -187,8 +189,8 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
-    database: "/{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }}"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_database_name, true) }}"
     token: "{{ ydb_credentials.token }}"
   become: true
   become_user: ydb
@@ -204,8 +206,8 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
-    database: "/{{ ydb_domain }}/{{ ydb_database_name | default(ydb_dbname, true) }}"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_database_name, true) }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
   become: true

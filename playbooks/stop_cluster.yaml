@@ -1,4 +1,16 @@
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+---
+
+# PLAYBOOK: ydb_platform.ydb.stop_cluster
+# PROPOSE : This playbook is designed to stop YDB instances on all nodes
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#     - YDB config
+#     - SSL certificates
+
+- hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
   become: true
   tasks:
 
@@ -6,7 +18,16 @@
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic_stop
       ignore_errors: True
+      tags:
+        - dynamic
+
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  become: true
+  tasks:
 
     - name: stop static
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_static_stop
+      tags:
+        - storage
+        - static
