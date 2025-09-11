@@ -5,7 +5,9 @@
   become: true
   block:
     - name: Transfer the secrets
-      copy: src={{ ansible_config_file | dirname }}/secret dest={{ ydb_dir }}/certs/secret
+      ansible.builtin.template: 
+        src: "secret.j2"
+        dest: "{{ ydb_dir }}/certs/secret"
     - name: Run the database creation script
       command: "{{ ydb_dir }}/home/create_database.sh {{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }} {{ ydb_database_name | default(ydb_dbname, true) }} {{ ydb_database_groups }}"
     - name: Cleanup the transferred secrets
