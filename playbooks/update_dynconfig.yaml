@@ -1,0 +1,69 @@
+---
+
+- name: Update dynconfig and restart dynamic nodes
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  run_once: true
+  become: true
+  tasks:
+    - name: Load presettings
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.preflight
+      tags:
+        - always
+
+    - name: Get ydb token
+      ydb_platform.ydb.get_token:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+        database: "/{{ ydb_domain }}"
+        user: "{{ ydb_user }}"
+        password: "{{ ydb_password }}"
+      register: ydb_credentials
+      until: "'token' in ydb_credentials"
+      retries: 10
+      delay: 10
+      tags:
+        - version
+        - update
+
+    - name: Get the current dynconfig version
+      ydb_platform.ydb.dynconfig_version:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ld_library_path: "{{ ydb_dir }}/lib"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ inventory_hostname }}:2135"
+        database: "/{{ ydb_domain }}"
+        token: "{{ ydb_credentials.token }}"
+      register: ydb_dynconfig_info
+      tags:
+        - version
+    
+    - name: Output current dynconfig version
+      ansible.builtin.debug:
+        var: ydb_dynconfig_info
+      tags:
+        - version
+
+    - name: Add the dyn config
+      template: src={{ ydb_custom_dynconfig }} dest={{ ydb_dir }}/cfg/ydbd-dyn-config.yaml mode='640'
+      tags:
+        - config
+
+    - name: Configure dyn config
+      ydb_platform.ydb.dynconfig_apply:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ld_library_path: "{{ ydb_dir }}/lib"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ inventory_hostname }}:2135"
+        database: "/{{ ydb_domain }}"
+        user: "{{ ydb_user }}"
+        token: "{{ ydb_credentials.token }}"
+        config: "{{ ydb_dir }}/cfg/ydbd-dyn-config.yaml"
+      tags:
+        - config
+    
+- name: Restart YDB cluster
+  ansible.builtin.import_playbook: rolling_restart_dynamic.yaml
+  tags:
+    - restart

@@ -43,7 +43,7 @@
     port: "{{ item.1 }}"
     state: started
     delay: 0
-    timeout: 1
+    timeout: "{{ delay | default(60) }}"
   with_nested: 
     - "{{ groups['ydbd_static'] | default(groups['ydb']) }}"
     - "{{ ydb_static_ports }}"
