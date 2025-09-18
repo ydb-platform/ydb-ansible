@@ -299,6 +299,7 @@
       - storage
       - static
       - no_restart
+
   - name: create dynamic node configuration file (V1 configuration only)
     command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
     changed_when: false
@@ -307,6 +308,7 @@
       - database
       - dynamic
       - no_restart
+
 - name: Restart YDB cluster (V1 configuration only)
   ansible.builtin.import_playbook: restart.yaml
   when: not ydb_config_v2 | default(false)
