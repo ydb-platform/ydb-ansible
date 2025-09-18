@@ -1,4 +1,20 @@
 ---
+
+# PLAYBOOK: ydb_platform.ydb.format_drives
+# PROPOSE : This playbook is designed to format drives for YDB
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.format_drives
+#
+# WARNING: 
+#   This will destroy ALL DATA on all drives defined in inventory
+
 - name: Format storage drives, erase metadata 
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
   tasks:

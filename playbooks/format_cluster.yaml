@@ -1,0 +1,76 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.format_cluster
+# PROPOSE : This playbook is designed to shutdown cluster and format drives
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.format_cluster
+#
+# WARNING: 
+#   This will destroy ALL DATA on all drives defined in inventory
+#   This will delete all `bin` and `cfg` folders for YDB on hosts
+
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  become: true
+  tasks:
+
+    - name: stop services
+      ansible.builtin.shell:
+        cmd: "systemctl list-units | grep ydbd | awk '{print $1;}' | xargs systemctl stop"
+      ignore_errors: True
+      tags:
+        - services
+
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  become: true
+  roles:
+  - role: preflight
+
+  tasks:
+    - name: Remove config dir
+      ansible.builtin.file:
+        path: "{{ ydb_dir }}/cfg"
+        state: absent
+      tags:
+        - config
+
+    - name: Remove bin dir
+      ansible.builtin.file:
+        path: "{{ ydb_dir }}/bin"
+        state: absent
+      tags:
+        - binaries
+
+    - name: Remove services
+      ansible.builtin.shell:
+        cmd: "rm -f /etc/systemd/system/ydbd-*.service && systemctl daemon-reload"
+      tags:
+        - services
+
+- name: Format storage drives, erase metadata 
+  hosts: "{{ groups['ydbd_static'] if 'ydbd_static' in groups else groups['ydb'] }}"
+  tasks:
+
+    - name: ask user confirmation for format drives
+      ansible.builtin.pause:
+        prompt: 'DATA LOSS: this will cause data loss if not handled with care! Enter "yes" to continue.'
+      register: prompt
+      run_once: true
+
+    - name: stop execution
+      ansible.builtin.fail:
+        msg: "aborting playbook execution"
+      when: prompt.user_input != "yes"
+
+    - name: Erase disk with dd
+      become: true
+      shell: dd if=/dev/zero of={{ item.name }} bs=1M count=100 status=none 
+      loop: "{{ ydb_disks }}"
+      tags:
+        - format

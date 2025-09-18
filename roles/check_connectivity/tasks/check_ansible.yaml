@@ -1,0 +1,6 @@
+---
+
+- name: Check ansible version
+  when: "ansible_version.full is version('2.11', '<=')"
+  ansible.builtin.fail:
+    msg: "aborting playbook execution. Install Ansible 2.11 or newer. Current version is {{ ansible_version.full }}"
