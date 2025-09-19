@@ -48,9 +48,10 @@
       ydb_version: "{{ cmd_version.stdout }}"
     run_once: true
     when: ydb_version is not defined
+
   - name: set ydb_config_v2 based on version if not explicitly set
     set_fact:
-      ydb_config_v2: "{{ ydb_config_v2 | default(ydb_version is defined and ydb_version is version('25.0', '>=')) }}"
+      ydb_config_v2: false
     run_once: true
     when: ydb_config_v2 is not defined
   tags:
@@ -116,7 +117,7 @@
     set_fact:
       ydb_temp_config_path: "/tmp/ydbd-config-{{ ansible_date_time.epoch }}-{{ 999999 | random }}.yaml"
     run_once: true
-    when: ydb_config_v2 | default(false)
+    when: ydb_config_v2|bool | default(false)
     tags:
       - storage
       - static
@@ -251,7 +252,7 @@
         become_user: ydb
         when: ydb_temp_config_path is defined
 
-    when: ydb_config_v2 | default(false)
+    when: ydb_config_v2|bool | default(false)
     tags:
       - storage
       - static
