@@ -44,9 +44,11 @@
     state: started
     delay: 0
     timeout: "{{ delay | default(60) }}"
+  when: item.0 != inventory_hostname
   with_nested: 
     - "{{ groups['ydbd_static'] | default(groups['ydb']) }}"
     - "{{ ydb_static_ports }}"
+
 
 - name: Check connections between dynamic nodes
   wait_for:
@@ -55,6 +57,7 @@
     state: started
     delay: 0
     timeout: 1
+  when: item.0 != inventory_hostname
   with_nested: 
     - "{{ groups['ydbd_dynamic'] | default(groups['ydb']) }}"
     - "{{ ydb_dynamic_ports }}"
