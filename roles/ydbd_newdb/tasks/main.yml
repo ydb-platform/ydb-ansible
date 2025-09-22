@@ -9,7 +9,7 @@
         src: "secret.j2"
         dest: "{{ ydb_dir }}/certs/secret"
     - name: Run the database creation script
-      command: "{{ ydb_dir }}/home/create_database.sh {{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }} {{ ydb_database_name | default(ydb_dbname, true) }} {{ ydb_database_groups }}"
+      command: "{{ ydb_dir }}/home/create_database.sh {{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }} {{ ydb_database_name | default(ydb_dbname, true) }} {{ ydb_database_storage_groups | default(ydb_database_groups) }}"
     - name: Cleanup the transferred secrets
       file: state=absent path={{ ydb_dir }}/certs/secret
   run_once: true
