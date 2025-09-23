@@ -21,11 +21,13 @@
   run_once: true
   tasks:
 
-    - name: prepare
+    - name: Prepare
       ansible.builtin.import_role:
         name: ydb_platform.ydb.preflight
+      tags:
+        - always
 
-    - name: get ydb token with user credentials
+    - name: Get ydb token with user credentials
       ydb_platform.ydb.get_token:
         ydb_bin: "{{ ydb_dir }}/bin/ydb"
         ca_file: "{{ ydb_dir }}/certs/ca.crt"
@@ -42,4 +44,53 @@
       become: true
       become_user: ydb
       tags:
+        - always
         - token
+
+    - name: Run workload [stock]
+      ydb_platform.ydb.workload:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
+        database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+        token: "{{ ydb_credentials.token }}"
+        enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+        workload: stock
+      run_once: true
+      become: true
+      become_user: ydb
+      tags:
+        - stock
+        - workload
+
+    - name: Run workload [kv]
+      ydb_platform.ydb.workload:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
+        database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+        token: "{{ ydb_credentials.token }}"
+        enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+        workload: kv
+      run_once: true
+      become: true
+      become_user: ydb
+      tags:
+        - kv
+        - workload
+
+    - name: Run workload [topic]
+      ydb_platform.ydb.workload:
+        ydb_bin: "{{ ydb_dir }}/bin/ydb"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
+        database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
+        token: "{{ ydb_credentials.token }}"
+        enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+        workload: topic
+      run_once: true
+      become: true
+      become_user: ydb
+      tags:
+        - topic
+        - workload

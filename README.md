@@ -143,7 +143,7 @@ Notes:
 1. `ydbd-storage.service` is started, and the playbook waits for static nodes to come up.
 1. YDB blobstorage configuration is applied with the `ydbd admin blobstorage init` command.
 1. The playbook waits for the completion of YDB storage initialization.
-1. The initial password for the `root` user is configured according to contents of the `files/secret` file.
+
 
 #### Actions executed for YDB dynamic nodes deployment
 

@@ -199,7 +199,7 @@
 
 - name: Delay for 1 min
   pause:
-    seconds: 60
+    seconds: "{{ delay | default(60) }}"
 
 - name: Run test queries
   ydb_platform.ydb.run_test_queries:

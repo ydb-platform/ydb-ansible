@@ -1,0 +1,33 @@
+---
+
+- name: Record time on control node
+  delegate_to: localhost
+  become: false
+  run_once: true
+  command: "python3 -c 'import time; print(time.time())'"
+  register: start_time
+  changed_when: false
+
+- name: Record time on target nodes
+  become: false
+  command: "python3 -c 'import time; print(time.time())'"
+  register: remote_time
+  changed_when: false
+
+- name: Record time on control node
+  delegate_to: localhost
+  run_once: true
+  become: false
+  command: "python3 -c 'import time; print(time.time())'"
+  register: end_time
+  changed_when: false
+
+- name: Calculate time difference (with network delay)
+  set_fact:
+    time_diff: "{{ (remote_time.stdout | float) - ((start_time.stdout | float) + (end_time.stdout | float)) / 2 }}"
+
+- name: Time difference
+  debug:
+    msg: |
+      Time difference (server - control node): {{ '%.3f' | format(time_diff | float) }} seconds
+      Network delay: {{ '%.3f' | format((end_time.stdout | float) - (start_time.stdout | float)) }} seconds

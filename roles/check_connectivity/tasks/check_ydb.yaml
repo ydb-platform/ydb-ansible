@@ -1,0 +1,10 @@
+---
+
+- name: Get PIDs of YDBD
+  shell: pgrep 'ydbd|kikimr' | wc -l
+  register: pids_of_ydbd
+
+- name: Check presence of YDBD
+  when: pids_of_ydbd.stdout != "0"
+  ansible.builtin.fail:
+    msg: "aborting playbook execution. Stop running YDB instances"
