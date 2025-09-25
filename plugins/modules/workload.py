@@ -37,13 +37,6 @@ def main():
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
                     result['msg'] = stderr
                     module.fail_json(**result)
-                ydb_cmd  = ['workload', 'topic', 'run', 'read']
-                rc, stdout, stderr = ydb_cli(ydb_cmd)
-                results.append(stdout)
-                if rc != 0:
-                    module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
-                    result['msg'] = stderr
-                    module.fail_json(**result)
                 ydb_cmd  = ['workload', 'topic', 'run', 'full']
                 rc, stdout, stderr = ydb_cli(ydb_cmd)
                 results.append(stdout)
