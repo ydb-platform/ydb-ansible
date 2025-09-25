@@ -40,10 +40,14 @@
   tags: libxcrypt-compat
 
 - name: install required packages
+  become: true
+  become_user: root
   ansible.builtin.package:
     pkg: "{{ vars_for_distribution_version.packages_required }}"
     state: present
   timeout: 900
+  tags:
+    - packages
 
 - name: install cpufrequtils
   ansible.builtin.package:
