@@ -231,6 +231,7 @@
         ydb_disks: "{{ ydb_disks }}"
         groups: "{{ groups }}"
         ydb_dir: "{{ ydb_dir }}"
+        ydb_domain: "{{ ydb_domain }}"
       become: true
       become_user: ydb
 
