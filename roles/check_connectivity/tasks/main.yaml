@@ -1,5 +1,7 @@
 ---
 
+- ansible.builtin.gather_facts:
+
 - ansible.builtin.include_tasks: check_ansible.yaml
   tags:
     - checks

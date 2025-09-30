@@ -19,12 +19,6 @@
   ansible.builtin.service_facts:
   timeout: 300
 
-- name: check ansible_python
-  ydb_platform.ydb.warn:
-    msg: "discovered ansible_python version is out of date and is not supported"
-    that:
-      - "ansible_python_version is version_compare('3.7', '<')"
-
 - name: assert usage of systemd as an init system
   ansible.builtin.assert:
     that: ansible_service_mgr == 'systemd'

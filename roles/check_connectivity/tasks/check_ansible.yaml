@@ -1,6 +1,11 @@
 ---
 
-- name: Check ansible version
+- name: Check Ansible version
   when: "ansible_version.full is version('2.11', '<=')"
   ansible.builtin.fail:
-    msg: "aborting playbook execution. Install Ansible 2.11 or newer. Current version is {{ ansible_version.full }}"
+    msg: "Aborting playbook execution. Install Ansible 2.11 or newer. Current version is {{ ansible_version.full }}"
+
+- name: Check Python
+  ydb_platform.ydb.warn:
+    msg: "Discovered ansible_python version is out of date and is not supported. https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix"
+  when: "ansible_python_version is version('3.7', '<')"
