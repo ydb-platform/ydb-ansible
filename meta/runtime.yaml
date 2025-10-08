@@ -50,3 +50,9 @@
 #   group_name:
 #     - module1
 #     - module2
+plugin_routing:
+  inventory:
+    ydb_inventory:
+      name: ydb_platform.ydb.ydb_inventory
+      import_redirection:
+        redirect: plugins.inventory.ydb_inventory
