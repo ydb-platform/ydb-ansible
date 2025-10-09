@@ -55,21 +55,6 @@ ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
 
 # If quotas are required
 # YDBOPS-12647
-# Format for human-readable output
-human_readable() {
-    local bytes=$1
-    if (( bytes >= 1099511627776 )); then
-        echo "$(echo "scale=2; $bytes / 1099511627776" | bc) TB"
-    elif (( bytes >= 1073741824 )); then
-        echo "$(echo "scale=2; $bytes / 1073741824" | bc) GB"
-    elif (( bytes >= 1048576 )); then
-        echo "$(echo "scale=2; $bytes / 1048576" | bc) MB"
-    elif (( bytes >= 1024 )); then
-        echo "$(echo "scale=2; $bytes / 1024" | bc) KB"
-    else
-        echo "$bytes bytes"
-    fi
-}
 
 if [ "$4" -eq "1" ]; then
 
@@ -123,10 +108,10 @@ if [ "$4" -eq "1" ]; then
 
   echo "Calculated quotas for database '$DB_NAME':"
   echo "-------------------------------------------"
-  printf "%-20s | %-15s | %s\n" "Quota Type" "Raw Bytes" "Human Readable"
+  printf "%-20s | %-15s | %s\n" "Quota Type" "Raw Bytes"
   echo "-------------------------------------------"
-  printf "%-20s | %-15s | %s\n" "Hard Quota" "$hard_quota_bytes" "$(human_readable $hard_quota_bytes)"
-  printf "%-20s | %-15s | %s\n" "Soft Quota" "$soft_quota_bytes" "$(human_readable $soft_quota_bytes)"
+  printf "%-20s | %-15s | %s\n" "Hard Quota" "$hard_quota_bytes"
+  printf "%-20s | %-15s | %s\n" "Soft Quota" "$soft_quota_bytes"
   echo "-------------------------------------------"
   echo ""
 
