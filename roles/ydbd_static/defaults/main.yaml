@@ -9,3 +9,5 @@ ydb_custom_dynconfig: ydbd-dyn-config.yaml.j2
 ydb_config_v2: false
 ydb_host_user: ydb
 ydb_host_group: ydb
+# ydb_database_quotas - set hard/soft quotas on every DB during creation 
+ydb_database_quotas: false
