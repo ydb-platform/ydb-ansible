@@ -209,8 +209,8 @@
       copy:
         content: "{{ ydb_config | ydb_platform.ydb.ydb_config_to_yaml }}"
         dest: "{{ ydb_temp_config_path }}"
-        owner: ydb
-        group: ydb
+        owner: "{{ ydb_host_user }}"
+        group: "{{ ydb_host_group }}"
         mode: 0644
       when: ydb_config_is_map
 
@@ -218,8 +218,8 @@
       copy:
         src: "{{ ydb_config }}"
         dest: "{{ ydb_temp_config_path }}"
-        owner: ydb
-        group: ydb
+        owner: "{{ ydb_host_user }}"
+        group: "{{ ydb_host_group }}"
         mode: 0644
       when: not ydb_config_is_map
 
@@ -233,7 +233,7 @@
         ydb_dir: "{{ ydb_dir }}"
         ydb_domain: "{{ ydb_domain }}"
       become: true
-      become_user: ydb
+      become_user: "{{ ydb_host_user }}"
 
     - name: update configuration with selectors
       ydb_platform.ydb.apply_config_selectors:
@@ -242,7 +242,7 @@
         database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
         storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
       become: true
-      become_user: ydb
+      become_user: "{{ ydb_host_user }}"
       when: ydb_config_v2 and (ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined)
 
 - name: init YDB node configuration (V2 only - before ydbd start)
@@ -254,7 +254,7 @@
     endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   when: ydb_config_v2|bool
 
 - name: cleanup temp config file after node init
@@ -323,7 +323,7 @@
   retries: 5
   delay: 5
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   when: not ydb_config_v2
 
 - name: init YDB storage if not initialized (non-v2 configuration)
@@ -342,7 +342,7 @@
   register: init_storage_nonv2
   run_once: true
   when: not ydb_config_v2
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
 
 # For v2 configs, initialize storage after the server is running
 - name: init YDB storage if not initialized (v2 configuration)
@@ -358,7 +358,7 @@
   register: init_storage_v2
   run_once: true
   when: ydb_config_v2
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
 
 - name: get ydb token with user credentials
   ydb_platform.ydb.get_token:
@@ -375,7 +375,7 @@
   retries: 25
   delay: 20
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
 
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
@@ -386,7 +386,7 @@
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   tags:
     - discovery
 
@@ -404,9 +404,10 @@
   retries: 30
   delay: 10
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   tags:
     - healthcheck
+  # when: "ydb_version is version('25.1', '<')"
 
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:
@@ -419,7 +420,7 @@
     token: "{{ ydb_credentials.token }}"
   run_once: true
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   register: password_result
   retries: 30
   delay: 15
