@@ -22,6 +22,7 @@
   
 - name: Load configuration from file if path provided
   when: is_config_file
+  become: false
   block:
     - name: Verify config file exists
       ansible.builtin.stat:
@@ -34,7 +35,3 @@
         msg: "Config file {{ ydb_config }} not found"
       when: not config_file.stat.exists
 
-    - name: Read configuration file
-      ansible.builtin.include_vars:
-        file: "{{ ydb_config }}"
-        name: ydb_config_parsed

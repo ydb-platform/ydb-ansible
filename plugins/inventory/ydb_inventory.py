@@ -1,5 +1,6 @@
 from ansible.plugins.inventory import BaseInventoryPlugin
 import yaml
+import copy
 from ansible.errors import AnsibleError
 # from ansible.template import Templar
 
@@ -73,6 +74,10 @@ class InventoryModule(BaseInventoryPlugin):
         try:
             with open(ydb_config, "r") as file:
                 yaml_config = yaml.safe_load(file)
+                self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config)
+                if 'config' in yaml_config and 'self_management_config' in yaml_config['config']:
+                    if 'enabled' in yaml_config['config']['self_management_config'] and yaml_config['config']['self_management_config']['enabled']:
+                        self.inventory.groups['ydb'].set_variable('ydb_config_v2', True)
                 # Read drives config
                 drive_configs = {}
                 drive_labels = {}
@@ -83,12 +88,12 @@ class InventoryModule(BaseInventoryPlugin):
                     for drive_config in yaml_config['config']['host_configs']:
                         for i, item in enumerate(drive_config['drive']):
                             label = item['path'].split('/')[-1]
-                            drive_config['drive'][i]['label'] = label
+                            drive_configs[drive_config['host_config_id']] = copy.deepcopy(drive_config['drive'])
+                            drive_configs[drive_config['host_config_id']][i]['label'] = label
                             if label in drive_labels:
-                                drive_config['drive'][i]['disk']  = drive_labels[label]
+                                drive_configs[drive_config['host_config_id']][i]['name']  = drive_labels[label]
                             else:
                                 raise AnsibleError(f"Config parsing error, unable to find disk for label: {label}")
-                        drive_configs[drive_config['host_config_id']] = drive_config['drive']
                 # Read hosts and define variables for them
                 if 'config' in yaml_config and 'hosts' in yaml_config['config']:
                     for host in yaml_config['config']['hosts']:
@@ -96,7 +101,7 @@ class InventoryModule(BaseInventoryPlugin):
                         # Set variables for hosts
                         for key, value in host.items():
                             if key == 'host_config_id':
-                                self.inventory.set_variable(host['host'], 'host_drives', drive_configs[value])
+                                self.inventory.set_variable(host['host'], 'ydb_disks', drive_configs[value])
                             else:
                                 self.inventory.set_variable(host['host'], key, value)
                 

@@ -36,3 +36,36 @@
   ansible.builtin.fail:
     msg: "Impossible to use ydb_enforce_user_token_requirement and ydb_request_client_certificate together"
   when: ydb_use_dynamic_config is defined and ydb_use_dynamic_config|bool and ydb_enforce_user_token_requirement|bool and ydb_request_client_certificate|bool
+
+- name: Load configuration from file if path provided
+  when: ydb_config_dict is not defined
+  become: false
+  run_once: true
+  block:
+
+    - name: Check if ydb_config is a file path
+      set_fact:
+        is_config_file: "{{ ydb_config is string }}"
+    
+    - name: Register ydb_config_dict from ydb_config var
+      ansible.builtin.set_fact:
+        ydb_config_dict: "{{ ydb_config }}"
+      when: not is_config_file|bool
+
+    - name: Verify config file exists
+      ansible.builtin.stat:
+        path: "{{ ydb_config }}"
+      register: config_file
+      delegate_to: localhost  # Проверяем файл на control node
+      when: is_config_file|bool
+
+    - name: Fail if file missing
+      ansible.builtin.fail:
+        msg: "Config file {{ ydb_config }} not found"
+      when: is_config_file|bool and not config_file.stat.exists
+
+    - name: Read configuration file
+      ansible.builtin.include_vars:
+        file: "{{ ydb_config }}"
+        name: ydb_config_dict
+      when: is_config_file|bool

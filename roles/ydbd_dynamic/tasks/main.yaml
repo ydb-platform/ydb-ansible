@@ -113,8 +113,6 @@
       ydb_database_node_cores | default(ydb_cores_dynamic, true)
       }}
 
-
-
 - name: create dynamic node configuration file
   command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
   changed_when: false
@@ -125,6 +123,7 @@
     src: ydbd-dynnode.service
     dest: "/etc/systemd/system/ydbd-{{ item.dbname | default(ydb_database_name, true) }}-{{ item.instance }}.service"
   loop: "{{ ydb_dynnodes }}"
+  when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
   notify:
     - daemon reload
 
@@ -137,6 +136,7 @@
     state: started
     enabled: true
   loop: "{{ ydb_dynnodes }}"
+  when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
 
 - name: Get YDB token
   ydb_platform.ydb.get_token:
@@ -148,7 +148,7 @@
     password: "{{ ydb_password }}"
     retry_on_ssl_error: true
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
@@ -162,27 +162,35 @@
     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
     token: "{{ root_token.token | default('') }}"
   run_once: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   tags:
     - create_database
 
 - name: Create YDB database
-  ydb_platform.ydb.create_database:
-    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
-    ld_library_path: "{{ ydb_dir }}/lib"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
-    database: "/{{ ydb_domain }}/{{ ydb_dbname | default(ydb_database_name, true) }}"
-    token: "{{ ydb_credentials.token }}"
-    pool_kind: "{{ ydb_pool_kind }}"
-    groups: "{{ ydb_database_storage_groups | default(ydb_database_groups) }}"
-  become: true
-  become_user: ydb
+  ansible.builtin.import_role: 
+    name: ydbd_newdb
   run_once: true
-  retries: 50
-  delay: 15
+  become: true
   tags:
     - create_database
+
+# - name: Create YDB database
+#   ydb_platform.ydb.create_database:
+#     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+#     ld_library_path: "{{ ydb_dir }}/lib"
+#     ca_file: "{{ ydb_dir }}/certs/ca.crt"
+#     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
+#     database: "/{{ ydb_domain }}/{{ ydb_dbname | default(ydb_database_name, true) }}"
+#     token: "{{ ydb_credentials.token }}"
+#     pool_kind: "{{ ydb_pool_kind }}"
+#     groups: "{{ ydb_database_storage_groups | default(ydb_database_groups) }}"
+#   become: true
+#   become_user: "{{ ydb_host_user }}"
+#   run_once: true
+#   retries: 50
+#   delay: 15
+#   tags:
+#     - create_database
 
 - name: Wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
@@ -193,8 +201,9 @@
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_database_name, true) }}"
     token: "{{ ydb_credentials.token }}"
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   loop: "{{ ydb_dynnodes }}"
+  when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
   retries: 5
 
 - name: Delay for 1 min
@@ -211,8 +220,9 @@
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   loop: "{{ ydb_dynnodes }}"
+  when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
   throttle: 1
   tags:
     - tests
