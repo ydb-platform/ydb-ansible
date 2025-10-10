@@ -53,6 +53,11 @@ ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
   admin database /{{ ydb_domain }}/${DB_NAME} \
   create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1
 
+if grep -qE '^ERROR: ' ${TMPLOG}; then
+  cat ${TMPLOG};
+  exit 1
+fi
+
 # If quotas are required
 # YDBOPS-12647
 
