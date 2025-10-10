@@ -35,36 +35,7 @@ class InventoryModule(BaseInventoryPlugin):
         # Загружаем конфиг плагина (YAML-файл)
         config = self._read_config_data(path)
 
-        # # Инициализация Templar
-        # templar = Templar(loader=loader)
-
-        # try:
-        #     # 3. Обрабатываем шаблоны во всех значениях конфигурации
-        #     processed_config = {}
-        #     for key, value in config.items():
-        #         if isinstance(value, str) and '{{' in value:
-        #             # Обрабатываем строки с шаблонами
-        #             processed_config[key] = templar.template(value, fail_on_undefined=True)
-        #         else:
-        #             # Простые значения копируем как есть
-        #             processed_config[key] = value
-                    
-        #     # 4. Используем обработанные значения
-        #     print(processed_config)
         ydb_config = config.get('ydb_config')
-            
-        #     # 5. Ваша логика загрузки инвентаря
-        #     if isinstance(ydb_config, dict):
-        #         # Обработка встроенной конфигурации
-        #         self._load_from_dict(ydb_config)
-        #     else:
-        #         # Обработка файловой конфигурации
-        #         self._load_from_file(ydb_config)
-                
-        # except Exception as e:
-        #     raise AnsibleError(f"Template error: {str(e)}")
-
-        # ydb_config = config.get('all')['children']['ydb']['vars']['ydb_config']
         print(f"Reading inventory from {ydb_config}")
 
         group = 'ydb'
