@@ -57,9 +57,9 @@ class InventoryModule(BaseInventoryPlugin):
                         drive_labels[disk['label']] = disk['name']
                 if 'config' in yaml_config and 'host_configs' in yaml_config['config']:
                     for drive_config in yaml_config['config']['host_configs']:
+                        drive_configs[drive_config['host_config_id']] = copy.deepcopy(drive_config['drive'])
                         for i, item in enumerate(drive_config['drive']):
                             label = item['path'].split('/')[-1]
-                            drive_configs[drive_config['host_config_id']] = copy.deepcopy(drive_config['drive'])
                             drive_configs[drive_config['host_config_id']][i]['label'] = label
                             if label in drive_labels:
                                 drive_configs[drive_config['host_config_id']][i]['name']  = drive_labels[label]
