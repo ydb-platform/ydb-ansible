@@ -48,8 +48,8 @@ class InventoryModule(BaseInventoryPlugin):
                 if 'config' in yaml_config:
                     self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config['config'])
                     
-                    if 'default_disk_type' in yaml_config['config']:
-                        self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'])
+                    if 'default_disk_type' in yaml_config['config'] and 'ydb_pool_kind' not in ydb_vars:
+                        self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'].lower())
 
                     if 'self_management_config' in yaml_config['config'] and 'enabled' in yaml_config['config']['self_management_config'] and yaml_config['config']['self_management_config']['enabled']:
                         self.inventory.groups['ydb'].set_variable('ydb_config_v2', True)
