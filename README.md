@@ -62,7 +62,7 @@ The meaning and format of the variables used are specified in the table below.
 | `ydb_config_v2` | Controls initialization method and configuration management: if `true` uses YDB configuration V2 with `node init` + `bootstrap` and `--config-dir` arg, if `false` uses configuration V1 with `actor_system_config` injection and `--yaml-config` arg. If not set, automatically determined based on YDB version (`true` for version 25.1 and above) |
 | `ydb_dbname` | Database name, for database creation, dynamic nodes deployment and dynamic nodes rolling restart |
 | `ydb_pool_kind` | YDB default storage pool kind, as specified in the static nodes configuration file in the `storage_pool_types.kind` field |
-| `ydb_database_storage_groups` | Initial number of storage groups in the newly created database (alias: `ydb_database_groups`) |
+| `ydb_database_groups` | Initial number of storage groups in the newly created database |
 | `ydb_dynnode_restart_sleep_seconds` | Number of seconds to sleep after startup of each dynamic node during the rolling restart. |
 
 ### Installing the YDB cluster using Ansible

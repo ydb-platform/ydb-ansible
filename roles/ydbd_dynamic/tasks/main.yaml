@@ -183,7 +183,7 @@
 #     database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
 #     token: "{{ ydb_credentials.token }}"
 #     pool_kind: "{{ ydb_pool_kind }}"
-#     groups: "{{ ydb_database_storage_groups | default(ydb_database_groups) }}"
+#     groups: "{{ ydb_database_groups }}"
 #   become: true
 #   become_user: "{{ ydb_host_user }}"
 #   run_once: true
