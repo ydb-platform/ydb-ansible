@@ -47,6 +47,12 @@ class InventoryModule(BaseInventoryPlugin):
                 yaml_config = yaml.safe_load(file)
                 if 'config' in yaml_config:
                     self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config['config'])
+
+                    if 'ydb_dbname' not in ydb_vars and 'ydb_dynnodes' in ydb_vars:
+                        for dynnode in ydb_vars['ydb_dynnodes']:
+                            if 'dbname' in dynnode:
+                                self.inventory.groups['ydb'].set_variable('ydb_dbname',dynnode['dbname'])
+                                break
                     
                     if 'default_disk_type' in yaml_config['config'] and 'ydb_pool_kind' not in ydb_vars:
                         self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'].lower())
