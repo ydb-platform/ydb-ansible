@@ -13,8 +13,8 @@
       - "{{ item.var1 is defined or item.var2 is defined }}"
     fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
   loop:
-    - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
-    - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
+    - { var1: "ydb_cores_static" }
+    - { var1: "ydb_cores_dynamic" }
     - { var1: "ydb_disks", var2: "ydb_disks" }
     - { var1: "ydb_domain", var2: "ydb_domain" }
     - { var1: "ydb_user", var2: "ydb_user" }
@@ -153,7 +153,7 @@
   when: ydb_config_v2 is not defined
 
 - name: create static node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static) }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
   changed_when: false
   when: not ydb_config_v2
 
@@ -239,11 +239,11 @@
       ydb_platform.ydb.apply_config_selectors:
         config: "{{ ydb_temp_config_path }}"
         output_file: "{{ ydb_temp_config_path }}"
-        database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
-        storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
+        database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
+        storage_cores: "{{ ydb_cores_static | default(omit) }}"
       become: true
       become_user: "{{ ydb_host_user }}"
-      when: ydb_config_v2 and (ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined)
+      when: ydb_config_v2 and (ydb_cores_dynamic is defined or ydb_cores_static is defined)
 
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:

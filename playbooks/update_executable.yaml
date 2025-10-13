@@ -9,8 +9,8 @@
         - "{{ item.var1 is defined or item.var2 is defined }}"
       fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
     loop:
-      - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
-      - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
+      - { var1: "ydb_cores_static" }
+      - { var1: "ydb_cores_dynamic" }
   tags:
     - storage
     - static

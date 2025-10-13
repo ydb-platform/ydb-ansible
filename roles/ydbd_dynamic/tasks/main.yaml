@@ -6,7 +6,7 @@
   loop:
     - ydb_dir
     - ydb_domain
-    - ydb_database_node_cores | default(ydb_cores_dynamic, 1)
+    - ydb_cores_dynamic
     - ydb_dbname
 
 # Simple default broker selection
@@ -110,11 +110,11 @@
   set_fact:
     ydbd_dynamic_cores: >
       {{
-      ydb_database_node_cores | default(ydb_cores_dynamic, true)
+      ydb_cores_dynamic
       }}
 
 - name: create dynamic node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic }}"
   changed_when: false
   when: not ydb_config_v2
 
