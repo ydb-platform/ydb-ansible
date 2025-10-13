@@ -4,6 +4,13 @@ from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
 STDOUT_SUCCESS = 'OK'
 STDOUT_ALREADY_EXISTS = 'ERROR: ALREADY_EXISTS'
+DOCUMENTATION = r'''
+    name: create_database
+    plugin_type: module
+    short_description: Create YDB database
+    description: |
+        Create YDB database
+'''
 
 
 def main():

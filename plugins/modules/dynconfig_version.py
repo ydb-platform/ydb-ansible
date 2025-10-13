@@ -7,6 +7,14 @@ import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: dynconfig_version
+    plugin_type: module
+    short_description: Get current version of dynamic config
+    description: |
+        Get current version of dynamic config
+'''
+
 def main():
     argument_spec=dict(
         timeout=dict(type='int', default=180),

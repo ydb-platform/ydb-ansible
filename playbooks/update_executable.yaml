@@ -6,8 +6,8 @@
   tasks:
   - ansible.builtin.assert:
       that:
-        - "{{ item.var1 is defined or item.var2 is defined }}"
-      fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
+        - "{{ item.var1 is defined"
+      fail_msg: "Either {{ item.var1 }} variable is required"
     loop:
       - { var1: "ydb_cores_static" }
       - { var1: "ydb_cores_dynamic" }

@@ -4,6 +4,14 @@ import os
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import drive, cli
 
+DOCUMENTATION = r'''
+    name: drive_prepare
+    plugin_type: module
+    short_description: Oblitirate drives for YDB
+    description: |
+        Module for preparing hard drives for YDB, it's safe format of drive. Drives with YDB data will not be affected / changed.
+        Be aware: it won't format drives with some YDB data for your safety
+'''
 
 def main():
     argument_spec = dict(

@@ -9,6 +9,14 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
 
+DOCUMENTATION = r'''
+    name: apply_config_selectors
+    plugin_type: module
+    short_description: Apply changes for storage selectors
+    description: |
+        Apply changes for storage selectors
+'''
+
 def run_module():
     module_args = dict(
         config=dict(type='str', required=True),
