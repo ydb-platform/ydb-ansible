@@ -4,6 +4,13 @@ import os
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import drive, cli
 
+DOCUMENTATION = r'''
+    name: ydbd_cmd
+    plugin_type: module
+    short_description: YDBD command executor
+    description: |
+        Module for running commands with YDBD
+'''
 
 def main():
     argument_spec = dict(

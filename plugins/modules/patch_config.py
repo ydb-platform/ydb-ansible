@@ -5,6 +5,14 @@ import copy
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
+DOCUMENTATION = r'''
+    name: patch_config
+    plugin_type: module
+    short_description: patch ydb config
+    description: |
+        patch ydb config
+'''
+
 def _ensure_config_path(config, path, default_value):
     """Helper function to ensure a nested config path exists with a default value."""
     current = config
@@ -83,7 +91,7 @@ def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None, ydb_dir=
         _ensure_config_path(config, 'grpc_config.ca', f"{ydb_dir}/certs/ca.crt")
         _ensure_config_path(config, 'grpc_config.services_enabled', ['legacy','discovery'])
     
-    if ydb_domain is not None:
+    if ydb_domain is not None and ydb_domain != "Root":
         _ensure_config_path(config, 'domains_config.domain', [{"name": f"{ydb_domain}"}])
 
     # Generate hosts section if it's missing and we have the required data

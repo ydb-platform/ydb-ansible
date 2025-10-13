@@ -1,6 +1,15 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: workload
+    plugin_type: module
+    short_description: Run workload tests on YDB cluster
+    description: |
+        Run workload tests on YDB cluster
+        `workload` possible values: topic, kv, stock
+'''
+
 def main():
     argument_spec=dict(
         workload=dict(type='str', default='stock'),
