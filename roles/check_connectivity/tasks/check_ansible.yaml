@@ -21,7 +21,7 @@
     is_config_file: "{{ ydb_config is string }}"
   
 - name: Load configuration from file if path provided
-  when: is_config_file
+  when: "is_config_file|bool"
   become: false
   block:
     - name: Verify config file exists

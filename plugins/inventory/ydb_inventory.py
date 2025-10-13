@@ -46,9 +46,18 @@ class InventoryModule(BaseInventoryPlugin):
             with open(ydb_config, "r") as file:
                 yaml_config = yaml.safe_load(file)
                 self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config)
-                if 'config' in yaml_config and 'self_management_config' in yaml_config['config']:
-                    if 'enabled' in yaml_config['config']['self_management_config'] and yaml_config['config']['self_management_config']['enabled']:
+                if 'config' in yaml_config:
+                    
+                    if 'default_disk_type' in yaml_config['config']:
+                        self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'])
+
+                    if 'self_management_config' in yaml_config['config'] and 'enabled' in yaml_config['config']['self_management_config'] and yaml_config['config']['self_management_config']['enabled']:
                         self.inventory.groups['ydb'].set_variable('ydb_config_v2', True)
+                        self.inventory.groups['ydb'].set_variable('ydb_config', yaml_config)
+                    
+                    # Default domain is Root
+                    self.inventory.groups['ydb'].set_variable('ydb_domain','Root')
+                        
                 # Read drives config
                 drive_configs = {}
                 drive_labels = {}
