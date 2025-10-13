@@ -4,4 +4,3 @@ ydb_request_client_certificate: false
 # ydb_use_dynamic_config - define how to configure dynamic nodes - static or dynamic configs
 # Default value: false
 ydb_use_dynamic_config: false
-ydb_database_name: "{{ ydb_dbname }}"
