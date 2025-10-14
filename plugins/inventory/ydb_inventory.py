@@ -54,6 +54,9 @@ class InventoryModule(BaseInventoryPlugin):
                             if 'dbname' in dynnode:
                                 self.inventory.groups['ydb'].set_variable('ydb_dbname',dynnode['dbname'])
                                 break
+                    
+                    if 'ydb_enforce_user_token_requirement' not in ydb_vars:
+                        self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
                  
                     if 'default_disk_type' in yaml_config['config'] and 'ydb_pool_kind' not in ydb_vars:
                         self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'].lower())
