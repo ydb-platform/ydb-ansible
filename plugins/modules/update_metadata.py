@@ -7,7 +7,13 @@ except ImportError:
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
-
+DOCUMENTATION = r'''
+    name: update_metadata
+    plugin_type: module
+    short_description: Update metadata in YDB config
+    description: |
+        Update metadata in YDB config
+'''
 
 def run_module():
     module_args = dict(
