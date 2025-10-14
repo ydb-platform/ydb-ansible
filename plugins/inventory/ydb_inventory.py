@@ -91,7 +91,7 @@ class InventoryModule(BaseInventoryPlugin):
                                 self.inventory.set_variable(host['host'], 'ydb_disks', drive_configs[value])
                             else:
                                 self.inventory.set_variable(host['host'], key, value)
-                        if (brokers) < 3:
+                        if len(brokers) < 3:
                             brokers.append(host['host'])
                 
                 if 'ydb_brokers' not in ydb_vars and len(brokers) > 0:
