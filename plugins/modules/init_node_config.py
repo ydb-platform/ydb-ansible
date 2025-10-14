@@ -9,6 +9,13 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
+DOCUMENTATION = r'''
+    name: init_node_config
+    plugin_type: module
+    short_description: Create init config for a node
+    description: |
+        Create initial config for a node with V2 configuration
+'''
 
 def check_node_config_exists(config_dir, result):
     """Check if node configuration already exists"""
@@ -30,7 +37,7 @@ def init_node_config(ydb_cli, config_file, config_dir, result):
 
         # Create the initial metadata structure
         original_config['metadata'] = {
-            'kind': 'basicConfig',
+            'kind': 'MainConfig',
             'cluster': '',
             'version': 0
         }
