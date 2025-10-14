@@ -146,7 +146,7 @@
 
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
-          config: "{{ ydb_config_parsed }}"
+          config: "{{ ydb_config_dict }}"
           output_file: "{{ ydb_temp_config_path }}"
           hostvars: "{{ hostvars }}"
           ydb_disks: "{{ ydb_disks }}"

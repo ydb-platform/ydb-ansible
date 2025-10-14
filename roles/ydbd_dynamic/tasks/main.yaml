@@ -56,39 +56,13 @@
       - ydb_dynnodes is defined
     fail_msg: "ydb_dynnodes variable with dynamic node instances list is required"
 
-- name: check if ydb_config is a map
-  ansible.builtin.set_fact:
-    ydb_config_is_map: "{{ ydb_config is defined and ydb_config is mapping }}"
-  when: ydb_config is defined
-
-- name: check if ydb_config is a string (path)
-  ansible.builtin.set_fact:
-    ydb_config_is_path: "{{ ydb_config is defined and ydb_config is string }}"
-  when: ydb_config is defined
-
-- name: read config file when ydb_config is a path
-  ansible.builtin.slurp:
-    src: "{{ ydb_config }}"
-  register: ydb_config_content
-  when:
-    - ydb_pool_kind is not defined
-    - ydb_config_is_path is defined and ydb_config_is_path
-
-- name: parse config file content
-  ansible.builtin.set_fact:
-    ydb_config_parsed: "{{ ydb_config_content['content'] | b64decode | from_yaml }}"
-  when:
-    - ydb_pool_kind is not defined
-    - ydb_config_is_path is defined and ydb_config_is_path
-    - ydb_config_content is defined
-
 - name: set default for ydb_pool_kind from parsed config file
   ansible.builtin.set_fact:
-    ydb_pool_kind: "{{ ydb_config_parsed.default_disk_type | lower }}"
+    ydb_pool_kind: "{{ ydb_config_dict.default_disk_type | lower }}"
   when:
     - ydb_pool_kind is not defined
-    - ydb_config_parsed is defined
-    - ydb_config_parsed.default_disk_type is defined
+    - ydb_config_dict is defined
+    - ydb_config_dict.default_disk_type is defined
 
 - name: set default for ydb_pool_kind when ydb_config is a map
   ansible.builtin.set_fact:
