@@ -40,6 +40,7 @@ class InventoryModule(BaseInventoryPlugin):
 
         group = 'ydb'
         self.inventory.add_group(group)
+        brokers = []
 
         ydb_vars = self.inventory.groups['ydb'].get_vars()
         try:
@@ -53,7 +54,7 @@ class InventoryModule(BaseInventoryPlugin):
                             if 'dbname' in dynnode:
                                 self.inventory.groups['ydb'].set_variable('ydb_dbname',dynnode['dbname'])
                                 break
-                    
+                 
                     if 'default_disk_type' in yaml_config['config'] and 'ydb_pool_kind' not in ydb_vars:
                         self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'].lower())
 
@@ -90,6 +91,11 @@ class InventoryModule(BaseInventoryPlugin):
                                 self.inventory.set_variable(host['host'], 'ydb_disks', drive_configs[value])
                             else:
                                 self.inventory.set_variable(host['host'], key, value)
+                        if (brokers) < 3:
+                            brokers.append(host['host'])
+                
+                if 'ydb_brokers' not in ydb_vars and len(brokers) > 0:
+                    self.inventory.groups['ydb'].set_variable('ydb_brokers', brokers)
                 
         except Exception as e:
             raise AnsibleError(f"Config parsing error: {str(e)}")
