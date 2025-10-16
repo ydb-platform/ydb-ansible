@@ -36,9 +36,9 @@ RestartSec=1
 SyslogIdentifier=ydbd
 SyslogFacility=daemon
 SyslogLevel=err
-{%- if ydb_affinity_static is defined %}
+{% if ydb_affinity_static is defined %}
 CPUAffinity={{ ydb_affinity_static }}
-{%- endif %}
+{% endif %}
 
 [Install]
 WantedBy=multi-user.target
