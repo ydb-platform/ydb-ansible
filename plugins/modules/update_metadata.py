@@ -84,7 +84,7 @@ def run_module():
         # Increment existing version
         try:
             current_version = int(config['metadata']['version'])
-            config['metadata']['version'] = current_version + 1
+            # config['metadata']['version'] = current_version + 1
             result['changed'] = True
         except (ValueError, TypeError):
             module.fail_json(msg='Version in metadata must be an integer')
