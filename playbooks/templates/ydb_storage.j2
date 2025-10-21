@@ -1,0 +1,6 @@
+- labels:
+    container: ydb-static
+  targets:
+{% for host in groups['ydb'] %}
+  - "{{ host }}:{{ 8765 }}"
+{% endfor %}

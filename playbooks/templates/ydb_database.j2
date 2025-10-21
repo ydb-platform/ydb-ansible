@@ -1,0 +1,12 @@
+- labels:
+    container: ydb-dynamic
+  targets:
+{% for host in groups['ydb'] %}
+{% for i in ydb_dynnodes %}
+{% if 'offset' in i %}
+  - "{{ host }}:{{ 8766 + i.offset }}"
+{% else %}
+  - "{{ host }}:{{ 8766 + ydb_dynnodes.index(i) }}"
+{% endif %}
+{% endfor %}
+{% endfor %}

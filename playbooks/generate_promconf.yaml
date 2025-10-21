@@ -1,0 +1,41 @@
+---
+
+- name: Generate Prometheus config
+  hosts: ydb
+  run_once: true
+
+  vars:
+    prometheus_conf_dir: "promconf"
+    ca_crt: "{{ ydb_tls_dir }}/ca.crt"
+
+  tasks:
+    - name: prepare directory
+      delegate_to: localhost
+      file:
+        path: "{{ ansible_config_file | dirname }}/{{ prometheus_conf_dir }}"
+        state: directory
+
+    - name: generate ydb_storage.yml
+      delegate_to: localhost
+      template:
+        src: "templates/ydb_storage.j2"
+        dest: "{{ ansible_config_file | dirname }}/{{ prometheus_conf_dir }}/ydb_storage.yml"
+
+    - name: generate ydb_database.yml
+      delegate_to: localhost
+      template:
+        src: "templates/ydb_database.j2"
+        dest: "{{ ansible_config_file | dirname }}/{{ prometheus_conf_dir }}/ydb_database.yml"
+
+    - name: copy ca.crt
+      delegate_to: localhost
+      when: ca_crt is exists
+      copy:
+        src: "{{ ca_crt }}"
+        dest: "{{ ansible_config_file | dirname }}/{{ prometheus_conf_dir }}/ca.crt"
+
+    - name: copy prometheus_ydb.yml
+      delegate_to: localhost
+      template:
+        src: "templates/prometheus_ydb.j2"
+        dest: "{{ ansible_config_file | dirname }}/{{ prometheus_conf_dir }}/prometheus_ydb.yml"
