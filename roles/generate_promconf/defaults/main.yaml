@@ -1,1 +1,1 @@
-prometheus_conf_dir: "promconf"
+ydb_prometheus_conf_dir: "{{ ansible_config_file | dirname }}/promconf"
