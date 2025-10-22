@@ -1,0 +1,20 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.generate_promconf
+# PROPOSE : This playbook is designed to generate Prometheus config for YDB cluster.
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#     - YDB config
+#     - SSL certificates
+#
+# WARNING: Run only on localhost
+
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  run_once: true
+  tasks:
+    - name: generate prometheus config
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.generate_promconf
