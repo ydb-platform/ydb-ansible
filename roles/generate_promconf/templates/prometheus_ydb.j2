@@ -32,8 +32,8 @@ scrape_configs:
         replacement: auth
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/compile
     scheme: https
 {{  tls_config_block }}
@@ -54,8 +54,8 @@ scrape_configs:
         replacement: compile
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/config
     scheme: https
 {{  tls_config_block }}
@@ -76,8 +76,8 @@ scrape_configs:
         replacement: config
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/coordinator
     scheme: https
 {{  tls_config_block }}
@@ -98,8 +98,8 @@ scrape_configs:
         replacement: coordinator
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/datastreams
     scheme: https
 {{  tls_config_block }}
@@ -120,8 +120,8 @@ scrape_configs:
         replacement: datastreams
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/dsproxy_queue
     scheme: https
 {{  tls_config_block }}
@@ -142,8 +142,8 @@ scrape_configs:
         replacement: dsproxy_queue
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/dsproxy
     scheme: https
 {{  tls_config_block }}
@@ -164,8 +164,8 @@ scrape_configs:
         replacement: dsproxy
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/dsproxy_mon
     scheme: https
 {{  tls_config_block }}
@@ -186,8 +186,8 @@ scrape_configs:
         replacement: dsproxy_mon
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/dsproxy_overview
     scheme: https
 {{  tls_config_block }}
@@ -208,8 +208,8 @@ scrape_configs:
         replacement: dsproxy_overview
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/dsproxy_percentile
     scheme: https
 {{  tls_config_block }}
@@ -230,8 +230,8 @@ scrape_configs:
         replacement: dsproxy_percentile
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/grpc
     scheme: https
 {{  tls_config_block }}
@@ -252,8 +252,8 @@ scrape_configs:
         replacement: grpc
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/kqp
     scheme: https
 {{  tls_config_block }}
@@ -274,8 +274,8 @@ scrape_configs:
         replacement: kqp
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/netclassifier
     scheme: https
 {{  tls_config_block }}
@@ -296,8 +296,8 @@ scrape_configs:
         replacement: netclassifier
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/processing
     scheme: https
 {{  tls_config_block }}
@@ -318,8 +318,8 @@ scrape_configs:
         replacement: processing
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/proxy
     scheme: https
 {{  tls_config_block }}
@@ -340,8 +340,8 @@ scrape_configs:
         replacement: proxy
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/followers
     scheme: https
 {{  tls_config_block }}
@@ -362,8 +362,8 @@ scrape_configs:
         replacement: followers
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/storage_pool_stat
     scheme: https
 {{  tls_config_block }}
@@ -384,8 +384,8 @@ scrape_configs:
         replacement: storage_pool_stat
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/tablets
     scheme: https
 {{  tls_config_block }}
@@ -406,8 +406,8 @@ scrape_configs:
         replacement: tablets
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/topics
     scheme: https
 {{  tls_config_block }}
@@ -428,7 +428,7 @@ scrape_configs:
         replacement: topics
     file_sd_configs:
       - files:
-        - ydbd-database.yml
+        - ydb_database.yml
   - job_name: ydb/utils
     scheme: https
 {{  tls_config_block }}
@@ -449,8 +449,8 @@ scrape_configs:
         replacement: utils
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/dsproxynode
     scheme: https
 {{  tls_config_block }}
@@ -471,8 +471,8 @@ scrape_configs:
         replacement: dsproxynode
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/interconnect
     scheme: https
 {{  tls_config_block }}
@@ -493,8 +493,8 @@ scrape_configs:
         replacement: interconnect
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/pdisks
     scheme: https
 {{  tls_config_block }}
@@ -515,7 +515,7 @@ scrape_configs:
         replacement: pdisks
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
+        - ydb_storage.yml
   - job_name: ydb/persqueue
     scheme: https
 {{  tls_config_block }}
@@ -536,8 +536,8 @@ scrape_configs:
         replacement: persqueue
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/pqproxy
     scheme: https
 {{  tls_config_block }}
@@ -558,8 +558,8 @@ scrape_configs:
         replacement: pqproxy
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/vdisks
     scheme: https
 {{  tls_config_block }}
@@ -580,7 +580,7 @@ scrape_configs:
         replacement: vdisks
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
+        - ydb_storage.yml
   - job_name: ydb/healthcheck
     scheme: https
 {{  tls_config_block }}
@@ -600,8 +600,8 @@ scrape_configs:
         replacement: healthcheck
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
   - job_name: ydb/ydb
     scheme: https
 {{  tls_config_block }}
@@ -622,6 +622,6 @@ scrape_configs:
         replacement: ydb
     file_sd_configs:
       - files:
-        - ydbd-storage.yml
-        - ydbd-database.yml
+        - ydb_storage.yml
+        - ydb_database.yml
 
