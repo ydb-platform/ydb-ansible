@@ -40,7 +40,6 @@ def set_pdisk_active_status(ydb_dstool):
             dstool_result = json.loads(stdout)
             for pdisk in dstool_result:
                 if "Status" in pdisk and pdisk["Status"] != "ACTIVE":
-                    print(pdisk)
                     ydb_dstool(['pdisk', 'set', '--status=ACTIVE', '--pdisk-ids', pdisk["NodeId:PDiskId"]])
         except Exception:
             # Ignore errors in PDisk status setting as it's not critical
