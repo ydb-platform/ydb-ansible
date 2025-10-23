@@ -62,8 +62,12 @@ class InventoryModule(BaseInventoryPlugin):
                 if 'ydb_enforce_user_token_requirement' not in ydb_vars:
                     self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
                 
-                if 'default_disk_type' in yaml_config and 'ydb_pool_kind' not in ydb_vars:
-                    self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['default_disk_type'].lower())
+                if 'ydb_pool_kind' not in ydb_vars:
+                    if 'default_disk_type' in yaml_config:
+                        self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['default_disk_type'].lower())
+                    if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
+                        if 'storage_pool_types' in yaml_config['domains_config']['domain'][0]:
+                            self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['domains_config']['domain'][0]['storage_pool_types'][0]['kind'])
 
                 if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
                     self.inventory.groups['ydb'].set_variable('ydb_config_v2', True)

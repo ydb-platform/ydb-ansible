@@ -4,6 +4,13 @@ import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: run_test_queries
+    plugin_type: module
+    short_description: Run test queries to check YDB is ready for actions
+    description: |
+        Run test queries to check YDB is ready for actions
+'''
 
 def main():
     table_name = '`_ansible_test_table`'
