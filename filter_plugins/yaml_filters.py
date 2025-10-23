@@ -5,7 +5,13 @@ from ansible.utils.display import Display
 
 from ansible_collections.ydb_platform.ydb.plugins.filter.yaml_filters import ydb_config_to_yaml, FilterModule as OrigFilterModule
 
-
+DOCUMENTATION = r'''
+    name: yaml_filters
+    plugin_type: filter
+    short_description: short desc
+    description: |
+        long description
+'''
 
 class FilterModule(object):
     """

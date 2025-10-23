@@ -4,6 +4,13 @@ import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: set_user_password
+    plugin_type: module
+    short_description: Set YDB user password
+    description: |
+        Set YDB user password
+'''
 
 def validate_user(value):
     return re.fullmatch('[a-z0-9]+', value) is not None
