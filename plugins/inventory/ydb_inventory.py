@@ -46,36 +46,40 @@ class InventoryModule(BaseInventoryPlugin):
         try:
             with open(ydb_config, "r") as file:
                 yaml_config = yaml.safe_load(file)
+
                 if 'config' in yaml_config:
-                    self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config['config'])
+                    """ V2 Config """
+                    yaml_config = yaml_config['config']
 
-                    if 'ydb_dbname' not in ydb_vars and 'ydb_dynnodes' in ydb_vars:
-                        for dynnode in ydb_vars['ydb_dynnodes']:
-                            if 'dbname' in dynnode:
-                                self.inventory.groups['ydb'].set_variable('ydb_dbname',dynnode['dbname'])
-                                break
-                    
-                    if 'ydb_enforce_user_token_requirement' not in ydb_vars:
-                        self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
-                 
-                    if 'default_disk_type' in yaml_config['config'] and 'ydb_pool_kind' not in ydb_vars:
-                        self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['config']['default_disk_type'].lower())
+                self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config)
 
-                    if 'self_management_config' in yaml_config['config'] and 'enabled' in yaml_config['config']['self_management_config'] and yaml_config['config']['self_management_config']['enabled']:
-                        self.inventory.groups['ydb'].set_variable('ydb_config_v2', True)
-                        self.inventory.groups['ydb'].set_variable('ydb_config', yaml_config['config'])
-                    
-                    # Default domain is Root
-                    self.inventory.groups['ydb'].set_variable('ydb_domain','Root')
-                        
+                if 'ydb_dbname' not in ydb_vars and 'ydb_dynnodes' in ydb_vars:
+                    for dynnode in ydb_vars['ydb_dynnodes']:
+                        if 'dbname' in dynnode:
+                            self.inventory.groups['ydb'].set_variable('ydb_dbname',dynnode['dbname'])
+                            break
+                
+                if 'ydb_enforce_user_token_requirement' not in ydb_vars:
+                    self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
+                
+                if 'default_disk_type' in yaml_config and 'ydb_pool_kind' not in ydb_vars:
+                    self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['default_disk_type'].lower())
+
+                if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
+                    self.inventory.groups['ydb'].set_variable('ydb_config_v2', True)
+
+                self.inventory.groups['ydb'].set_variable('ydb_config', yaml_config)
+                
+                # Default domain is Root
+                self.inventory.groups['ydb'].set_variable('ydb_domain','Root')
                 # Read drives config
                 drive_configs = {}
                 drive_labels = {}
                 if 'ydb_disks' in ydb_vars:
                     for disk in ydb_vars['ydb_disks']:
                         drive_labels[disk['label']] = disk['name']
-                if 'config' in yaml_config and 'host_configs' in yaml_config['config']:
-                    for drive_config in yaml_config['config']['host_configs']:
+                if 'host_configs' in yaml_config:
+                    for drive_config in yaml_config['host_configs']:
                         drive_configs[drive_config['host_config_id']] = copy.deepcopy(drive_config['drive'])
                         for i, item in enumerate(drive_config['drive']):
                             label = item['path'].split('/')[-1]
@@ -85,8 +89,8 @@ class InventoryModule(BaseInventoryPlugin):
                             else:
                                 raise AnsibleError(f"Config parsing error, unable to find disk for label: {label}")
                 # Read hosts and define variables for them
-                if 'config' in yaml_config and 'hosts' in yaml_config['config']:
-                    for host in yaml_config['config']['hosts']:
+                if 'hosts' in yaml_config:
+                    for host in yaml_config['hosts']:
                         self.inventory.add_host(host['host'], group=group)
                         # Set variables for hosts
                         for key, value in host.items():

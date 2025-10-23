@@ -7,6 +7,14 @@ import uuid
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: pdisk_active
+    plugin_type: module
+    short_description: Activate INACTIVE PDisks
+    description: |
+        In some cases some PDisks can become INACTIVE during cluster initialization.
+        This module changes their state to ACTIVE
+'''
 
 def set_pdisk_active_status(ydb_dstool):
     """Set PDisk status to ACTIVE for any inactive PDisks"""
@@ -16,6 +24,7 @@ def set_pdisk_active_status(ydb_dstool):
             dstool_result = json.loads(stdout)
             for pdisk in dstool_result:
                 if "Status" in pdisk and pdisk["Status"] != "ACTIVE":
+                    print(pdisk)
                     ydb_dstool(['pdisk', 'set', '--status=ACTIVE', '--pdisk-ids', pdisk["NodeId:PDiskId"]])
         except Exception:
             # Ignore errors in PDisk status setting as it's not critical
