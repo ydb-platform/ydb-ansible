@@ -74,8 +74,13 @@ class InventoryModule(BaseInventoryPlugin):
 
                 self.inventory.groups['ydb'].set_variable('ydb_config', yaml_config)
                 
-                # Default domain is Root
-                self.inventory.groups['ydb'].set_variable('ydb_domain','Root')
+                if 'ydb_domain' not in ydb_vars:
+                    if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
+                        self.inventory.groups['ydb'].set_variable('ydb_domain',yaml_config['domains_config']['domain'][0]['name'])
+                    else:
+                        # Default domain is Root
+                        self.inventory.groups['ydb'].set_variable('ydb_domain','Root')
+                
                 # Read drives config
                 drive_configs = {}
                 drive_labels = {}
