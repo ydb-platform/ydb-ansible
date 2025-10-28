@@ -60,7 +60,10 @@ class InventoryModule(BaseInventoryPlugin):
                             break
                 
                 if 'ydb_enforce_user_token_requirement' not in ydb_vars:
-                    self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
+                    if 'domains_config' in yaml_config and 'security_config' in yaml_config['domains_config'] and 'enforce_user_token_requirement' in yaml_config['domains_config']['security_config']:
+                        self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', yaml_config['domains_config']['security_config']['enforce_user_token_requirement'])
+                    else:
+                        self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
                 
                 if 'ydb_pool_kind' not in ydb_vars:
                     if 'default_disk_type' in yaml_config:
