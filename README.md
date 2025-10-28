@@ -556,8 +556,8 @@ You have two deployment options:
 After deployment, reload Prometheus and verify target status at `http://prometheus:9090/targets`.
 
 **Grafana Dashboards**  
-To visualize YDB cluster metrics, import the preconfigured Grafana dashboards templates from promconf/grafana-templates subfolder (after generate_promconf) or download them directly
-[Download templates](https://github.com/ydb-platform/ydb/tree/main/ydb/deploy/helm/ydb-prometheus/dashboards)  
+To visualize YDB cluster metrics, import the preconfigured Grafana dashboards templates from `promconf/grafana-templates` subfolder (created by generate_promconf playbook) or download them
+[directly](https://github.com/ydb-platform/ydb/tree/main/ydb/deploy/helm/ydb-prometheus/dashboards)  
 
 # FAQ
 
