@@ -1,1 +1,16 @@
 ydb_prometheus_conf_dir: "{{ ansible_config_file | dirname }}/promconf"
+ydb_grafana_dashboards:
+  - actors.json
+  - cpu.json
+  - database-hive-detailed.json
+  - datashard.json
+  - dboverview.json
+  - dbstatus.json
+  - distributed-storage-latencies-leveled.json
+  - distributed-storage-performance-metrics.json
+  - distributed-storage-self-heal.json
+  - grpc.json
+  - queryengine.json
+  - replication-factor.json
+  - single-pdisk.json
+  - txproxy.json
