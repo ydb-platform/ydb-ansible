@@ -37,3 +37,16 @@
   template:
     src: "templates/prometheus_ydb.j2"
     dest: "{{ ydb_prometheus_conf_dir }}/prometheus_ydb.yml"
+
+- name: prepare grafana templates directory
+  delegate_to: localhost
+  file:
+    path: "{{ ydb_prometheus_conf_dir }}/grafana-dashboards"
+    state: directory
+
+- name: download grafana templates
+  delegate_to: localhost
+  get_url:
+    url: "https://github.com/ydb-platform/ydb/raw/refs/heads/main/ydb/deploy/helm/ydb-prometheus/dashboards/{{ item }}"
+    dest: "{{ ydb_prometheus_conf_dir }}/grafana-dashboards/"
+  loop: "{{ ydb_grafana_dashboards }}"
