@@ -7,12 +7,12 @@ from ansible.errors import AnsibleError
 DOCUMENTATION = r'''
     name: ydb_inventory
     plugin_type: inventory
-    short_description: YDB inventory from config.yaml
+    short_description: Get YDB inventory from config.yaml
     description: |
         This inventory plugin fetches hosts from a custom source (config.yaml).
     options:
         plugin:
-            description: The name of the plugin (must be 'ydb_inventory')
+            description: The name of the plugin (it should always be set to 'ydb_platform.ydb.ydb_inventory')
             required: true
             choices: ['ydb_platform.ydb.ydb_inventory']
         ydb_config:
