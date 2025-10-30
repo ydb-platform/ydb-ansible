@@ -30,9 +30,14 @@
         msg: "aborting playbook execution"
       when: prompt.user_input != "yes"
 
+    - name: Register ydb_drives
+      ansible.builtin.set_fact:
+        ydb_drives: "{{ ydb_disks }}"
+      when: ydb_drives is not defined
+
     - name: Erase disk with dd
       become: true
-      shell: dd if=/dev/zero of={{ item.name }} bs=1M count=100 status=none 
-      loop: "{{ ydb_disks }}"
+      shell: dd if=/dev/zero of={{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }} bs=1M count=100 status=none 
+      loop: "{{ ydb_drives }}"
       tags:
         - format

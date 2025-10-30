@@ -181,16 +181,21 @@
         msg: "aborting playbook execution"
       when: prompt.user_input != "yes"
 
+- name: Register ydb_drives
+  ansible.builtin.set_fact:
+    ydb_drives: "{{ ydb_disks }}"
+  when: ydb_drives is not defined
+
 - name: prepare drives
   ydb_platform.ydb.drive_prepare:
-    name: "{{ item['name'] }}"
+    name: "{{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }}"
     label: "{{ item['label'] }}"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     allow_format: "{{ ydb_allow_format_drives }}"
-  with_items: "{{ ydb_disks }}"
+  with_items: "{{ ydb_drives }}"
   become: true
 
 - name: generate random temporary config file path for v2 node init

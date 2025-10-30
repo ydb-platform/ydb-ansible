@@ -27,7 +27,10 @@ class InventoryModule(BaseInventoryPlugin):
 
     def verify_file(self, path):
         # Проверяем, что это конфиг для нашего плагина
-        valid = super().verify_file(path)
+        valid = False
+        if super(InventoryModule, self).verify_file(path):
+            if path.endswith(('ydb_inventory.yaml', 'ydb_inventory.yml', 'inventory.yaml', 'inventory.yml')):
+                valid = True
         return valid
 
     def parse(self, inventory, loader, path, cache=True):
@@ -98,8 +101,6 @@ class InventoryModule(BaseInventoryPlugin):
                             drive_configs[drive_config['host_config_id']][i]['label'] = label
                             if label in drive_labels:
                                 drive_configs[drive_config['host_config_id']][i]['name']  = drive_labels[label]
-                            else:
-                                raise AnsibleError(f"Config parsing error, unable to find disk for label: {label}")
                 # Read hosts and define variables for them
                 if 'hosts' in yaml_config:
                     for host in yaml_config['hosts']:
@@ -107,7 +108,7 @@ class InventoryModule(BaseInventoryPlugin):
                         # Set variables for hosts
                         for key, value in host.items():
                             if key == 'host_config_id':
-                                self.inventory.set_variable(host['host'], 'ydb_disks', drive_configs[value])
+                                self.inventory.set_variable(host['host'], 'ydb_drives', drive_configs[value])
                             else:
                                 self.inventory.set_variable(host['host'], key, value)
                         if len(brokers) < 3:
