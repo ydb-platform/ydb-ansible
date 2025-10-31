@@ -56,18 +56,16 @@ class InventoryModule(BaseInventoryPlugin):
 
                 self.inventory.groups['ydb'].set_variable('ydb_config_dict', yaml_config)
 
+                # Set default database name if it's not defined
                 if 'ydb_dbname' not in ydb_vars and 'ydb_dynnodes' in ydb_vars:
                     for dynnode in ydb_vars['ydb_dynnodes']:
                         if 'dbname' in dynnode:
                             self.inventory.groups['ydb'].set_variable('ydb_dbname',dynnode['dbname'])
                             break
                 
-                if 'ydb_enforce_user_token_requirement' not in ydb_vars:
-                    if 'domains_config' in yaml_config and 'security_config' in yaml_config['domains_config'] and 'enforce_user_token_requirement' in yaml_config['domains_config']['security_config']:
-                        self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', yaml_config['domains_config']['security_config']['enforce_user_token_requirement'])
-                    else:
-                        self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', False)
-                
+                ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
+                self.inventory.groups['ydb'].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)
+
                 if 'ydb_pool_kind' not in ydb_vars:
                     if 'default_disk_type' in yaml_config:
                         self.inventory.groups['ydb'].set_variable('ydb_pool_kind', yaml_config['default_disk_type'].lower())
@@ -80,12 +78,10 @@ class InventoryModule(BaseInventoryPlugin):
 
                 self.inventory.groups['ydb'].set_variable('ydb_config', yaml_config)
                 
-                if 'ydb_domain' not in ydb_vars:
-                    if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
-                        self.inventory.groups['ydb'].set_variable('ydb_domain',yaml_config['domains_config']['domain'][0]['name'])
-                    else:
-                        # Default domain is Root
-                        self.inventory.groups['ydb'].set_variable('ydb_domain','Root')
+                domain = 'Root'
+                if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
+                    domain = yaml_config['domains_config']['domain'][0]['name']
+                self.inventory.groups['ydb'].set_variable('ydb_domain',domain)
                 
                 # Read drives config
                 drive_configs = {}
@@ -114,8 +110,7 @@ class InventoryModule(BaseInventoryPlugin):
                         if len(brokers) < 3:
                             brokers.append(host['host'])
                 
-                if 'ydb_brokers' not in ydb_vars and len(brokers) > 0:
-                    self.inventory.groups['ydb'].set_variable('ydb_brokers', brokers)
+                self.inventory.groups['ydb'].set_variable('ydb_brokers', brokers)
                 
         except Exception as e:
             raise AnsibleError(f"Config parsing error: {str(e)}")
