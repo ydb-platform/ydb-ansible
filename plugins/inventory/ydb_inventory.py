@@ -60,23 +60,15 @@ class InventoryModule(BaseInventoryPlugin):
                     yaml_config = yaml_config['config']
 
                 self.inventory.groups[group_name].set_variable('ydb_config_dict', yaml_config)
-
-                # Set default database name if it's not defined
-                if 'ydb_dbname' not in ydb_vars and 'ydb_dynnodes' in ydb_vars:
-                    for dynnode in ydb_vars['ydb_dynnodes']:
-                        if 'dbname' in dynnode:
-                            self.inventory.groups[group_name].set_variable('ydb_dbname',dynnode['dbname'])
-                            break
                 
                 ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
                 self.inventory.groups[group_name].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)
 
-                if 'ydb_pool_kind' not in ydb_vars:
-                    if 'default_disk_type' in yaml_config:
-                        self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['default_disk_type'].lower())
-                    if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
-                        if 'storage_pool_types' in yaml_config['domains_config']['domain'][0]:
-                            self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['domains_config']['domain'][0]['storage_pool_types'][0]['kind'])
+                if 'default_disk_type' in yaml_config:
+                    self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['default_disk_type'].lower())
+                if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
+                    if 'storage_pool_types' in yaml_config['domains_config']['domain'][0]:
+                        self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['domains_config']['domain'][0]['storage_pool_types'][0]['kind'])
 
                 if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
                     self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
@@ -91,6 +83,7 @@ class InventoryModule(BaseInventoryPlugin):
                 # Read drives config
                 drive_configs = {}
                 drive_labels = {}
+
                 if 'ydb_disks' in ydb_vars:
                     for disk in ydb_vars['ydb_disks']:
                         drive_labels[disk['label']] = disk['name']
