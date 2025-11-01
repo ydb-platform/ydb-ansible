@@ -1,0 +1,51 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.prepare_drives
+# PROPOSE : This playbook is designed to format drives for YDB
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.prepare_drives --extra-vars "ydb_disk_prepare=ydb_disk_1"
+#
+# WARNING: 
+#   This will destroy ALL DATA on all drives defined in inventory
+
+- name: Format storage drives, erase metadata 
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  become: true
+  roles:
+  - role: preflight
+
+  tasks:
+
+    - name: Check variable
+      run_once: true
+      ansible.builtin.assert:
+        that:
+        - "ydb_disk_prepare is defined"
+        fail_msg: "Usage: ansible-playbook ydb_platform.ydb.prepare_drives --extra-vars 'ydb_disk_prepare=ydb_disk_1'"
+
+    - name: Register ydb_drives
+      run_once: true
+      ansible.builtin.set_fact:
+        ydb_drives: "{{ ydb_disks }}"
+      when: ydb_drives is not defined
+
+    - name: "Prepare drive {{ ydb_disk_prepare }}"
+      ydb_platform.ydb.drive_prepare:
+        name: "{{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }}"
+        label: "{{ item['label'] }}"
+        ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+        ld_library_path: "{{ ydb_dir }}/lib"
+        ca_file: "{{ ydb_dir }}/certs/ca.crt"
+        endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
+        allow_format: true
+      when: item.label == ydb_disk_prepare
+      with_items: "{{ ydb_drives }}"
+      become: true
+  

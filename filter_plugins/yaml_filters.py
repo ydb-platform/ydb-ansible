@@ -8,9 +8,9 @@ from ansible_collections.ydb_platform.ydb.plugins.filter.yaml_filters import ydb
 DOCUMENTATION = r'''
     name: yaml_filters
     plugin_type: filter
-    short_description: short desc
+    short_description: YAML config parsing
     description: |
-        long description
+        YAML config parsing
 '''
 
 class FilterModule(object):
