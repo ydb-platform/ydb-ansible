@@ -13,6 +13,7 @@
 #
 
 - hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic' in groups else groups['ydb'] }}"
+  serial: "{{ ydb_restart_serial | default(1) }}"
   roles:
   - role: ydbd_rolling_dynamic
     tags:

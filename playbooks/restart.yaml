@@ -28,6 +28,10 @@
       - storage
       - static
 
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  serial: "{{ ydb_restart_serial | default(1) }}"
+
+  roles:
   - role: ydbd_rolling_dynamic
     tags:
       - database
