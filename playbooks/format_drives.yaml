@@ -14,6 +14,9 @@
 #
 # WARNING: 
 #   This will destroy ALL DATA on all drives defined in inventory
+#
+# REQUIRED SOFTWARE: lsblk, dd
+#
 
 - name: Format storage drives, erase metadata 
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
@@ -48,15 +51,14 @@
       register: prompt
       run_once: true
 
-    # - name: stop execution
-    #   ansible.builtin.fail:
-    #     msg: "aborting playbook execution"
-    #   when: prompt.user_input != "yes"
+    - name: stop execution
+      ansible.builtin.fail:
+        msg: "aborting playbook execution"
+      when: prompt.user_input != "yes"
 
-
-    # - name: Erase disk with dd
-    #   become: true
-    #   shell: dd if=/dev/zero of={{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }} bs=1M count=100 status=none 
-    #   loop: "{{ ydb_drives }}"
-    #   tags:
-    #     - format
+    - name: Erase disk with dd
+      become: true
+      shell: dd if=/dev/zero of={{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }} bs=1M count=100 status=none 
+      loop: "{{ ydb_drives }}"
+      tags:
+        - format

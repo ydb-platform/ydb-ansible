@@ -14,9 +14,13 @@
 #
 # WARNING: 
 #   This will destroy ALL DATA on all drives defined in inventory
+#
+# REQUIRED SOFTWARE: lsblk, dd
+#
 
 - name: Format storage drives, erase metadata 
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  any_errors_fatal: true
   become: true
   roles:
   - role: preflight
@@ -34,6 +38,23 @@
       ansible.builtin.set_fact:
         ydb_drives: "{{ ydb_disks }}"
       when: ydb_drives is not defined
+
+    - name: "Not all drives described in Ansible configuration"
+      ansible.builtin.assert:
+        that:
+          - "ydb_drives|length <= ydb_disks|length"
+        fail_msg: "YDB Config for {{ inventory_hostname }} has more drives than Ansible configuration"
+        quiet: true
+
+    - name: "Get list of block devices on a host"
+      command: lsblk -d --noheadings --output NAME
+      register: local_disks
+
+    - name: "Check YDB drives"
+      ydb_platform.ydb.check_drives_presence:
+        ydb_drives: "{{ ydb_drives }}"
+        ydb_disks: "{{ ydb_disks }}"
+        host_drives: "{{ local_disks.stdout_lines }}"
 
     - name: "Prepare drive {{ ydb_disk_prepare }}"
       ydb_platform.ydb.drive_prepare:
