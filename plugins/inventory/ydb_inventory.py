@@ -50,7 +50,6 @@ class InventoryModule(BaseInventoryPlugin):
         self.inventory.add_group(group_name)
         brokers = []
 
-        ydb_vars = self.inventory.groups[group_name].get_vars()
         try:
             with open(ydb_config, "r") as file:
                 yaml_config = yaml.safe_load(file)
@@ -84,17 +83,15 @@ class InventoryModule(BaseInventoryPlugin):
                 drive_configs = {}
                 drive_labels = {}
 
-                if 'ydb_disks' in ydb_vars:
-                    for disk in ydb_vars['ydb_disks']:
-                        drive_labels[disk['label']] = disk['name']
                 if 'host_configs' in yaml_config:
                     for drive_config in yaml_config['host_configs']:
                         drive_configs[drive_config['host_config_id']] = copy.deepcopy(drive_config['drive'])
                         for i, item in enumerate(drive_config['drive']):
-                            label = item['path'].split('/')[-1]
-                            drive_configs[drive_config['host_config_id']][i]['label'] = label
-                            if label in drive_labels:
-                                drive_configs[drive_config['host_config_id']][i]['name']  = drive_labels[label]
+                            if '/dev/disk/by-partlabel/' in item['path']:
+                                label = item['path'].split('/')[-1]
+                                drive_configs[drive_config['host_config_id']][i]['label'] = label
+                                if label in drive_labels:
+                                    drive_configs[drive_config['host_config_id']][i]['name']  = drive_labels[label]
                 # Read hosts and define variables for them
                 if 'hosts' in yaml_config:
                     for host in yaml_config['hosts']:
