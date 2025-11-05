@@ -32,6 +32,7 @@
       ansible.builtin.assert:
         that:
           - "ydb_drives|length <= ydb_disks|length"
+          - "ydb_drives|length > 0"
         fail_msg: "YDB Config for {{ inventory_hostname }} has more drives than Ansible configuration"
         quiet: true
 

@@ -14,15 +14,18 @@ DOCUMENTATION = r'''
         plugin:
             description: The name of the plugin (it should always be set to 'ydb_platform.ydb.ydb_inventory')
             required: true
+            type: str
             choices: ['ydb_platform.ydb.ydb_inventory']
         ydb_config:
             description: YDB config (file or dictionary)
             required: true
+            type: str
             env:
               - name: INVENTORY_YDB_CONFIG
         ydb_hostgroup_name:
-            description: The name of group of hosts (default name is 'ydb')
+            description: The name of group of hosts
             required: false
+            default: 'ydb'
             env:
               - name: INVENTORY_YDB_HOSTGROUP_NAME
 '''
@@ -59,7 +62,7 @@ class InventoryModule(BaseInventoryPlugin):
                     yaml_config = yaml_config['config']
 
                 self.inventory.groups[group_name].set_variable('ydb_config_dict', yaml_config)
-                
+
                 ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
                 self.inventory.groups[group_name].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)
 
@@ -73,12 +76,12 @@ class InventoryModule(BaseInventoryPlugin):
                     self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
 
                 self.inventory.groups[group_name].set_variable('ydb_config', yaml_config)
-                
+
                 domain = 'Root'
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
                     domain = yaml_config['domains_config']['domain'][0]['name']
                 self.inventory.groups[group_name].set_variable('ydb_domain',domain)
-                
+
                 # Read drives config
                 drive_configs = {}
                 drive_labels = {}
@@ -104,9 +107,9 @@ class InventoryModule(BaseInventoryPlugin):
                                 self.inventory.set_variable(host['host'], key, value)
                         if len(brokers) < 3:
                             brokers.append(host['host'])
-                
+
                 self.inventory.groups[group_name].set_variable('ydb_brokers', brokers)
-                
+
         except Exception as e:
             raise AnsibleError(f"Config parsing error: {str(e)}")
 
