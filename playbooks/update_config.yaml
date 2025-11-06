@@ -20,11 +20,11 @@
 
   - ansible.builtin.assert:
       that:
-        - "{{ item.var1 is defined or item.var2 is defined }}"
-      fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
+        - "{{ item.var1 is defined}}"
+      fail_msg: "Either {{ item.var1 }} variable is required"
     loop:
-      - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
-      - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
+      - { var1: "ydb_cores_static" }
+      - { var1: "ydb_cores_dynamic" }
   tags:
     - storage
     - static
@@ -144,37 +144,9 @@
         retries: 30
         delay: 15
 
-      - name: check if ydb_config is a map
-        set_fact:
-          ydb_config_is_map: "{{ ydb_config is mapping }}"
-        run_once: true
-
-      - name: handle ydb_config as map
-        block:
-          - name: parse ansible configuration from map
-            set_fact:
-              parsed_ansible_config: "{{ ydb_config }}"
-            run_once: true
-        when: ydb_config_is_map
-
-      - name: handle ydb_config as file path
-        block:
-          - name: read ansible configuration file content
-            slurp:
-              src: "{{ ydb_config }}"
-            run_once: true
-            register: ansible_config_content
-            delegate_to: localhost
-
-          - name: parse ansible configuration content
-            set_fact:
-              parsed_ansible_config: "{{ ansible_config_content.content | b64decode | from_yaml }}"
-            run_once: true
-        when: not ydb_config_is_map
-
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
-          config: "{{ parsed_ansible_config }}"
+          config: "{{ ydb_config_dict }}"
           output_file: "{{ ydb_temp_config_path }}"
           hostvars: "{{ hostvars }}"
           ydb_disks: "{{ ydb_disks }}"
@@ -199,12 +171,12 @@
         ydb_platform.ydb.apply_config_selectors:
           config: "{{ ydb_temp_config_path }}"
           output_file: "{{ ydb_temp_config_path }}"
-          database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
-          storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
+          database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
+          storage_cores: "{{ydb_cores_static | default(omit) }}"
         become: true
         become_user: ydb
         run_once: true
-        when: ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined
+        when: ydb_cores_dynamic is defined or ydb_cores_static is defined
         register: selectors_result
         until: selectors_result is succeeded
         retries: 5
@@ -293,7 +265,7 @@
       - no_restart
 
   - name: update static node configuration file (V1 configuration only)
-    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static, true) }}"
+    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static | default(ydb_cores_static, true) }}"
     changed_when: false
     when: not ydb_config_v2 | default(false)
     tags:
@@ -302,7 +274,7 @@
       - no_restart
 
   - name: create dynamic node configuration file (V1 configuration only)
-    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_database_node_cores | default(ydb_cores_dynamic, true) }}"
+    command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-dynamic.yaml COMPUTE {{ ydb_cores_dynamic | default(ydb_cores_dynamic, true) }}"
     changed_when: false
     when: not ydb_config_v2 | default(false)
     tags:

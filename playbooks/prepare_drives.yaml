@@ -1,0 +1,43 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.prepare_drives
+# PROPOSE : This playbook is designed to format drives for YDB
+#           
+# HOW TO USE:
+#     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible
+#     You will need proper:
+#     - inventory
+#
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.prepare_drives --extra-vars "ydb_disk_prepare=ydb_disk_1"
+#
+# WARNING: 
+#   This will destroy ALL DATA on all drives defined in inventory
+#
+# REQUIRED SOFTWARE: lsblk, dd
+#
+
+- name: Format storage drives, erase metadata 
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  any_errors_fatal: true
+  become: true
+  vars:
+    ydb_format_disk: False
+    ydb_format_disk_prepare: True
+
+  roles:
+  - role: preflight
+
+  tasks:
+
+    - name: Check variable
+      run_once: true
+      ansible.builtin.assert:
+        that:
+        - "ydb_disk_prepare is defined"
+        fail_msg: "Usage: ansible-playbook ydb_platform.ydb.prepare_drives --extra-vars 'ydb_disk_prepare=ydb_disk_1'"
+
+    - name: Prepare drives
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.format_drives

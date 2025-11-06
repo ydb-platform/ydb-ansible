@@ -5,6 +5,14 @@ import copy
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
+DOCUMENTATION = r'''
+    name: patch_config
+    plugin_type: module
+    short_description: patch ydb config
+    description: |
+        patch ydb config
+'''
+
 def _ensure_config_path(config, path, default_value):
     """Helper function to ensure a nested config path exists with a default value."""
     current = config
@@ -68,7 +76,7 @@ def _generate_hosts_section(hostvars, ydb_disks, default_disk_type=None):
 
     return hosts
 
-def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None, ydb_dir=None):
+def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None, ydb_dir=None, ydb_domain=None):
     _ensure_config_path(config, 'yaml_config_enabled', True)
     _ensure_config_path(config, 'self_management_config.enabled', True)
     _ensure_config_path(config, 'actor_system_config.use_auto_config', True)
@@ -82,6 +90,9 @@ def patch_config_v2(config, hostvars=None, ydb_disks=None, groups=None, ydb_dir=
         _ensure_config_path(config, 'grpc_config.key', f"{ydb_dir}/certs/node.key")
         _ensure_config_path(config, 'grpc_config.ca', f"{ydb_dir}/certs/ca.crt")
         _ensure_config_path(config, 'grpc_config.services_enabled', ['legacy','discovery'])
+    
+    if ydb_domain is not None and ydb_domain != "Root":
+        _ensure_config_path(config, 'domains_config.domain', [{"name": f"{ydb_domain}"}])
 
     # Generate hosts section if it's missing and we have the required data
     if 'hosts' not in config and hostvars and ydb_disks:
@@ -105,6 +116,7 @@ def main():
         ydb_disks=dict(type='list', required=False),
         groups=dict(type='dict', required=False),
         ydb_dir=dict(type='str', required=False, default=None),
+        ydb_domain=dict(type='str', required=False, default=None),
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -117,6 +129,7 @@ def main():
         ydb_disks = module.params.get('ydb_disks')
         groups = module.params.get('groups')
         ydb_dir = module.params.get('ydb_dir')
+        ydb_domain = module.params.get('ydb_domain')
 
         # Handle different input types
         if isinstance(config_input, dict):
@@ -139,10 +152,10 @@ def main():
         # Apply the patch to the config section only
         original_config = copy.deepcopy(config)
         if 'config' in config:
-            patched_config_section = patch_config_v2(config['config'], hostvars, ydb_disks, groups, ydb_dir)
+            patched_config_section = patch_config_v2(config['config'], hostvars, ydb_disks, groups, ydb_dir, ydb_domain)
             config['config'] = patched_config_section
         else:
-            config = patch_config_v2(config, hostvars, ydb_disks, groups, ydb_dir)
+            config = patch_config_v2(config, hostvars, ydb_disks, groups, ydb_dir, ydb_domain)
 
         # Determine if changes were actually made
         result['changed'] = config != original_config

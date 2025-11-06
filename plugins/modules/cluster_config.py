@@ -6,6 +6,13 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
+DOCUMENTATION = r'''
+    name: cluster_config
+    plugin_type: module
+    short_description: Work with ydb cluster config
+    description: |
+        Work with ydb cluster config (it's needed for V2 cluster configuration)
+'''
 
 def fetch_cluster_config(ydb_cli, result):
     """Fetch current cluster configuration from YDB"""

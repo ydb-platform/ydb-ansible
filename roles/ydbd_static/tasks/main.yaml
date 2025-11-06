@@ -10,14 +10,14 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item.var1 is defined or item.var2 is defined }}"
-    fail_msg: "Either {{ item.var1 }} or {{ item.var2 }} variable is required"
+      - "{{ item.var1 is defined }}"
+    fail_msg: "Either {{ item.var1 }} variable is required"
   loop:
-    - { var1: "ydb_storage_node_cores", var2: "ydb_cores_static" }
-    - { var1: "ydb_database_node_cores", var2: "ydb_cores_dynamic" }
-    - { var1: "ydb_disks", var2: "ydb_disks" }
-    - { var1: "ydb_domain", var2: "ydb_domain" }
-    - { var1: "ydb_user", var2: "ydb_user" }
+    - { var1: "ydb_cores_static" }
+    - { var1: "ydb_cores_dynamic" }
+    - { var1: "ydb_disks" }
+    - { var1: "ydb_domain" }
+    - { var1: "ydb_user" }
 
 # Handle ydb_pool_kind if not defined
 - name: handle ydb_pool_kind if not defined
@@ -153,7 +153,7 @@
   when: ydb_config_v2 is not defined
 
 - name: create static node configuration file
-  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_storage_node_cores | default(ydb_cores_static) }}"
+  command: "{{ ydb_dir }}/home/update_config_file.sh ydbd-config.yaml ydbd-config-static.yaml STORAGE {{ ydb_cores_static }}"
   changed_when: false
   when: not ydb_config_v2
 
@@ -167,31 +167,14 @@
 - name: flush handlers
   meta: flush_handlers
 
-- name: format drives confirmation block
-  when: ydb_allow_format_drives and not ydb_skip_data_loss_confirmation_prompt
-  block:
-    - name: ask user confirmation for format drives
-      ansible.builtin.pause:
-        prompt: 'RISK OF DATA LOSS: "ydb_allow_format_drives" is set to "true": this may cause data loss if not handled with care! Enter "yes" to continue.'
-      register: prompt
-      run_once: true
+- name: Set variable
+  ansible.builtin.set_fact:
+    ydb_format_disk: False
+    ydb_format_disk_prepare: True
 
-    - name: stop execution
-      ansible.builtin.fail:
-        msg: "aborting playbook execution"
-      when: prompt.user_input != "yes"
-
-- name: prepare drives
-  ydb_platform.ydb.drive_prepare:
-    name: "{{ item['name'] }}"
-    label: "{{ item['label'] }}"
-    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
-    ld_library_path: "{{ ydb_dir }}/lib"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
-    allow_format: "{{ ydb_allow_format_drives }}"
-  with_items: "{{ ydb_disks }}"
-  become: true
+- name: Format drives
+  ansible.builtin.import_role:
+    name: ydb_platform.ydb.format_drives
 
 - name: generate random temporary config file path for v2 node init
   set_fact:
@@ -209,8 +192,8 @@
       copy:
         content: "{{ ydb_config | ydb_platform.ydb.ydb_config_to_yaml }}"
         dest: "{{ ydb_temp_config_path }}"
-        owner: ydb
-        group: ydb
+        owner: "{{ ydb_host_user }}"
+        group: "{{ ydb_host_group }}"
         mode: 0644
       when: ydb_config_is_map
 
@@ -218,8 +201,8 @@
       copy:
         src: "{{ ydb_config }}"
         dest: "{{ ydb_temp_config_path }}"
-        owner: ydb
-        group: ydb
+        owner: "{{ ydb_host_user }}"
+        group: "{{ ydb_host_group }}"
         mode: 0644
       when: not ydb_config_is_map
 
@@ -231,18 +214,19 @@
         ydb_disks: "{{ ydb_disks }}"
         groups: "{{ groups }}"
         ydb_dir: "{{ ydb_dir }}"
+        ydb_domain: "{{ ydb_domain }}"
       become: true
-      become_user: ydb
+      become_user: "{{ ydb_host_user }}"
 
     - name: update configuration with selectors
       ydb_platform.ydb.apply_config_selectors:
         config: "{{ ydb_temp_config_path }}"
         output_file: "{{ ydb_temp_config_path }}"
-        database_cores: "{{ ydb_database_node_cores | default(ydb_cores_dynamic) | default(omit) }}"
-        storage_cores: "{{ ydb_storage_node_cores | default(ydb_cores_static) | default(omit) }}"
+        database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
+        storage_cores: "{{ ydb_cores_static | default(omit) }}"
       become: true
-      become_user: ydb
-      when: ydb_config_v2 and (ydb_database_node_cores is defined or ydb_storage_node_cores is defined or ydb_cores_dynamic is defined or ydb_cores_static is defined)
+      become_user: "{{ ydb_host_user }}"
+      when: ydb_config_v2 and (ydb_cores_dynamic is defined or ydb_cores_static is defined)
 
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:
@@ -253,7 +237,7 @@
     endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     database: "/{{ ydb_domain }}"
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   when: ydb_config_v2|bool
 
 - name: cleanup temp config file after node init
@@ -322,7 +306,7 @@
   retries: 5
   delay: 5
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   when: not ydb_config_v2
 
 - name: init YDB storage if not initialized (non-v2 configuration)
@@ -341,7 +325,7 @@
   register: init_storage_nonv2
   run_once: true
   when: not ydb_config_v2
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
 
 # For v2 configs, initialize storage after the server is running
 - name: init YDB storage if not initialized (v2 configuration)
@@ -357,7 +341,7 @@
   register: init_storage_v2
   run_once: true
   when: ydb_config_v2
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
 
 - name: get ydb token with user credentials
   ydb_platform.ydb.get_token:
@@ -374,7 +358,7 @@
   retries: 25
   delay: 20
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
 
 - name: wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
@@ -385,7 +369,7 @@
     token: "{{ ydb_credentials.token }}"
   any_errors_fatal: true
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   tags:
     - discovery
 
@@ -403,9 +387,10 @@
   retries: 30
   delay: 10
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   tags:
     - healthcheck
+  when: "(ydb_version is regex(\"\\d+\\..*\") or ydb_version is regex(\"\\d+-.*\")) and ydb_version is version('25.1', '<')" # Hack until YDB HC will handle 3-nodes-mirror-3-dc in 25.*
 
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:
@@ -418,7 +403,7 @@
     token: "{{ ydb_credentials.token }}"
   run_once: true
   become: true
-  become_user: ydb
+  become_user: "{{ ydb_host_user }}"
   register: password_result
   retries: 30
   delay: 15

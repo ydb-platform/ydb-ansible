@@ -1,6 +1,37 @@
 ---
 
-- name: Check ansible version
+- name: Check Ansible version
   when: "ansible_version.full is version('2.11', '<=')"
   ansible.builtin.fail:
-    msg: "aborting playbook execution. Install Ansible 2.11 or newer. Current version is {{ ansible_version.full }}"
+    msg: "Aborting playbook execution. Install Ansible 2.11 or newer. Current version is {{ ansible_version.full }}"
+
+- name: Check Python
+  ydb_platform.ydb.warn:
+    msg: "Discovered ansible_python version is out of date and is not supported. https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix"
+  when: "ansible_python_version is version('3.7', '<')"
+
+- name: Check config
+  assert:
+    that:
+      - ydb_config is string or ydb_config is mapping
+    fail_msg: "ydb_config must be either a path (string) or data (dict)"
+
+- name: Check if ydb_config is a file path
+  set_fact:
+    is_config_file: "{{ ydb_config is string }}"
+  
+- name: Load configuration from file if path provided
+  when: "is_config_file|bool"
+  become: false
+  block:
+    - name: Verify config file exists
+      ansible.builtin.stat:
+        path: "{{ ydb_config }}"
+      register: config_file
+      delegate_to: localhost  # Проверяем файл на control node
+
+    - name: Fail if file missing
+      ansible.builtin.fail:
+        msg: "Config file {{ ydb_config }} not found"
+      when: not config_file.stat.exists
+

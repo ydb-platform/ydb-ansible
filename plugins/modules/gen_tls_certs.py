@@ -5,6 +5,13 @@ import io
 import os
 import tempfile
 
+DOCUMENTATION = r'''
+    name: get_tls_certs
+    plugin_type: module
+    short_description: Generate TLS certificates
+    description: |
+        Generate TLS certificates if needed
+'''
 
 def write_file(atomic_move):
     def write_file_impl(path, content):

@@ -1,9 +1,10 @@
 #! /bin/sh
-# Create the YDB database.
+# Create the YDB database and set quotas
 # Parameters:
 # * static node fqdn
 # * database name
 # * initial number of storage groups
+# * set quotas (1)
 
 set +e
 set +u
@@ -29,6 +30,7 @@ set -u
 if [ -f ${PASSFILE} ]; then
   # Username and password are passed in file for reconfiguration.
   . ${PASSFILE}
+  ydb version --disable-checks > /dev/null
   ydb --ca-file ${CAFILE} -e ${DB_ENDPOINT} -d ${DB_DOMAIN} \
     auth get-token -f > ${TOKEN}
 else
@@ -42,10 +44,9 @@ TMPLOG=`mktemp /tmp/ydbd.createdb.XXXXXX`
 trap "rm -f ${TMPLOG}" EXIT
 
 ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
-  admin database /{{ ydb_domain }}/${DB_NAME} create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1
+  admin database /{{ ydb_domain }}/${DB_NAME} \
+  create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1
 
-# Ensure success, e.g. no error messages even when the exit code is zero.
-set +e
 if grep -qE '^ERROR: ' ${TMPLOG}; then
   cat ${TMPLOG};
   exit 1

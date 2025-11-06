@@ -1,6 +1,15 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: workload
+    plugin_type: module
+    short_description: Run workload tests on YDB cluster
+    description: |
+        Run workload tests on YDB cluster
+        `workload` possible values: topic, kv, stock
+'''
+
 def main():
     argument_spec=dict(
         workload=dict(type='str', default='stock'),
@@ -35,18 +44,14 @@ def main():
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
-                    module.fail_json(**result)
-                ydb_cmd  = ['workload', 'topic', 'run', 'read']
-                rc, stdout, stderr = ydb_cli(ydb_cmd)
-                results.append(stdout)
-                if rc != 0:
-                    module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
                 ydb_cmd  = ['workload', 'topic', 'run', 'full']
                 rc, stdout, stderr = ydb_cli(ydb_cmd)
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
             else:
                 module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
@@ -63,18 +68,21 @@ def main():
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
                 ydb_cmd  = ['workload', 'kv', 'run', 'insert']
                 rc, stdout, stderr = ydb_cli(ydb_cmd)
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
                 ydb_cmd  = ['workload', 'kv', 'run', 'select']
                 rc, stdout, stderr = ydb_cli(ydb_cmd)
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
             else:
                 module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
@@ -91,18 +99,21 @@ def main():
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
                 ydb_cmd  = ['workload', 'stock', 'run', 'rand-user-hist']
                 rc, stdout, stderr = ydb_cli(ydb_cmd)
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
                 ydb_cmd  = ['workload', 'stock', 'run', 'add-rand-order']
                 rc, stdout, stderr = ydb_cli(ydb_cmd)
                 results.append(stdout)
                 if rc != 0:
                     module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')
+                    result['msg'] = stderr
                     module.fail_json(**result)
             else:
                 module.log(f'workload failed with rc: {rc}, stdout: {stdout}, stderr: {stderr}')

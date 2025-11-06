@@ -3,6 +3,13 @@ import time
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: wait_discover
+    plugin_type: module
+    short_description: Check until discovery become working
+    description: |
+        Check until discovery become working
+'''
 
 def main():
     argument_spec=dict(

@@ -7,6 +7,13 @@ import uuid
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
+DOCUMENTATION = r'''
+    name: init_storage
+    plugin_type: module
+    short_description: Initialize blobstorage (BS)
+    description: |
+        Initialize blobstorage (BS) regarding config version
+'''
 
 def check_storage_initialization(ydb_dstool, result):
     """Check if storage is already initialized using dstool"""

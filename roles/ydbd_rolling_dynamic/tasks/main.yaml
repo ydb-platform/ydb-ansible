@@ -3,3 +3,4 @@
 
 - name: YDB database nodes rolling restart
   include_tasks: "restart_dynamic.yaml"
+  loop: "{{ ydb_dynnodes }}"

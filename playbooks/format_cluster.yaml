@@ -15,25 +15,26 @@
 # WARNING: 
 #   This will destroy ALL DATA on all drives defined in inventory
 #   This will delete all `bin` and `cfg` folders for YDB on hosts
+#
+# REQUIRED SOFTWARE: lsblk, dd, xargs, awk, rm
+#
 
 - hosts: "{{ ansible_play_hosts | default('ydb') }}"
   become: true
+
+  roles:
+  - role: preflight
+
   tasks:
 
-    - name: stop services
+    - name: "Stop services"
       ansible.builtin.shell:
         cmd: "systemctl list-units | grep ydbd | awk '{print $1;}' | xargs systemctl stop"
       ignore_errors: True
       tags:
         - services
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
-  become: true
-  roles:
-  - role: preflight
-
-  tasks:
-    - name: Remove config dir
+    - name: "Remove config dir"
       ansible.builtin.file:
         path: "{{ ydb_dir }}/cfg"
         state: absent
@@ -53,24 +54,12 @@
       tags:
         - services
 
-- name: Format storage drives, erase metadata 
+- name: "Format storage drives, erase metadata "
   hosts: "{{ groups['ydbd_static'] if 'ydbd_static' in groups else groups['ydb'] }}"
-  tasks:
+  any_errors_fatal: true
+  vars:
+    ydb_format_disk: True
+    ydb_format_disk_prepare: False
+  roles:
 
-    - name: ask user confirmation for format drives
-      ansible.builtin.pause:
-        prompt: 'DATA LOSS: this will cause data loss if not handled with care! Enter "yes" to continue.'
-      register: prompt
-      run_once: true
-
-    - name: stop execution
-      ansible.builtin.fail:
-        msg: "aborting playbook execution"
-      when: prompt.user_input != "yes"
-
-    - name: Erase disk with dd
-      become: true
-      shell: dd if=/dev/zero of={{ item.name }} bs=1M count=100 status=none 
-      loop: "{{ ydb_disks }}"
-      tags:
-        - format
+    - role: ydb_platform.ydb.format_drives

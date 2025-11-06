@@ -4,6 +4,14 @@ from ansible.errors import AnsibleFilterError
 from ansible.module_utils.six import string_types
 from ansible.utils.display import Display
 
+DOCUMENTATION = r'''
+    name: yaml_filters
+    plugin_type: filter
+    short_description: YAML config parsing
+    description: |
+        YAML config parsing
+'''
+
 display = Display()
 
 class YDBDynCustomYAMLDumper(yaml.SafeDumper):

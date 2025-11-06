@@ -2,7 +2,7 @@
 
 
 # PLAYBOOK: ydb_platform.ydb.install_dynamic
-# PROPOSE : This playbook is designed to create YDB database in YDB cluster.
+# PROPOSE : This playbook is designed to install YDB dynamic(database) nodes in YDB cluster.
 #           
 # HOW TO USE:
 #     Use https://github.com/ydb-platform/ydb-ansible-examples as an example to prepare Ansible

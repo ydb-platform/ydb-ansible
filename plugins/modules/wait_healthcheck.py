@@ -5,6 +5,13 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils  import cli
 
 INVALID_PASSWORD = 'CLIENT_UNAUTHENTICATED'
+DOCUMENTATION = r'''
+    name: wait_healthcheck
+    plugin_type: module
+    short_description: Wait until healthcheck becomes GOOD
+    description: |
+        Wait until healthcheck becomes GOOD
+'''
 
 def main():
     argument_spec=dict(

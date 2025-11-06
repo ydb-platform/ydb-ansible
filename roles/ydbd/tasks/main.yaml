@@ -14,13 +14,13 @@
 
 - name: create ydb group
   group:
-    name: ydb
+    name: "{{ ydb_host_group }}"
     system: true
 
 - name: create ydb user
   user:
-    name: ydb
-    group: ydb
+    name: "{{ ydb_host_user }}"
+    group: "{{ ydb_host_group }}"
     groups: [disk, certs]
     system: true
     create_home: true
@@ -32,8 +32,9 @@
     path: "{{ ydb_dir }}/home/.ansible/tmp"
     state: directory
     recurse: true
-    group: ydb
-    owner: ydb
+    owner: "{{ ydb_host_user }}"
+    group: "{{ ydb_host_group }}"
+
 
 - name: Add aliases in bashrc
   lineinfile:
@@ -141,8 +142,8 @@
       copy:
         content: "{{ ydb_config | ydb_platform.ydb.ydb_config_to_yaml }}"
         dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
-        owner: ydb
-        group: ydb
+        owner: "{{ ydb_host_user }}"
+        group: "{{ ydb_host_group }}"
         mode: 0440
       when: ydb_config_is_map and not ydb_config_v2 | default(false)
 
@@ -150,8 +151,8 @@
       copy:
         src: "{{ ydb_config }}"
         dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
-        owner: ydb
-        group: ydb
+        owner: "{{ ydb_host_user }}"
+        group: "{{ ydb_host_group }}"
         mode: 0440
       when: not ydb_config_is_map and not ydb_config_v2 | default(false)
 

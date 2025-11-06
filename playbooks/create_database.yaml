@@ -16,7 +16,7 @@
 # ansible-playbook ydb_platform.ydb.create_database
 #
 # Create DB with new name
-# ansible-playbook ydb_platform.ydb.create_database --extra-vars "ydb_database_name=newdbname"
+# ansible-playbook ydb_platform.ydb.create_database --extra-vars "ydb_dbname=newdbname"
 #
 # WARNING: There will be no dynamic nodes for the new database. You have to create them by using
 # playbook `install_dynamic`

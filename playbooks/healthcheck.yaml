@@ -2,6 +2,8 @@
 - name: Healthcheck cluster
   hosts: "{{ ansible_play_hosts | default(groups['ydbd_static']) }}"
   run_once: true
+  vars:
+    ydb_host_user: ydb
   tasks:
 
     - name: prepare
@@ -23,7 +25,7 @@
       retries: 25
       delay: 20
       become: true
-      become_user: ydb
+      become_user: "{{ ydb_host_user }}"
       tags:
         - token
 
@@ -36,7 +38,7 @@
         token: "{{ ydb_credentials.token }}"
       any_errors_fatal: true
       become: true
-      become_user: ydb
+      become_user: "{{ ydb_host_user }}"
       tags:
         - discovery
 
@@ -54,6 +56,7 @@
       retries: 30
       delay: 10
       become: true
-      become_user: ydb
+      become_user: "{{ ydb_host_user }}"
       tags:
         - healthcheck
+      when: "(ydb_version is regex(\"\\d+\\..*\") or ydb_version is regex(\"\\d+-.*\")) and ydb_version is version('25.1', '<')" # Hack until YDB HC will handle 3-nodes-mirror-3-dc in 25.*

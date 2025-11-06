@@ -1,6 +1,13 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
 
+DOCUMENTATION = r'''
+    name: dynconfig_apply
+    plugin_type: module
+    short_description: Change dynamic config
+    description: |
+        This module designed to replace dynamic config
+'''
 
 def main():
     argument_spec=dict(

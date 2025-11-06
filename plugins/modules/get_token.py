@@ -10,6 +10,13 @@ SSL_HANDSHAKE_ERRORS = [
     'failed to connect to all addresses'
 ]
 
+DOCUMENTATION = r'''
+    name: get_token
+    plugin_type: module
+    short_description: Get YDB token
+    description: |
+        Get token from YDB cluster
+'''
 
 def main():
     argument_spec=dict(

@@ -8,6 +8,13 @@ except ImportError:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
+DOCUMENTATION = r'''
+    name: update_metadata
+    plugin_type: module
+    short_description: Update metadata in YDB config
+    description: |
+        Update metadata in YDB config
+'''
 
 def run_module():
     module_args = dict(
@@ -78,7 +85,7 @@ def run_module():
         # Increment existing version
         try:
             current_version = int(config['metadata']['version'])
-            config['metadata']['version'] = current_version + 1
+            # config['metadata']['version'] = current_version + 1
             result['changed'] = True
         except (ValueError, TypeError):
             module.fail_json(msg='Version in metadata must be an integer')

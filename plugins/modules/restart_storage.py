@@ -1,6 +1,13 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
 
+DOCUMENTATION = r'''
+    name: restart_storage
+    plugin_type: module
+    short_description: Restart storage nodes using ydbops
+    description: |
+        Restart storage nodes using YDBOps tool
+'''
 
 def main():
     argument_spec=dict(

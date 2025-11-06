@@ -8,7 +8,7 @@ namespace: ydb_platform
 name: ydb
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.2.0
+version: 1.2.5
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -19,7 +19,6 @@ authors:
 - Artem Gromov <artgromov@ydb.tech> artgromov
 - Eugene Arbatsky <elabpro@ydb.tech> elabpro
 - Maksim Zinal <zinal@ydb.tech> zinal
-
 
 ### OPTIONAL but strongly recommended
 # A short summary description of the collection

@@ -1,0 +1,12 @@
+---
+
+extra_links:
+  - description: YDB official website
+    url: https://ydb.tech
+  - description: YDB repository
+    url: https://github.com/ydb-platform/ydb
+  - description: YDB Ansible Collection repository
+    url: https://github.com/ydb-platform/ydb-ansible
+  - description: Examples with YDB Ansible configurations
+    url: https://github.com/ydb-platform/ydb-ansible-examples
+

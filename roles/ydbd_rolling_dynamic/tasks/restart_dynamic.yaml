@@ -2,24 +2,17 @@
 # YDB restart dynamic nodes on a single host
 
 - name: Restart the dynamic nodes on {{ inventory_hostname }}
-  throttle: 1
-  delay: 5
   ansible.builtin.systemd:
     state: restarted
-    name: "ydbd-{{ ydb_database_name | default(ydb_dbname, true) }}-{{ item.instance }}"
+    name: "ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}"
   any_errors_fatal: true
   become: true
   become_method: sudo
   become_user: root
-  loop: "{{ ydb_dynnodes }}"
 
 - name: Wait for dynamic nodes on {{ inventory_hostname }} to start listening
-  throttle: 1
   ansible.builtin.wait_for:
     port: "{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
-    delay: 3
-    sleep: 3
-  loop: "{{ ydb_dynnodes }}"
 
 - name: Additional delay to settle the dynamic nodes
   ansible.builtin.pause: seconds={{ ydb_dynnode_restart_sleep_seconds | default(5) }}
