@@ -167,54 +167,14 @@
 - name: flush handlers
   meta: flush_handlers
 
-- name: format drives confirmation block
-  when: ydb_allow_format_drives and not ydb_skip_data_loss_confirmation_prompt
-  block:
-    - name: ask user confirmation for format drives
-      ansible.builtin.pause:
-        prompt: 'RISK OF DATA LOSS: "ydb_allow_format_drives" is set to "true": this may cause data loss if not handled with care! Enter "yes" to continue.'
-      register: prompt
-      run_once: true
-
-    - name: stop execution
-      ansible.builtin.fail:
-        msg: "aborting playbook execution"
-      when: prompt.user_input != "yes"
-
-- name: "Register ydb_drives"
+- name: Set variable
   ansible.builtin.set_fact:
-    ydb_drives: "{{ ydb_disks }}"
-  when: ydb_drives is not defined
+    ydb_format_disk: False
+    ydb_format_disk_prepare: True
 
-- name: "Not all drives described in Ansible configuration"
-  ansible.builtin.assert:
-    that:
-      - "ydb_drives|length <= ydb_disks|length"
-      - "ydb_drives|length > 0"
-    fail_msg: "YDB Config for {{ inventory_hostname }} has more drives than Ansible configuration"
-    quiet: true
-
-- name: "Get list of block devices on a host"
-  command: lsblk -d --noheadings --output NAME
-  register: local_disks
-
-- name: "Check YDB drives"
-  ydb_platform.ydb.check_drives_presence:
-    ydb_drives: "{{ ydb_drives }}"
-    ydb_disks: "{{ ydb_disks }}"
-    host_drives: "{{ local_disks.stdout_lines }}"
-
-- name: "Prepare drives"
-  ydb_platform.ydb.drive_prepare:
-    name: "{{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }}"
-    label: "{{ item['label'] }}"
-    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
-    ld_library_path: "{{ ydb_dir }}/lib"
-    ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
-    allow_format: "{{ ydb_allow_format_drives }}"
-  with_items: "{{ ydb_drives }}"
-  become: true
+- name: Format drives
+  ansible.builtin.import_role:
+    name: ydb_platform.ydb.format_drives
 
 - name: generate random temporary config file path for v2 node init
   set_fact:

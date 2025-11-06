@@ -57,45 +57,9 @@
 - name: "Format storage drives, erase metadata "
   hosts: "{{ groups['ydbd_static'] if 'ydbd_static' in groups else groups['ydb'] }}"
   any_errors_fatal: true
-  tasks:
+  vars:
+    ydb_format_disk: True
+    ydb_format_disk_prepare: False
+  roles:
 
-    - name: "Not all drives described in Ansible configuration"
-      ansible.builtin.assert:
-        that:
-          - "ydb_drives|length <= ydb_disks|length"
-          - "ydb_drives|length > 0"
-        fail_msg: "YDB Config for {{ inventory_hostname }} has more drives than Ansible configuration"
-        quiet: true
-
-    - name: "Get list of block devices on a host"
-      command: lsblk -d --noheadings --output NAME
-      register: local_disks
-
-    - name: "Check YDB drives"
-      ydb_platform.ydb.check_drives_presence:
-        ydb_drives: "{{ ydb_drives }}"
-        ydb_disks: "{{ ydb_disks }}"
-        host_drives: "{{ local_disks.stdout_lines }}"
-
-    - name: "Ask user confirmation for format drives"
-      ansible.builtin.pause:
-        prompt: 'DATA LOSS: this will cause data loss if not handled with care! Enter "yes" to continue.'
-      register: prompt
-      run_once: true
-
-    - name: "Stop execution"
-      ansible.builtin.fail:
-        msg: "aborting playbook execution"
-      when: prompt.user_input != "yes"
-
-    - name: "Register ydb_drives"
-      ansible.builtin.set_fact:
-        ydb_drives: "{{ ydb_disks }}"
-      when: ydb_drives is not defined
-
-    - name: "Erase disk with dd"
-      become: true
-      shell: dd if=/dev/zero of={{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join(),"/dev/null") }} bs=1M count=100 status=none 
-      loop: "{{ ydb_drives }}"
-      tags:
-        - format
+    - role: ydb_platform.ydb.format_drives
