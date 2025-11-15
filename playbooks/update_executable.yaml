@@ -74,10 +74,7 @@
       tags:
         - no_restart
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
-  tasks:
-  - name: Restart YDB cluster
-    become: true
-    ansible.builtin.import_playbook: restart.yaml
-    tags:
-      - restart
+- name: Restart YDB cluster
+  ansible.builtin.import_playbook: ydb_platform.ydb.restart
+  tags:
+    - no_restart
