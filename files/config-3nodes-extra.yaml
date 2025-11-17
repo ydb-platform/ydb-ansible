@@ -198,6 +198,10 @@ audit_config:
     format: JSON
     log_name: audit
 
+immediate_controls_config:
+  vdisk_controls:
+    enable_local_sync_log_data_cutting: true
+
 # Actor system config is appended to the configuration file by Ansible task.
 # Provided here in the commented form for reference
 #actor_system_config:
