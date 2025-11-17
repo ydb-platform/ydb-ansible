@@ -77,4 +77,4 @@
 - name: Restart YDB cluster
   ansible.builtin.import_playbook: ydb_platform.ydb.restart
   tags:
-    - no_restart
+    - restart
