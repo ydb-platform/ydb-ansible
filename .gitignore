@@ -7,3 +7,4 @@
 .vscode/*
 ydb-token-file
 ydbd-token-file
+playbooks/test*
