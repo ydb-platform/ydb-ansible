@@ -75,7 +75,7 @@ Overall installation is performed according to the [official instruction](https:
 1. Ensure that you have Python 3.8 or later installed on all hosts of the cluster.
 1. Configure the passwordless SSH access to all hosts of the cluster.
 1. Configure the [priviledge escalation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html) on all hosts of the cluster, such as passwordless sudo for the user account with the SSH access.
-1. Install `ansible-core` version 2.11-2.15. Ansible 2.10 or older is not supported.
+1. Install `ansible-core` version 2.11-2.18. Ansible 2.10 or older is not supported. Ansible 2.19 and newer are not supported yet.
 1. Install the required YDB Ansible collections from Github:
 
     ```bash
