@@ -57,7 +57,8 @@ issues: https://github.com/ydb-platform/ydb-ansible/issues
 build_ignore: 
 - '.git*'
 - '.vscod*'
-- 'playbooks/test*'
+- .vscode
+- 'playbooks/test*.yaml'
 
 # A dict controlling use of manifest directives used in building the collection artifact. The key 'directives' is a
 # list of MANIFEST.in style
