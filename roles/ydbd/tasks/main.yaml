@@ -74,7 +74,13 @@
 
     - name: gather host IP addresses for certificate generation
       set_fact:
-        host_ip_addresses: "{{ (ansible_all_ipv4_addresses + [ansible_default_ipv4.address]) | unique | join(' ') }}"
+        host_ip_addresses: >-
+          {{ (
+            (ansible_all_ipv4_addresses | default([]))
+            + ([ansible_default_ipv4.address] if ansible_default_ipv4.address is defined else [])
+            + (ansible_all_ipv6_addresses | default([]))
+            + ([ansible_default_ipv6.address] if ansible_default_ipv6.address is defined else [])
+          ) | unique | join(' ') }}
       delegate_to: "{{ inventory_hostname }}"
       delegate_facts: false
 
