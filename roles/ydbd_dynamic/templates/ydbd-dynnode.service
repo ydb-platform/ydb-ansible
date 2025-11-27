@@ -53,6 +53,8 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
     --grpc-ca {{ ydb_dir }}/certs/ca.crt \
     --ca {{ ydb_dir }}/certs/ca.crt \
     --mon-cert {{ ydb_dir }}/certs/web.pem \
+    --grpc-cert {{ ydb_dir }}/certs/node.crt \
+    --grpc-key {{ ydb_dir }}/certs/node.key \
 {% for ydb_broker in ydb_brokers %}
     --node-broker grpcs://{{ ydb_broker }}:2135{% if not loop.last %} \{% endif +%}
 {% endfor %}
