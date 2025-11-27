@@ -44,6 +44,14 @@
   tags:
     - format
 
+- name: "Remove labels"
+  become: true
+  shell: rm -f /dev/disk/by-partlabel/{{ item['label'] }}
+  loop: "{{ ydb_drives }}"
+  when: ydb_format_disk|bool is defined and ydb_format_disk|bool == True
+  tags:
+    - format
+
 - name: "Prepare drives"
   ydb_platform.ydb.drive_prepare:
     name: "{{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }}"
