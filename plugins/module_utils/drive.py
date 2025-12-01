@@ -29,15 +29,15 @@ def create_partition_if_not_exists(module, name, label):
 
 
 def create_partition_parted(module, name, label, parted_bin, partprobe_bin):
-    module.run_command([parted_bin, '--script', name, 'mklabel', 'gpt'])
-    module.run_command([parted_bin, '--script', name, 'mkpart', label, '0%', '100%', '--align', 'optimal'])
-    module.run_command([partprobe_bin, name])
+    module.run_command([parted_bin, '--script', name, 'mklabel', 'gpt'], check_rc=True)
+    module.run_command([parted_bin, '--script', name, 'mkpart', label, '0%', '100%', '--align', 'optimal'], check_rc=True)
+    module.run_command([partprobe_bin, name], check_rc=True)
 
 
 def create_partition_sgdisk(module, name, label, sgdisk_bin):
-    module.run_command([sgdisk_bin, '--clear', name])
-    module.run_command([sgdisk_bin, '--new=1:2048:0', name])
-    module.run_command([sgdisk_bin, f'--change-name=1:{label}', name])
+    module.run_command([sgdisk_bin, '--clear', name], check_rc=True)
+    module.run_command([sgdisk_bin, '--new=1:2048:0', name], check_rc=True)
+    module.run_command([sgdisk_bin, f'--change-name=1:{label}', name], check_rc=True)
 
 
 def prepare_partition_using_dd(module, label_path):
