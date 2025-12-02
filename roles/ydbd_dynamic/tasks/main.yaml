@@ -104,14 +104,6 @@
 - name: flush handlers
   meta: flush_handlers
 
-- name: start dynamic nodes
-  ansible.builtin.systemd:
-    name: "ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}.service"
-    state: started
-    enabled: true
-  loop: "{{ ydb_dynnodes }}"
-  when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
-
 - name: Get YDB token
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -123,6 +115,7 @@
     retry_on_ssl_error: true
   become: true
   become_user: "{{ ydb_host_user }}"
+  when: ydb_credentials is not defined or 'token' not in ydb_credentials
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
@@ -134,7 +127,7 @@
     dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
-    token: "{{ root_token.token | default('') }}"
+    token: "{{ ydb_credentials.token | default('') }}"
   run_once: true
   become_user: "{{ ydb_host_user }}"
   tags:
@@ -148,23 +141,13 @@
   tags:
     - create_database
 
-# - name: Create YDB database
-#   ydb_platform.ydb.create_database:
-#     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
-#     ld_library_path: "{{ ydb_dir }}/lib"
-#     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-#     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
-#     database: "/{{ ydb_domain }}/{{ ydb_dbname }}"
-#     token: "{{ ydb_credentials.token }}"
-#     pool_kind: "{{ ydb_pool_kind }}"
-#     groups: "{{ ydb_database_groups }}"
-#   become: true
-#   become_user: "{{ ydb_host_user }}"
-#   run_once: true
-#   retries: 50
-#   delay: 15
-#   tags:
-#     - create_database
+- name: start dynamic nodes
+  ansible.builtin.systemd:
+    name: "ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}.service"
+    state: started
+    enabled: true
+  loop: "{{ ydb_dynnodes }}"
+  when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
 
 - name: Wait for ydb discovery to start working locally
   ydb_platform.ydb.wait_discovery:
