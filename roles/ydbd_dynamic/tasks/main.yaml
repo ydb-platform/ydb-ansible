@@ -115,7 +115,7 @@
     retry_on_ssl_error: true
   become: true
   become_user: "{{ ydb_host_user }}"
-  when: ydb_credentials is not defined or 'token' not in ydb_credentials
+  when: "ydb_credentials is not defined or 'token' not in ydb_credentials"
   run_once: true
   register: ydb_credentials
   until: "'token' in ydb_credentials"
