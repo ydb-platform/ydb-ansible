@@ -116,7 +116,7 @@
   ydb_platform.ydb.get_token:
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
     database: "/{{ ydb_domain }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
@@ -133,7 +133,7 @@
   ydb_platform.ydb.pdisk_active:
     dstool_bin: "{{ ydb_dir }}/bin/ydb-dstool"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:2135"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
     token: "{{ root_token.token | default('') }}"
   run_once: true
   become_user: "{{ ydb_host_user }}"
@@ -171,7 +171,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_dbname, true) }}"
     token: "{{ ydb_credentials.token }}"
   become: true
@@ -189,7 +189,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers) | flatten(levels=1) | first }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_dbname, true) }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
