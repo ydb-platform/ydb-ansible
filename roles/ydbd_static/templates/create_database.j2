@@ -18,6 +18,13 @@ PASSFILE={{ ydb_dir }}/certs/secret
 DB_NAME="$2"
 DB_GROUPS="$3"
 
+#
+# First device for YDB on the host for estimating storage size
+# YDBOPS-12647
+#
+DISK_DEVICE="{{ ydb_disks[0].name }}"
+YDB_SCHEMA="{{ ydb_config_dict.static_erasure }}"
+
 LD_LIBRARY_PATH={{ ydb_dir }}/lib
 export LD_LIBRARY_PATH
 
@@ -47,6 +54,80 @@ ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
   admin database /{{ ydb_domain }}/${DB_NAME} \
   create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1
 
+if grep -qE '^ERROR: ' ${TMPLOG}; then
+  cat ${TMPLOG};
+  exit 1
+fi
+
+# If quotas are required
+# YDBOPS-12647
+
+if [ "$4" -eq "1" ]; then
+
+  if [ ! -b "$DISK_DEVICE" ]; then
+      echo "ERROR: Device $DISK_DEVICE does not exist or is not a block device" >&2
+      exit 1
+  fi
+
+  disk_size_bytes=$(blockdev --getsize64 "$DISK_DEVICE")
+  if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to get size of device $DISK_DEVICE" >&2
+      exit 1
+  fi
+
+  DISK_SIZE_GB=$(echo "scale=10; $disk_size_bytes / (1024*1024*1024)" | bc | cut -f 1 -d '.')
+
+  # Set formula parameters based on YDB schema
+  case "$YDB_SCHEMA" in
+      mirror-3-dc)
+          D=9
+          K=5
+          N=16
+          ;;
+      block-4-2)
+          D=8
+          K=2
+          N=16
+          ;;
+      *)
+          echo "ERROR: Unknown pool type: $YDB_SCHEMA" >&2
+          exit 1
+          ;;
+  esac
+
+  # Calculate base value
+  base_value=$(echo "scale=10; 0.995 * $DISK_SIZE_GB * $DB_GROUPS * $D / ($K * $N)" | bc )
+
+  # Round down to tens of GB
+  rounded_value=$(echo "($base_value / 10) * 10" | bc | awk -F. '{print int($1)}')
+
+  # Convert to bytes
+  hard_quota_bytes=$(echo "$rounded_value * 1073741824" | bc | awk -F. '{print $1}')
+  soft_quota_bytes=$(echo "$hard_quota_bytes * 0.95" | bc | awk -F. '{print $1}')
+
+  # Display disk info and calculated quotas
+  echo "Disk Information:"
+  echo "-----------------"
+  echo "Device:          $DISK_DEVICE"
+  echo "Raw Size:        $DISK_SIZE_GB Gb"
+  echo ""
+
+  echo "Calculated quotas for database '$DB_NAME':"
+  echo "-------------------------------------------"
+  printf "%-20s | %-15s | %s\n" "Quota Type" "Raw Bytes"
+  echo "-------------------------------------------"
+  printf "%-20s | %-15s | %s\n" "Hard Quota" "$hard_quota_bytes"
+  printf "%-20s | %-15s | %s\n" "Soft Quota" "$soft_quota_bytes"
+  echo "-------------------------------------------"
+  echo ""
+
+  ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
+    admin database /{{ ydb_domain }}/${DB_NAME} \
+    quotas change --data-size-hard-quota $hard_quota_bytes --data-size-soft-quota $soft_quota_bytes >>${TMPLOG} 2>&1
+fi
+
+# Ensure success, e.g. no error messages even when the exit code is zero.
+set +e
 if grep -qE '^ERROR: ' ${TMPLOG}; then
   cat ${TMPLOG};
   exit 1
