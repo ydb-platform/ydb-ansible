@@ -6,6 +6,7 @@ Overview
 --------
 
 By default YDB is using all available cores. There're several way to split available cores between YDB instances:
+
 - define number of cores for different types of instances
 - pin exactly core to instances
 
