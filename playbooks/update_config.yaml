@@ -76,7 +76,7 @@
       ydb_bin: "{{ ydb_dir }}/bin/ydb"
       ld_library_path: "{{ ydb_dir }}/lib"
       ca_file: "{{ ydb_dir }}/certs/ca.crt"
-      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
       database: "/{{ ydb_domain }}"
       user: "{{ ydb_user }}"
       password: "{{ ydb_password }}"
