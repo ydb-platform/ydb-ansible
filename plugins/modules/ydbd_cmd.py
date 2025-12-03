@@ -24,8 +24,11 @@ def main():
         ydbd_cli = cli.YDBD.from_module(module)
         cmd = module.params.get('cmd')
 
-        rc,stdout,_ = ydbd_cli(cmd.split(" "))
+        rc,stdout,stderr = ydbd_cli(cmd.split(" "))
         result['stdout'] = stdout
+        if rc != 0:
+            result['stderr'] = stderr
+            module.fail_json(**result)
         result['changed'] = True
 
         module.exit_json(**result)

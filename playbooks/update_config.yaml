@@ -285,3 +285,6 @@
 - name: Restart YDB cluster (V1 configuration only)
   ansible.builtin.import_playbook: restart.yaml
   when: not ydb_config_v2 | default(false)
+  tags:
+    - restart
+
