@@ -1,0 +1,17 @@
+---
+
+
+# PLAYBOOK: ydb_platform.ydb.run_dstool
+# PROPOSE : This playbook is designed to execute a command with YDB DSTool on a static server
+#           
+# EXAMPLE:
+#
+# get help for admin section
+#   ansible-playbook ydb_platform.ydb.run_dstool --extra-vars 'cmd="group add --pool-name /Root/db:ssd --groups 1"'
+#
+
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  become: true
+  run_once: true
+  roles:
+  - role: run_dstool
