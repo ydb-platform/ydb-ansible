@@ -21,10 +21,10 @@ def main():
     result = {'changed': False}
     try:
         
-        ydbd_cli = cli.DsTool.from_module(module)
+        ydb_dstool = cli.DsTool.from_module(module)
         cmd = module.params.get('cmd')
 
-        rc,stdout,stderr = ydbd_cli(cmd.split(" "))
+        rc,stdout,stderr = ydb_dstool(cmd.split(" "))
         result['stdout'] = stdout
         if rc != 0:
             result['stderr'] = stderr
