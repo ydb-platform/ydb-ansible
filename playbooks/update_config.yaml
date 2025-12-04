@@ -167,20 +167,22 @@
         retries: 5
         delay: 5
 
-      - name: update configuration with selectors
-        ydb_platform.ydb.apply_config_selectors:
-          config: "{{ ydb_temp_config_path }}"
-          output_file: "{{ ydb_temp_config_path }}"
-          database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
-          storage_cores: "{{ydb_cores_static | default(omit) }}"
-        become: true
-        become_user: ydb
-        run_once: true
-        when: ydb_cores_dynamic is defined or ydb_cores_static is defined
-        register: selectors_result
-        until: selectors_result is succeeded
-        retries: 5
-        delay: 5
+      # - name: update configuration with selectors
+      #   ydb_platform.ydb.apply_config_selectors:
+      #     config: "{{ ydb_temp_config_path }}"
+      #     output_file: "{{ ydb_temp_config_path }}"
+      #     database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
+      #     storage_cores: "{{ydb_cores_static | default(omit) }}"
+      #   become: true
+      #   become_user: ydb
+      #   run_once: true
+      #   when: ydb_cores_dynamic is defined or ydb_cores_static is defined
+      #   register: selectors_result
+      #   until: selectors_result is succeeded
+      #   retries: 5
+      #   delay: 5
+      #   tags:
+      #     - selectors
 
       - name: update metadata in configuration
         ydb_platform.ydb.update_metadata:
