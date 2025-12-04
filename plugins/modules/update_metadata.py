@@ -84,14 +84,10 @@ def run_module():
             config['metadata']['version'] = 1
             result['changed'] = True
     else:
-        # Increment existing version
+        # Increment existing version (do need for V2 since YDB CLI 2.21.0)
         try:
             current_version = int(config['metadata']['version'])
-            if "25.3" in ydbd_version or "25-3" in ydbd_version:
-                # Hack for 25.3
-                config['metadata']['version'] = current_version
-            else:
-                config['metadata']['version'] = current_version + 1
+            config['metadata']['version'] = current_version
             result['changed'] = True
         except (ValueError, TypeError):
             module.fail_json(msg='Version in metadata must be an integer')
@@ -109,10 +105,8 @@ def run_module():
 
     module.exit_json(**result)
 
-
 def main():
     run_module()
-
 
 if __name__ == '__main__':
     main()

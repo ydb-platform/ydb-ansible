@@ -135,6 +135,16 @@
   - name: V2 configuration management block
     block:
 
+      - name: Get YDB CLI version
+        run_once: true
+        shell: "{{ ydb_dir }}/bin/ydb version | awk '{print $3;}'"
+        register: ydb_cli_version
+
+      - name: Check YDB CLI version (it must be above 2.21)
+        when: "ydb_cli_version is version('2.20', '<=')"
+        ansible.builtin.fail:
+          msg: "Aborting playbook execution. Install YDB CLI 2.21 or newer. Current version is {{ ydb_cli_version }}"
+
       - name: get current cluster configuration metadata
         ydb_platform.ydb.cluster_config:
           ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -218,10 +228,6 @@
         delay: 5
         # when: not ydb_config_is_map
       
-      - name: pause
-        ansible.builtin.pause:
-          seconds: 60
-
       - name: update cluster configuration using YDB config management V2
         ydb_platform.ydb.cluster_config:
           ydb_bin: "{{ ydb_dir }}/bin/ydb"
