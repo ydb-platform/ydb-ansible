@@ -16,12 +16,12 @@ def main():
     argument_spec = dict(
         cmd=dict(type='str', default='')
     )
-    cli.DSTool.add_arguments(argument_spec)
+    cli.DsTool.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
     result = {'changed': False}
     try:
         
-        ydbd_cli = cli.DSTool.from_module(module)
+        ydbd_cli = cli.DsTool.from_module(module)
         cmd = module.params.get('cmd')
 
         rc,stdout,stderr = ydbd_cli(cmd.split(" "))
