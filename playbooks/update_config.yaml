@@ -141,9 +141,9 @@
         register: ydb_cli_version
 
       - name: Check YDB CLI version (it must be above 2.21)
-        when: "ydb_cli_version is version('2.20', '<=')"
+        when: "ydb_cli_version.stdout is version('2.20', '<=')"
         ansible.builtin.fail:
-          msg: "Aborting playbook execution. Install YDB CLI 2.21 or newer. Current version is {{ ydb_cli_version }}"
+          msg: "Aborting playbook execution. Install YDB CLI 2.21 or newer. Current version is {{ ydb_cli_version.stdout }}"
 
       - name: get current cluster configuration metadata
         ydb_platform.ydb.cluster_config:
