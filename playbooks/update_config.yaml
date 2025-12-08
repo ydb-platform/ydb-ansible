@@ -20,11 +20,12 @@
 
   - ansible.builtin.assert:
       that:
-        - "{{ item.var1 is defined}}"
-      fail_msg: "Either {{ item.var1 }} variable is required"
+        - "{{ item is defined}}"
+      fail_msg: "Either {{ item }} variable is required"
     loop:
-      - { var1: "ydb_cores_static" }
-      - { var1: "ydb_cores_dynamic" }
+      - "ydb_cores_static"
+      - "ydb_cores_dynamic"
+      - "ydb_tls_dir"
   tags:
     - storage
     - static
@@ -141,6 +142,7 @@
         register: ydb_cli_version
 
       - name: Check YDB CLI version (it must be above 2.21)
+        run_once: true
         when: "ydb_cli_version.stdout is version('2.20', '<=')"
         ansible.builtin.fail:
           msg: "Aborting playbook execution. Install YDB CLI 2.21 or newer. Current version is {{ ydb_cli_version.stdout }}"

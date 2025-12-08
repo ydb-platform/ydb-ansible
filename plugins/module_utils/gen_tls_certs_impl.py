@@ -162,7 +162,7 @@ DNS.1={node}
     create_directory(dest_dir)
     run_command(f'cp -v {os.path.join(certs_dir, "ca.crt")} {dest_dir}/')
 
-    node = fqdn.strip() + "."
+    node = fqdn.strip()
     short_node = node.split(".")[0]
     safe_node = short_node.replace("*", "_").replace("$", "_").replace("/", "_")
     make_node_conf(safe_node, short_node, node)
