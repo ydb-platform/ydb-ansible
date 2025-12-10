@@ -72,7 +72,6 @@ def main():
     argument_spec = dict(
         config_file = dict(type='str', required=False),
         mode        = dict(type='str', default='replace', choices=['replace', 'fetch','load']),
-        variable    =  dict(type='str', required=False)
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -82,17 +81,16 @@ def main():
         ydb_cli     = cli.YDB.from_module(module)
         config_file = module.params.get('config_file')
         mode        = module.params.get('mode')
-        variable    = module.params.get('variable')
 
         if mode == 'load':
             with open(config_file, 'r') as f:
                 try:
                     local_config = safe_load(f)
-                    self.inventory.set_variable(variable, local_config)
                 except yaml.YAMLError as e:
                     result['msg'] = f'failed to parse configuration file {config_file}: {e}'
                     module.fail_json(**result)
             result['msg'] = 'configuration is loaded into variable'
+            result['config'] = local_config
             module.exit_json(**result)
 
         if mode == 'fetch':

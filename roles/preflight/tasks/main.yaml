@@ -64,7 +64,7 @@
         msg: "Config file {{ ydb_config }} not found"
       when: is_config_file|bool and not config_file.stat.exists
 
-    - name: Read configuration file into ansible variable
+    - name: Read configuration file into variable
       ydb_platform.ydb.cluster_config:
           ydb_bin: ""
           ld_library_path: ""
@@ -72,8 +72,13 @@
           endpoint: ""
           token: ""
           config_file: "{{ ydb_config }}"
-          variable: "ydb_config_dict"
           mode: load
       delegate_to: 127.0.0.1
       run_once: true
+      register: cluster_config_result
       when: is_config_file|bool
+    
+    - name: Register ydb_config_dict
+      ansible.builtin.set_fact:
+        ydb_config_dict: "{{ cluster_config_result.config }}"
+      when: cluster_config_result is defined and is_config_file|bool
