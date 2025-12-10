@@ -218,15 +218,15 @@
       become: true
       become_user: "{{ ydb_host_user }}"
 
-    # - name: update configuration with selectors
-    #   ydb_platform.ydb.apply_config_selectors:
-    #     config: "{{ ydb_temp_config_path }}"
-    #     output_file: "{{ ydb_temp_config_path }}"
-    #     database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
-    #     storage_cores: "{{ ydb_cores_static | default(omit) }}"
-    #   become: true
-    #   become_user: "{{ ydb_host_user }}"
-    #   when: ydb_config_v2 and (ydb_cores_dynamic is defined or ydb_cores_static is defined)
+    - name: update configuration with selectors
+      ydb_platform.ydb.apply_config_selectors:
+        config: "{{ ydb_temp_config_path }}"
+        output_file: "{{ ydb_temp_config_path }}"
+        database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
+        storage_cores: "{{ ydb_cores_static | default(omit) }}"
+      become: true
+      become_user: "{{ ydb_host_user }}"
+      when: ydb_config_v2 and (ydb_cores_dynamic is defined or ydb_cores_static is defined)
 
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:
