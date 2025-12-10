@@ -56,11 +56,11 @@ class InventoryModule(BaseInventoryPlugin):
             with open(ydb_config, "r") as file:
                 yaml_config = safe_load(file)
 
+                self.inventory.groups[group_name].set_variable('ydb_config_dict', yaml_config)
+
                 if 'config' in yaml_config:
                     """ V2 Config """
                     yaml_config = yaml_config['config']
-
-                self.inventory.groups[group_name].set_variable('ydb_config_dict', yaml_config)
 
                 ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
                 self.inventory.groups[group_name].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)

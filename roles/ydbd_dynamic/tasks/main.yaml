@@ -58,19 +58,19 @@
 
 - name: set default for ydb_pool_kind from parsed config file
   ansible.builtin.set_fact:
-    ydb_pool_kind: "{{ ydb_config_dict.default_disk_type | lower }}"
+    ydb_pool_kind: "{{ ydb_config_dict.config.default_disk_type | lower }}"
   when:
     - ydb_pool_kind is not defined
     - ydb_config_dict is defined
-    - ydb_config_dict.default_disk_type is defined
+    - ydb_config_dict.config.default_disk_type is defined
 
 - name: set default for ydb_pool_kind when ydb_config is a map
   ansible.builtin.set_fact:
-    ydb_pool_kind: "{{ ydb_config.default_disk_type | lower }}"
+    ydb_pool_kind: "{{ ydb_config.config.default_disk_type | lower }}"
   when:
     - ydb_pool_kind is not defined
     - ydb_config_is_map is defined and ydb_config_is_map
-    - ydb_config.default_disk_type is defined
+    - ydb_config.config.default_disk_type is defined
 
 - name: require ydb_pool_kind if not specified and can't determine from ydb_config
   ansible.builtin.assert:

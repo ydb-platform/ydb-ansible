@@ -23,7 +23,7 @@ DB_GROUPS="$3"
 # YDBOPS-12647
 #
 DISK_DEVICE="{{ ydb_disks[0].name }}"
-YDB_SCHEMA="{{ ydb_config_dict.static_erasure | default(ydb_config_dict.erasure) }}"
+YDB_SCHEMA="{{ ydb_config_dict.static_erasure | default(ydb_config_dict.config.erasure) }}"
 
 LD_LIBRARY_PATH={{ ydb_dir }}/lib
 export LD_LIBRARY_PATH

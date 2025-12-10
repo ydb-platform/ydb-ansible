@@ -78,7 +78,8 @@
       register: cluster_config_result
       when: is_config_file|bool
     
-    - name: Register ydb_config_dict
+    - name: Register ydb_config_dict from config file
       ansible.builtin.set_fact:
         ydb_config_dict: "{{ cluster_config_result.config }}"
       when: cluster_config_result is defined and is_config_file|bool
+
