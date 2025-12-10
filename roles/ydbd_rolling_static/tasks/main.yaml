@@ -73,7 +73,7 @@
       ydb_platform.ydb.restart_storage:
         ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
         ydbops_endpoint: "grpcs://{{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }}:2135"
-        ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }}"
+        ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} {{ '-i ' + ansible_ssh_private_key_file if ansible_ssh_private_key_file is defined }}"
         ca_file: "{{ ydb_tls_dir }}/ca.crt"
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
@@ -87,7 +87,7 @@
       ydb_platform.ydb.restart_storage:
         ydbops_bin: "{{ ansible_config_file | dirname }}/bin/ydbops"
         ydbops_endpoint: "grpcs://{{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }}:2135"
-        ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} -i {{ ansible_ssh_private_key_file }}"
+        ssh_args: "ssh {{ ansible_ssh_common_args }} -l {{ ansible_user }} {{ '-i ' + ansible_ssh_private_key_file if ansible_ssh_private_key_file is defined }}"
         ca_file: "{{ ydb_tls_dir }}/ca.crt"
         token: "{{ ydb_credentials.token }}"
         availability_mode: "{{ availability_mode }}"
