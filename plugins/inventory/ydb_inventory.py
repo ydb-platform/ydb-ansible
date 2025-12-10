@@ -1,8 +1,7 @@
 from ansible.plugins.inventory import BaseInventoryPlugin
-import yaml
 import copy
 from ansible.errors import AnsibleError
-# from ansible.template import Templar
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
 DOCUMENTATION = r'''
     name: ydb_inventory
@@ -55,7 +54,7 @@ class InventoryModule(BaseInventoryPlugin):
 
         try:
             with open(ydb_config, "r") as file:
-                yaml_config = yaml.safe_load(file)
+                yaml_config = safe_load(file)
 
                 if 'config' in yaml_config:
                     """ V2 Config """
