@@ -89,9 +89,9 @@ def main():
                 try:
                     local_config = safe_load(f)
                     self.inventory.set_variable(variable, local_config)
-            except yaml.YAMLError as e:
-                result['msg'] = f'failed to parse configuration file {config_file}: {e}'
-                module.fail_json(**result)
+                except yaml.YAMLError as e:
+                    result['msg'] = f'failed to parse configuration file {config_file}: {e}'
+                    module.fail_json(**result)
             result['msg'] = 'configuration is loaded into variable'
             module.exit_json(**result)
 
