@@ -1,12 +1,6 @@
 import os
-import yaml
-try:
-    from yaml import CSafeLoader as SafeLoader
-except ImportError:
-    from yaml import SafeLoader
-
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
 DOCUMENTATION = r'''
     name: update_metadata
@@ -47,7 +41,7 @@ def run_module():
         # Load YAML config
         try:
             with open(config_input, 'r') as f:
-                config = yaml.load(f, Loader=SafeLoader)
+                config = safe_load(f)
         except Exception as e:
             module.fail_json(msg=f'Failed to parse YAML: {str(e)}')
 
