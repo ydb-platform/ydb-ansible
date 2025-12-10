@@ -89,7 +89,7 @@ def run_module():
                     'actor_system_config': yaml_tag ({
                         'cpu_count': database_cores,
                         'node_type': 'COMPUTE'
-                    ,'!inherit')
+                    } ,'!inherit')
                 },
                 'description': database_node_description,
                 'selector': {
