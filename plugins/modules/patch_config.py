@@ -164,7 +164,10 @@ def main():
         # Write to output file if specified
         if output_file and not module.check_mode:
             with open(output_file, 'w') as f:
-                safe_dump(config, f)
+                if 'config' in config:
+                    safe_dump(config, f)
+                else:
+                    safe_dump({"config": config}, f)
             result['msg'] = f'patched configuration written to {output_file}'
         else:
             result['msg'] = 'configuration patched successfully'

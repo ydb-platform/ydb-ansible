@@ -56,7 +56,7 @@ class InventoryModule(BaseInventoryPlugin):
             with open(ydb_config, "r") as file:
                 yaml_config = safe_load(file)
 
-                self.inventory.groups[group_name].set_variable('ydb_config_dict', yaml_config)
+                self.inventory.groups[group_name].set_variable('ydb_config', yaml_config)
 
                 if 'config' in yaml_config:
                     """ V2 Config """
@@ -73,8 +73,6 @@ class InventoryModule(BaseInventoryPlugin):
 
                 if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
                     self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
-
-                self.inventory.groups[group_name].set_variable('ydb_config', yaml_config)
 
                 domain = 'Root'
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
