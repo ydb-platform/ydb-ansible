@@ -154,7 +154,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    endpoint: "grpcs://{{ ydb_front | default(play_hosts | flatten(levels=1) | first | default(ydb_brokers | flatten(levels=1) | first)) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_dbname, true) }}"
     token: "{{ ydb_credentials.token }}"
   become: true
@@ -172,7 +172,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    endpoint: "grpcs://{{ ydb_front | default(play_hosts | flatten(levels=1) | first | default(ydb_brokers | flatten(levels=1) | first)) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_dbname, true) }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
