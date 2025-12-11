@@ -143,9 +143,6 @@
 - name: Add the password initialization script
   template: src=init_password.j2 dest={{ ydb_dir }}/home/init_password.sh mode='755'
 
-- name: Add the database creation script
-  template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode='755'
-
 - name: set ydb_config_v2 based on version if not explicitly set
   set_fact:
     ydb_config_v2: "{{ ydb_config_v2 | default(ydb_version is defined and ydb_version is version('25.0', '>=')) }}"

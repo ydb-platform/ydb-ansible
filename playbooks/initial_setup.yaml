@@ -54,6 +54,10 @@
       tags:
         - setup
 
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  become: true
+  any_errors_fatal: true
+  tasks:
     - name: setup ydb static nodes
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_static
@@ -62,6 +66,10 @@
         - static
         - storage
 
+- hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
+  become: true
+  any_errors_fatal: true
+  tasks:
     - name: setup ydb dynamic nodes
       ansible.builtin.import_role:
         name: ydb_platform.ydb.ydbd_dynamic

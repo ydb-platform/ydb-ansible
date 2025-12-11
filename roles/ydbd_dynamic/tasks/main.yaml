@@ -133,6 +133,9 @@
   tags:
     - create_database
 
+- name: Add the database creation script
+  template: src=create_database.j2 dest={{ ydb_dir }}/home/create_database.sh mode='755'
+
 - name: Create YDB database
   ansible.builtin.import_role: 
     name: ydbd_newdb
@@ -154,7 +157,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    endpoint: "grpcs://{{ inventory_hostname }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_dbname, true) }}"
     token: "{{ ydb_credentials.token }}"
   become: true
@@ -172,7 +175,7 @@
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
-    endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
+    endpoint: "grpcs://{{ inventory_hostname }}:{{ 2136 + (item.offset | default(ydb_dynnodes.index(item))) }}"
     database: "/{{ ydb_domain }}/{{ item.dbname | default(ydb_dbname, true) }}"
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
