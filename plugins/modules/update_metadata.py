@@ -15,7 +15,6 @@ def run_module():
         config=dict(type='raw', required=True),
         current_metadata=dict(type='dict', required=False),
         output_file=dict(type='str', required=False),
-        ydbd_version = dict(type='str', required=True)
     )
 
     result = dict(
@@ -30,7 +29,6 @@ def run_module():
     config_input = module.params['config']
     current_metadata = module.params.get('current_metadata')
     output_file = module.params.get('output_file')
-    ydbd_version = module.params.get('ydbd_version')
 
     # Determine if config is a file path or a dictionary
     if isinstance(config_input, str):
@@ -78,7 +76,6 @@ def run_module():
             config['metadata']['version'] = 1
             result['changed'] = True
     else:
-        # Increment existing version (do need for V2 since YDB CLI 2.21.0)
         try:
             current_version = int(current_metadata['version'])
             config['metadata']['version'] = current_version

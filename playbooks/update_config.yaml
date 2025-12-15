@@ -220,7 +220,6 @@
           config: "{{ ydb_temp_config_path }}"
           output_file: "{{ ydb_temp_config_path }}"
           current_metadata: "{{ current_cluster_config.metadata }}"
-          ydbd_version: "{{ ydb_version }}"
         run_once: true
         become: true
         become_user: ydb
