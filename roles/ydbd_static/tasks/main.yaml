@@ -342,6 +342,8 @@
   run_once: true
   when: ydb_config_v2
   become_user: "{{ ydb_host_user }}"
+  tags:
+    - bootstrap
 
 - name: get ydb token with user credentials
   ydb_platform.ydb.get_token:

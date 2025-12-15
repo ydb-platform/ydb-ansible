@@ -80,7 +80,7 @@ def run_module():
     else:
         # Increment existing version (do need for V2 since YDB CLI 2.21.0)
         try:
-            current_version = int(config['metadata']['version'])
+            current_version = int(current_metadata['version'])
             config['metadata']['version'] = current_version
             result['changed'] = True
         except (ValueError, TypeError):
