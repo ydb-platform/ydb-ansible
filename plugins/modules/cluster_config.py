@@ -71,7 +71,7 @@ def configs_different(current_config, new_config):
 def main():
     argument_spec = dict(
         config_file = dict(type='str', required=False),
-        mode        = dict(type='str', default='replace', choices=['replace', 'fetch','load']),
+        mode        = dict(type='str', default='replace', choices=['replace', 'fetch','set_variable']),
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -82,7 +82,7 @@ def main():
         config_file = module.params.get('config_file')
         mode        = module.params.get('mode')
 
-        if mode == 'load':
+        if mode == 'set_variable':
             with open(config_file, 'r') as f:
                 try:
                     local_config = safe_load(f)

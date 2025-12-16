@@ -72,7 +72,7 @@
           endpoint: ""
           token: ""
           config_file: "{{ ydb_config }}"
-          mode: load
+          mode: set_variable
       delegate_to: 127.0.0.1
       run_once: true
       register: cluster_config_result
