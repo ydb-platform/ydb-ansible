@@ -10,14 +10,14 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item.var1 is defined }}"
-    fail_msg: "Either {{ item.var1 }} variable is required"
+      - "{{ item }} is defined"
+    fail_msg: "Either {{ item }} variable is required"
   loop:
-    - { var1: "ydb_cores_static" }
-    - { var1: "ydb_cores_dynamic" }
-    - { var1: "ydb_disks" }
-    - { var1: "ydb_domain" }
-    - { var1: "ydb_user" }
+    - "ydb_cores_static"
+    - "ydb_cores_dynamic"
+    - "ydb_disks"
+    - "ydb_domain"
+    - "ydb_user"
 
 # Handle ydb_pool_kind if not defined
 - name: handle ydb_pool_kind if not defined
