@@ -211,6 +211,8 @@ Example:
 
 Example configurations for V2 can be found in [ydb-ansible-examples](https://github.com/ydb-platform/ydb-ansible-examples/tree/main/6-nodes-bridge-2-dc) repository.
 
+Also you can get sample configurations for different [use cases](https://github.com/ydb-platform/ydb-ansible-examples/tree/main/use-cases-v2) (such as `add new hard drive`, `add new storage host`)
+
 ## How to migrate from V1 to V2
 
 There no playbook yet for this action for YDB cluster and you must follow the documentaion procedure https://ydb.tech/docs/en/devops/configuration-management/migration/migration-to-v2. The playbook is under construction and it will be releases in the next YDB Ansible release.
