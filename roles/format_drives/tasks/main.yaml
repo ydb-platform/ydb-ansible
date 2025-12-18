@@ -62,5 +62,18 @@
     endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
     allow_format: "{{ ydb_allow_format_drives }}"
   with_items: "{{ ydb_drives }}"
-  when: ydb_format_disk_prepare|bool is defined and ydb_format_disk_prepare|bool == True
+  when: ydb_disk_prepare is not defined and ydb_format_disk_prepare|bool is defined and ydb_format_disk_prepare|bool == True
+  become: true
+
+- name: "Prepare drives"
+  ydb_platform.ydb.drive_prepare:
+    name: "{{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()) }}"
+    label: "{{ item['label'] }}"
+    ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
+    ld_library_path: "{{ ydb_dir }}/lib"
+    ca_file: "{{ ydb_dir }}/certs/ca.crt"
+    endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
+    allow_format: "{{ ydb_allow_format_drives }}"
+  when: ydb_disk_prepare is defined and item.label == ydb_disk_prepare
+  with_items: "{{ ydb_drives }}"
   become: true

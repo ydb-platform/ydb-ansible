@@ -1,8 +1,7 @@
 from ansible.plugins.inventory import BaseInventoryPlugin
-import yaml
 import copy
 from ansible.errors import AnsibleError
-# from ansible.template import Templar
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
 DOCUMENTATION = r'''
     name: ydb_inventory
@@ -55,13 +54,13 @@ class InventoryModule(BaseInventoryPlugin):
 
         try:
             with open(ydb_config, "r") as file:
-                yaml_config = yaml.safe_load(file)
+                yaml_config = safe_load(file)
+
+                self.inventory.groups[group_name].set_variable('ydb_config', yaml_config)
 
                 if 'config' in yaml_config:
                     """ V2 Config """
                     yaml_config = yaml_config['config']
-
-                self.inventory.groups[group_name].set_variable('ydb_config_dict', yaml_config)
 
                 ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
                 self.inventory.groups[group_name].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)
@@ -74,8 +73,6 @@ class InventoryModule(BaseInventoryPlugin):
 
                 if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
                     self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
-
-                self.inventory.groups[group_name].set_variable('ydb_config', yaml_config)
 
                 domain = 'Root'
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:

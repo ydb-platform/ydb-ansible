@@ -36,7 +36,7 @@
         path: "{{ ansible_config_file | dirname }}/bin/ydbops"
       register: ydbops_stat
 
-    - name: create bin directory
+    - name: Create bin directory
       delegate_to: 127.0.0.1
       run_once: true
       ansible.builtin.file:
@@ -58,7 +58,7 @@
       ansible.builtin.setup:
       when: not ydbops_stat.stat.exists|bool
 
-    - name: install ydbops
+    - name: Install ydbops
       delegate_to: 127.0.0.1
       run_once: true
       ansible.builtin.get_url:
@@ -67,7 +67,7 @@
         mode: 0755
       when: not ydbops_stat.stat.exists|bool
 
-    - name: "run ydbops to gracefully restart part of the cluster, it takes a long time"
+    - name: "Run ydbops to gracefully restart part of the cluster, it takes a long time"
       delegate_to: 127.0.0.1
       run_once: true
       ydb_platform.ydb.restart_storage:
@@ -81,7 +81,7 @@
         log_file: "{{ ydbops_log }}"
       when: ansible_limit is defined
 
-    - name: "run ydbops to gracefully restart the cluster, it takes a long time"
+    - name: "Run ydbops to gracefully restart the cluster, it takes a long time"
       delegate_to: 127.0.0.1
       run_once: true
       ydb_platform.ydb.restart_storage:
@@ -110,21 +110,21 @@
       set_fact:
         ydbops_source_bin: "{{ ydbops_source_bin  }}_darwin_{{ ansible_facts.architecture }}"
 
-    - name: install ydbops
+    - name: Install ydbops
       ansible.builtin.get_url:
         url: "{{ ydbops_release_url }}/{{ ydbops_source_bin }}"
         dest: "{{ ydb_dir }}/bin/ydbops"
         mode: 0755
       when: ydbops_binary is not defined and not ydbops_stat.stat.exists|bool
 
-    - name: install ydbops
+    - name: Install ydbops
       ansible.builtin.copy:
         src: "{{ ydbops_binary }}"
         dest: "{{ ydb_dir }}/bin/ydbops"
         mode: 0755
       when: ydbops_binary is defined and not ydbops_stat.stat.exists|bool
 
-    - name: "run ydbops to gracefully restart the cluster, it takes a long time"
+    - name: "Run ydbops to gracefully restart the cluster, it takes a long time"
       ydb_platform.ydb.restart_storage:
         ydbops_bin: "{{ ydb_dir }}/bin/ydbops"
         ydbops_endpoint: "grpcs://{{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }}:2135"
@@ -135,7 +135,7 @@
         hosts: "{{ inventory_hostname }}"
         log_file: "{{ ydbops_log }}"
 
-- name: ydb storage check
+- name: YDB storage check
   include_tasks: "check_static.yaml"
   loop: "{{ brokers | default(groups['ydb']) | flatten(levels=1) }}"
   loop_control:

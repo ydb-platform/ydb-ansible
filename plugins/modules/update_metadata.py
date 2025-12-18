@@ -1,12 +1,6 @@
 import os
-import yaml
-try:
-    from yaml import CSafeLoader as SafeLoader
-except ImportError:
-    from yaml import SafeLoader
-
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
 DOCUMENTATION = r'''
     name: update_metadata
@@ -45,7 +39,7 @@ def run_module():
         # Load YAML config
         try:
             with open(config_input, 'r') as f:
-                config = yaml.load(f, Loader=SafeLoader)
+                config = safe_load(f)
         except Exception as e:
             module.fail_json(msg=f'Failed to parse YAML: {str(e)}')
 
@@ -82,10 +76,9 @@ def run_module():
             config['metadata']['version'] = 1
             result['changed'] = True
     else:
-        # Increment existing version
         try:
-            current_version = int(config['metadata']['version'])
-            # config['metadata']['version'] = current_version + 1
+            current_version = int(current_metadata['version'])
+            config['metadata']['version'] = current_version
             result['changed'] = True
         except (ValueError, TypeError):
             module.fail_json(msg='Version in metadata must be an integer')
@@ -103,10 +96,8 @@ def run_module():
 
     module.exit_json(**result)
 
-
 def main():
     run_module()
-
 
 if __name__ == '__main__':
     main()

@@ -1,95 +1,108 @@
 import yaml
-try:
-    from yaml import CSafeDumper as SafeDumper
-except ImportError:
-    from yaml import SafeDumper
+
+class SafeUnknownConstructor(yaml.constructor.SafeConstructor):
+    def __init__(self):
+        yaml.constructor.SafeConstructor.__init__(self)
+
+    def construct_undefined(self, node):
+        data = getattr(self, 'construct_' + node.id)(node)
+        datatype = type(data)
+        wraptype = type('TagWrap_'+datatype.__name__, (datatype,), {})
+        wrapdata = wraptype(data)
+        wrapdata.tag = lambda: None
+        wrapdata.datatype = lambda: None
+        setattr(wrapdata, "wrapTag", node.tag)
+        setattr(wrapdata, "wrapType", datatype)
+        return wrapdata
 
 
-class YDBDynCustomYAMLDumper(SafeDumper):
+class SafeUnknownLoader(SafeUnknownConstructor, yaml.loader.SafeLoader):
+
+    def __init__(self, stream):
+        SafeUnknownConstructor.__init__(self)
+        yaml.loader.SafeLoader.__init__(self, stream)
+
+
+class SafeUnknownRepresenter(yaml.representer.SafeRepresenter):
+    def represent_data(self, wrapdata):
+        tag = False
+        if type(wrapdata).__name__.startswith('TagWrap_'):
+            datatype = getattr(wrapdata, "wrapType")
+            tag = getattr(wrapdata, "wrapTag")
+            data = datatype(wrapdata)
+        else:
+            data = wrapdata
+        node = super(SafeUnknownRepresenter, self).represent_data(data)
+        if tag:
+            node.tag = tag
+        return node
+
+class SafeUnknownDumper(SafeUnknownRepresenter, yaml.dumper.SafeDumper):
+
+    def __init__(self, stream,
+            default_style=None, default_flow_style=False,
+            canonical=None, indent=None, width=None,
+            allow_unicode=None, line_break=None,
+            encoding=None, explicit_start=None, explicit_end=None,
+            version=None, tags=None, sort_keys=True):
+
+        SafeUnknownRepresenter.__init__(self, default_style=default_style,
+                default_flow_style=default_flow_style, sort_keys=sort_keys)
+
+        yaml.dumper.SafeDumper.__init__(self,  stream,
+                                        default_style=default_style,
+                                        default_flow_style=default_flow_style,
+                                        canonical=canonical,
+                                        indent=indent,
+                                        width=width,
+                                        allow_unicode=allow_unicode,
+                                        line_break=line_break,
+                                        encoding=encoding,
+                                        explicit_start=explicit_start,
+                                        explicit_end=explicit_end,
+                                        version=version,
+                                        tags=tags,
+                                        sort_keys=sort_keys)
+
+
+MySafeLoader = SafeUnknownLoader
+yaml.constructor.SafeConstructor.add_constructor(None, SafeUnknownConstructor.construct_undefined)
+
+def yaml_tag(data,tag):
     """
-    Custom YAML Dumper that preserves !inherit tags.
+    Add tag to data
+
+    Args:
+        data: The data to tag
+        tag: tag (!inherit, !remove, ..)
     """
-    pass
-
-
-# Custom YAML tag handler for !inherit during loading
-class InheritableDict(dict):
-    """A dict subclass that can hold a YAML tag."""
-    tag = None
-
-
-def inherit_constructor(loader, node):
-    """
-    Constructor for !inherit tags.
-    When a node has the !inherit tag, creates an InheritableDict with the tag set.
-    """
-    value = loader.construct_mapping(node) if isinstance(node, yaml.MappingNode) else {}
-    result = InheritableDict(value)
-    result.tag = '!inherit'
-    return result
-
-
-# Create a custom Loader class that knows about !inherit
-class CustomYAMLLoader(yaml.SafeLoader):
-    """
-    Custom YAML Loader that preserves !inherit tags.
-    """
-    pass
-
-
-# Register the constructor for !inherit tags
-CustomYAMLLoader.add_constructor('!inherit', inherit_constructor)
-
-
-def represent_undefined(dumper, data):
-    """
-    Custom representer for handling !inherit tags.
-    When data is '!inherit', preserves it as a YAML tag.
-    Otherwise, represents it as a regular string.
-    """
-    if data == '!inherit':
-        return dumper.represent_scalar('!inherit', '')
-    return dumper.represent_scalar('tag:yaml.org,2002:str', str(data))
-
-
-def represent_none(dumper, data):
-    """
-    Custom representer for None values.
-    Represents None as null in YAML.
-    """
-    return dumper.represent_scalar('tag:yaml.org,2002:null', 'null')
-
-
-# Add a representer for InheritableDict
-def represent_inheritable_dict(dumper, data):
-    """
-    Represent an InheritableDict in YAML with its tag.
-    """
-    return dumper.represent_mapping(data.tag if data.tag else 'tag:yaml.org,2002:map', data)
-
-
-# Register custom representers
-YDBDynCustomYAMLDumper.add_representer(type(None), represent_none)
-YDBDynCustomYAMLDumper.add_representer(InheritableDict, represent_inheritable_dict)
-
+    datatype = type(data)
+    wraptype = type('TagWrap_'+datatype.__name__, (datatype,), {})
+    wrapdata = wraptype(data)
+    wrapdata.tag = lambda: None
+    wrapdata.datatype = lambda: None
+    setattr(wrapdata, "wrapTag", tag)
+    setattr(wrapdata, "wrapType", datatype)
+    return wrapdata
 
 def safe_dump(data, file_obj, **kwargs):
     """
-    Safely dump YAML data to a file while preserving !inherit tags.
+    Safely dump YAML data to a file while preserving tags.
 
     Args:
         data: The data to dump
         file_obj: A file-like object to dump to
         **kwargs: Additional arguments to pass to yaml.dump
     """
-    kwargs.setdefault('Dumper', YDBDynCustomYAMLDumper)
+    kwargs.setdefault('Dumper', SafeUnknownDumper)
     kwargs.setdefault('default_flow_style', False)
+    kwargs.setdefault('allow_unicode', True)
     return yaml.dump(data, file_obj, **kwargs)
 
 
 def safe_load(stream):
     """
-    Safely load YAML data from a stream while preserving !inherit tags.
+    Safely load YAML data from a stream while preserving tags.
 
     Args:
         stream: A string or file-like object to load from
@@ -97,4 +110,4 @@ def safe_load(stream):
     Returns:
         The loaded YAML data
     """
-    return yaml.load(stream, Loader=CustomYAMLLoader)
+    return yaml.load(stream, Loader=SafeUnknownLoader)

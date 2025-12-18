@@ -20,11 +20,12 @@
 
   - ansible.builtin.assert:
       that:
-        - "{{ item.var1 is defined}}"
-      fail_msg: "Either {{ item.var1 }} variable is required"
+        - "{{ item is defined}}"
+      fail_msg: "Either {{ item }} variable is required"
     loop:
-      - { var1: "ydb_cores_static" }
-      - { var1: "ydb_cores_dynamic" }
+      - "ydb_cores_static"
+      - "ydb_cores_dynamic"
+      - "ydb_tls_dir"
   tags:
     - storage
     - static
@@ -35,8 +36,10 @@
 
 - name: Load presettings
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
   roles:
   - role: preflight
+
   tasks:
   - name: get ydb version if not defined
     shell: "{{ ydb_dir }}/release/archive/bin/ydbd --compatibility-info | awk '$1 ~ \"Version:\" { gsub(/-/, \".\", $2); print $2 }'"
@@ -54,6 +57,7 @@
       ydb_config_v2: false
     run_once: true
     when: ydb_config_v2 is not defined
+
   tags:
     - storage
     - static
@@ -125,8 +129,24 @@
       - dynamic
       - no_restart
 
+  - name: check if ydb_config is a map
+    set_fact:
+      ydb_config_is_map: "{{ ydb_config is mapping }}"
+
   - name: V2 configuration management block
     block:
+
+      - name: Get YDB CLI version
+        run_once: true
+        shell: "{{ ydb_dir }}/bin/ydb version | awk '{print $3;}'"
+        register: ydb_cli_version
+
+      - name: Check YDB CLI version (it must be above 2.21)
+        run_once: true
+        when: "ydb_cli_version.stdout is version('2.20', '<=')"
+        ansible.builtin.fail:
+          msg: "Aborting playbook execution. Install YDB CLI 2.21 or newer. Current version is {{ ydb_cli_version.stdout }}"
+
       - name: get current cluster configuration metadata
         ydb_platform.ydb.cluster_config:
           ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -144,6 +164,15 @@
         retries: 30
         delay: 15
 
+      # - name: copy configuration from file for V2
+      #   copy:
+      #     src: "{{ ydb_config }}"
+      #     dest: "{{ ydb_dir }}/cfg/config.yaml"
+      #     owner: ydb
+      #     group: ydb
+      #     mode: 0640
+      #   when: not ydb_config_is_map
+
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
           config: "{{ ydb_config_dict }}"
@@ -154,6 +183,7 @@
           ydb_dir: "{{ ydb_dir }}"
         run_once: true
         register: patched_config_result
+        # when: not ydb_config_is_map
 
       - name: set ownership of temporary file
         file:
@@ -166,6 +196,7 @@
         until: set_temp_ownership_result is succeeded
         retries: 5
         delay: 5
+        # when: not ydb_config_is_map
 
       - name: update configuration with selectors
         ydb_platform.ydb.apply_config_selectors:
@@ -181,6 +212,8 @@
         until: selectors_result is succeeded
         retries: 5
         delay: 5
+        tags:
+          - selectors
 
       - name: update metadata in configuration
         ydb_platform.ydb.update_metadata:
@@ -194,7 +227,8 @@
         until: v2_config_result is succeeded
         retries: 5
         delay: 5
-
+        # when: not ydb_config_is_map
+      
       - name: update cluster configuration using YDB config management V2
         ydb_platform.ydb.cluster_config:
           ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -212,6 +246,7 @@
         until: update_cluster_config_result is succeeded
         retries: 30
         delay: 15
+        # when: not ydb_config_is_map
 
     always:
       - name: cleanup temporary config file
@@ -234,9 +269,6 @@
 
   - name: handle ydb_config for V1 configuration
     block:
-      - name: check if ydb_config is a map
-        set_fact:
-          ydb_config_is_map: "{{ ydb_config is mapping }}"
 
       - name: copy configuration from map for V1
         copy:
@@ -285,3 +317,6 @@
 - name: Restart YDB cluster (V1 configuration only)
   ansible.builtin.import_playbook: restart.yaml
   when: not ydb_config_v2 | default(false)
+  tags:
+    - restart
+

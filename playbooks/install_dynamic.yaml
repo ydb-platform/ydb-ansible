@@ -16,8 +16,11 @@
 # Install and start dynamic nodes on all hosts (hostgroup `ydb` or `ydbd_dynamic`)
 # ansible-playbook ydb_platform.ydb.install_dynamic
 #
+# Install and start dynamic nodes on a hosts (hostgroup `ydb` or `ydbd_dynamic`) without database creation
+# ansible-playbook ydb_platform.ydb.install_dynamic --skip-tags create_database -l static-node-3.ydb-cluster.com
+#
 # Install and start dynamic nodes with several DB
-# ansible-playbook ydb_platform.ydb.install_dynamic --extra-vars --extra-vars '{
+# ansible-playbook ydb_platform.ydb.install_dynamic --extra-vars '{
 #   "ydb_dynnodes": [
 #     {"instance": "a", "offset": 1, "dbname": "db"},
 #     {"instance": "b", "offset": 2, "dbname": "db"}

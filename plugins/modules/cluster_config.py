@@ -4,7 +4,7 @@ import yaml
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
-from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
 DOCUMENTATION = r'''
     name: cluster_config
@@ -27,7 +27,7 @@ def fetch_cluster_config(ydb_cli, result):
 
     try:
         # Parse the YAML configuration
-        config = yaml.safe_load(stdout)
+        config = safe_load(stdout)
         return config, False
     except yaml.YAMLError as e:
         result['msg'] = f'failed to parse cluster config YAML: {e}'
@@ -70,17 +70,28 @@ def configs_different(current_config, new_config):
 
 def main():
     argument_spec = dict(
-        config_file=dict(type='str', required=False),
-        mode=dict(type='str', default='replace', choices=['replace', 'fetch']),
+        config_file = dict(type='str', required=False),
+        mode        = dict(type='str', default='replace', choices=['replace', 'fetch','set_variable']),
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     result = {'changed': False}
 
     try:
-        ydb_cli = cli.YDB.from_module(module)
+        ydb_cli     = cli.YDB.from_module(module)
         config_file = module.params.get('config_file')
-        mode = module.params.get('mode')
+        mode        = module.params.get('mode')
+
+        if mode == 'set_variable':
+            with open(config_file, 'r') as f:
+                try:
+                    local_config = safe_load(f)
+                except yaml.YAMLError as e:
+                    result['msg'] = f'failed to parse configuration file {config_file}: {e}'
+                    module.fail_json(**result)
+            result['msg'] = 'configuration is loaded into variable'
+            result['config'] = local_config
+            module.exit_json(**result)
 
         if mode == 'fetch':
             # Just fetch and return current configuration without writing to file
@@ -106,7 +117,7 @@ def main():
 
         with open(config_file, 'r') as f:
             try:
-                local_config = yaml.safe_load(f)
+                local_config = safe_load(f)
             except yaml.YAMLError as e:
                 result['msg'] = f'failed to parse configuration file {config_file}: {e}'
                 module.fail_json(**result)

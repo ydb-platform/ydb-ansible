@@ -19,7 +19,7 @@
   tasks:
   - ansible.builtin.assert:
       that:
-        - "{{ item is defined }}"
+        - "{{ item }} is defined"
       fail_msg: "Either {{ item }} variable is required"
     loop:
       - "ydb_cores_static"

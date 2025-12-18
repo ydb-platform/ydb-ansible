@@ -1,4 +1,12 @@
 ---
+# PLAYBOOK: ydb_platform.ydb.healthcheck
+# PROPOSE : This playbook is designed for checking cluster health
+#           
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.healthcheck
+#
+
 - name: Healthcheck cluster
   hosts: "{{ ansible_play_hosts | default(groups['ydbd_static']) }}"
   run_once: true

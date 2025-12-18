@@ -3,7 +3,7 @@ import os
 import copy
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
+from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
 DOCUMENTATION = r'''
     name: patch_config
@@ -133,17 +133,17 @@ def main():
 
         # Handle different input types
         if isinstance(config_input, dict):
-            # Config is already a dictionary
+            # Config is already a dictionary            
             config = config_input
         elif isinstance(config_input, str):
             # Config is a file path or YAML string
             if os.path.exists(config_input):
                 # It's a file path
                 with open(config_input, 'r') as f:
-                    config = yaml.safe_load(f)
+                    config = safe_load(f)
             else:
                 # It's a YAML string
-                config = yaml.safe_load(config_input)
+                config = safe_load(config_input)
         else:
             result['msg'] = 'config must be a dictionary, file path, or YAML string'
             module.fail_json(**result)
@@ -164,7 +164,10 @@ def main():
         # Write to output file if specified
         if output_file and not module.check_mode:
             with open(output_file, 'w') as f:
-                safe_dump({'config': config}, f)
+                if 'config' in config:
+                    safe_dump(config, f)
+                else:
+                    safe_dump({"config": config}, f)
             result['msg'] = f'patched configuration written to {output_file}'
         else:
             result['msg'] = 'configuration patched successfully'

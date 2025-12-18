@@ -10,14 +10,14 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item.var1 is defined }}"
-    fail_msg: "Either {{ item.var1 }} variable is required"
+      - "{{ item }} is defined"
+    fail_msg: "Either {{ item }} variable is required"
   loop:
-    - { var1: "ydb_cores_static" }
-    - { var1: "ydb_cores_dynamic" }
-    - { var1: "ydb_disks" }
-    - { var1: "ydb_domain" }
-    - { var1: "ydb_user" }
+    - "ydb_cores_static"
+    - "ydb_cores_dynamic"
+    - "ydb_disks"
+    - "ydb_domain"
+    - "ydb_user"
 
 # Handle ydb_pool_kind if not defined
 - name: handle ydb_pool_kind if not defined
@@ -218,15 +218,15 @@
       become: true
       become_user: "{{ ydb_host_user }}"
 
-    # - name: update configuration with selectors
-    #   ydb_platform.ydb.apply_config_selectors:
-    #     config: "{{ ydb_temp_config_path }}"
-    #     output_file: "{{ ydb_temp_config_path }}"
-    #     database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
-    #     storage_cores: "{{ ydb_cores_static | default(omit) }}"
-    #   become: true
-    #   become_user: "{{ ydb_host_user }}"
-    #   when: ydb_config_v2 and (ydb_cores_dynamic is defined or ydb_cores_static is defined)
+    - name: update configuration with selectors
+      ydb_platform.ydb.apply_config_selectors:
+        config: "{{ ydb_temp_config_path }}"
+        output_file: "{{ ydb_temp_config_path }}"
+        database_cores: "{{ ydb_cores_dynamic | default(omit) }}"
+        storage_cores: "{{ ydb_cores_static | default(omit) }}"
+      become: true
+      become_user: "{{ ydb_host_user }}"
+      when: ydb_config_v2 and (ydb_cores_dynamic is defined or ydb_cores_static is defined)
 
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:
@@ -342,6 +342,8 @@
   run_once: true
   when: ydb_config_v2
   become_user: "{{ ydb_host_user }}"
+  tags:
+    - bootstrap
 
 - name: get ydb token with user credentials
   ydb_platform.ydb.get_token:
