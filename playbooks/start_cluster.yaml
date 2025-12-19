@@ -21,11 +21,12 @@
         - static
         - storage
 
-    - name: Delay for 1 min
+    - name: Delay for 2 min. Storage nodes need time for recovery actions
       pause:
-        seconds: 60
+        seconds: 120
       tags:
         - delay
+        - storage
 
 - hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
   become: true
@@ -37,3 +38,12 @@
       ignore_errors: True
       tags:
         - dynamic
+
+    - name: Delay for 2 min. Dynamic nodes need time for recovery actions
+      pause:
+        seconds: 60
+      tags:
+        - delay
+        - dynamic
+
+- import_playbook: ydb_platform.ydb.healthcheck
