@@ -1,0 +1,117 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.migrate_to_v2
+# PROPOSE : This playbook is designed for migration from V1 to V2 configuration
+#           
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.migrate_to_v2
+#
+# REQUIRED SOFTWARE: curl
+
+# https://ydb.tech/docs/ru/devops/configuration-management/migration/migration-to-v2?version=v25.2
+# Steps
+# - Check current cluster configuration version
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  vars:
+    ydb_host_user: ydb
+
+  roles:
+  - role: preflight
+
+  tasks:
+
+  - name: "Get current YDB Cluster configuration"
+    ansible.builtin.shell: python3 -c "import requests; import urllib3; urllib3.disable_warnings(); print(requests.get('https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus', verify=False).text)"  | grep '^ConfigurationV2'
+    register: current_config_version
+    tags:
+      - check
+      - version
+
+  - name: "Check current YDB Cluster configuration not V2"
+    ansible.builtin.assert:
+      that:
+      - "current_config_version.stdout is defined"
+      - "current_config_version.stdout == 'ConfigurationV2 0'"
+      fail_msg: "Current cluster config is wrong: {{ current_config_version }}"    
+    tags:
+      - check
+      - version
+
+# - Get current config // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
+  - name: get ydb token with user credentials
+    ydb_platform.ydb.get_token:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
+      database: "/{{ ydb_domain }}"
+      user: "{{ ydb_user }}"
+      password: "{{ ydb_password }}"
+      retry_on_ssl_error: true
+    run_once: true
+    register: ydb_credentials
+    until: "'token' in ydb_credentials"
+    retries: 5
+    delay: 20
+    become: true
+    become_user: "{{ ydb_host_user }}"
+    tags:
+      - token
+
+  - name: Get current dynamic config
+    ydb_platform.ydb.cluster_config:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ld_library_path: "{{ ydb_dir }}/lib"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      mode: fetch
+    run_once: true
+    become: true
+    become_method: sudo
+    become_user: ydb
+    register: current_cluster_config
+    until: current_cluster_config is succeeded
+    retries: 30
+    delay: 15
+    tags:
+      - config
+      - step-1
+
+# - Get current dynamic config // TODO: команду посмотреть
+# - Generate config if absent // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config generate > config.yaml
+# - Merge static and dynamic config // TODO: подумать как
+# - Enrich config // feature_flags.switch_to_config_v2: true
+# - Remove all current configs from YDB nodes and put new config
+# - Update systemd services for static nodes
+# - Restart static nodes
+
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  tasks:
+  - name: "Get current YDB Cluster configuration"
+    ansible.builtin.shell: python3 -c "import requests; import urllib3; urllib3.disable_warnings(); print(requests.get('https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus', verify=False).text)"  | grep '^ConfigurationV2'
+    register: current_config_version
+    tags:
+      - check
+      - version
+
+  - name: "Check current YDB Cluster configuration is V2"
+    ansible.builtin.assert:
+      that:
+      - "current_config_version.stdout is defined"
+      - "current_config_version.stdout == 'ConfigurationV2 1'"
+      fail_msg: "Current cluster config is wrong: {{ current_config_version }}"
+    tags:
+      - check
+      - version
+
+# - Replace config in cluster // db -e grpc://<node.ydb.tech>:2135 cluster config replace -f config.yaml
+# - Get current config and compare it // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
+# - Enrich config // self_management_config.enabled: true
+# - Replace config in cluster // db -e grpc://<node.ydb.tech>:2135 cluster config replace -f config.yaml
+# - Restart static nodes
+# - Enrich config // При наличии секции config.domains_config.security_config в файле config.yaml вынести её на уровень выше — в секцию config.
+# - Enrich config // Удалить из файла config.yaml секции config.blob_storage_config и config.domains_config.
+# - Replace config in cluster // db -e grpc://<node.ydb.tech>:2135 cluster config replace -f config.yaml
+# - Update systemd services for dynamic nodes // remove --config-dir, --yaml-config
+# - Restart dynamic nodes
