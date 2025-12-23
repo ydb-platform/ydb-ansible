@@ -62,7 +62,11 @@ class InventoryModule(BaseInventoryPlugin):
                     """ V2 Config """
                     yaml_config = yaml_config['config']
 
-                ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
+                if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
+                    self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
+                    ydb_enforce_user_token_requirement = yaml_config.get('security_config', {}).get('enforce_user_token_requirement', False)
+                else:
+                    ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
                 self.inventory.groups[group_name].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)
 
                 if 'default_disk_type' in yaml_config:
@@ -71,8 +75,6 @@ class InventoryModule(BaseInventoryPlugin):
                     if 'storage_pool_types' in yaml_config['domains_config']['domain'][0]:
                         self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['domains_config']['domain'][0]['storage_pool_types'][0]['kind'])
 
-                if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
-                    self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
 
                 domain = 'Root'
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
