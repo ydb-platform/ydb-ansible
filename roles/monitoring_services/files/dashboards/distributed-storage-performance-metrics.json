@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 41,
+  "id": 1,
   "links": [],
   "panels": [
     {
@@ -101,7 +101,6 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -219,7 +218,6 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -400,7 +398,6 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -424,14 +421,22 @@
   ],
   "preload": false,
   "schemaVersion": 40,
-  "tags": [],
+  "tags": [
+    "ydb"
+  ],
   "templating": {
     "list": [
       {
-        "current": {
-          "text": "static",
-          "value": "static"
-        },
+        "current": {},
+        "name": "ds",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {},
         "definition": "label_values(storagePool)",
         "description": "storagePool",
         "label": "storagePool",
@@ -447,10 +452,7 @@
         "type": "query"
       },
       {
-        "current": {
-          "text": "All",
-          "value": "$__all"
-        },
+        "current": {},
         "definition": "label_values({storagePool=\"$storagePool\"},group)",
         "description": "",
         "includeAll": true,
@@ -465,29 +467,17 @@
         "refresh": 1,
         "regex": "",
         "type": "query"
-      },
-      {
-        "current": {
-          "text": "Prometheus",
-          "value": "prometheus"
-        },
-        "name": "ds",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "regex": "",
-        "type": "datasource"
       }
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Distributed Storage performance metrics",
-  "uid": "rd_ds-performance-metrics",
-  "version": 4,
+  "title": "Distributed Storage Performance Metrics",
+  "uid": "ydb-distributed-storage-perf",
+  "version": 1,
   "weekStart": ""
 }
