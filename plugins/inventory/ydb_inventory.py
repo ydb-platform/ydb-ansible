@@ -1,5 +1,7 @@
 from ansible.plugins.inventory import BaseInventoryPlugin
 import copy
+import os
+from ansible.config.manager import ConfigManager
 from ansible.errors import AnsibleError
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump, safe_load
 
@@ -17,8 +19,9 @@ DOCUMENTATION = r'''
             choices: ['ydb_platform.ydb.ydb_inventory']
         ydb_config:
             description: YDB config (file or dictionary)
-            required: true
+            required: false
             type: str
+            default: 'files/config.yaml'
             env:
               - name: INVENTORY_YDB_CONFIG
         ydb_hostgroup_name:
@@ -38,17 +41,30 @@ class InventoryModule(BaseInventoryPlugin):
         if super(InventoryModule, self).verify_file(path):
             if path.endswith(('ydb_inventory.yaml', 'ydb_inventory.yml', 'inventory.yaml', 'inventory.yml')):
                 valid = True
+            elif os.path.isfile(path) and path.endswith(('.yaml','.yml')):
+                try:
+                    with open(path, "r") as file:
+                        yaml_config = safe_load(file)
+                    if 'hosts' in yaml_config or 'metadata' in yaml_config:
+                        valid = True
+                except Exception as e:
+                    print(f"Can't parse inventory config {e}")
         return valid
 
     def parse(self, inventory, loader, path, cache=True):
         super().parse(inventory, loader, path, cache)
         # Загружаем конфиг плагина (YAML-файл)
-        config = self._read_config_data(path)
+        if path.endswith(('ydb_inventory.yaml', 'ydb_inventory.yml', 'inventory.yaml', 'inventory.yml')):
+            config = self._read_config_data(path)
+            ydb_config = config.get('ydb_config',os.path.join(self.get_ansible_config_path()))
+            group_name = config.get('ydb_hostgroup_name','ydb')
+        else:
+            ansible_config = ConfigManager()
+            ydb_config = path
+            group_name = 'ydb'
 
-        ydb_config = config.get('ydb_config')
         print(f"Reading inventory from {ydb_config}")
 
-        group_name = config.get('ydb_hostgroup_name','ydb')
         self.inventory.add_group(group_name)
         brokers = []
 
@@ -62,7 +78,11 @@ class InventoryModule(BaseInventoryPlugin):
                     """ V2 Config """
                     yaml_config = yaml_config['config']
 
-                ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
+                if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
+                    self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
+                    ydb_enforce_user_token_requirement = yaml_config.get('security_config', {}).get('enforce_user_token_requirement', False)
+                else:
+                    ydb_enforce_user_token_requirement = yaml_config.get('domains_config', {}).get('security_config', {}).get('enforce_user_token_requirement', False)
                 self.inventory.groups[group_name].set_variable('ydb_enforce_user_token_requirement', ydb_enforce_user_token_requirement)
 
                 if 'default_disk_type' in yaml_config:
@@ -71,8 +91,6 @@ class InventoryModule(BaseInventoryPlugin):
                     if 'storage_pool_types' in yaml_config['domains_config']['domain'][0]:
                         self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['domains_config']['domain'][0]['storage_pool_types'][0]['kind'])
 
-                if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
-                    self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
 
                 domain = 'Root'
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
