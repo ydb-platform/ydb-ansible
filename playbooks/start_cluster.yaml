@@ -41,7 +41,7 @@
 
     - name: Delay for 2 min. Dynamic nodes need time for recovery actions
       pause:
-        seconds: 60
+        seconds: 120
       tags:
         - delay
         - dynamic

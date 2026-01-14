@@ -151,10 +151,12 @@ class YdbOps(CLI):
         token_file=dict(type='str', default=None),
         hosts=dict(type='str',default=None),
         log_file=dict(type='str',default=None),
+        duration=dict(type='str',default=None),
     )
 
     def __init__(self, module, ydbops_bin, ydbops_endpoint, ydbops_systemd_unit=None,
-                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, hosts=None, log_file=None):
+                 ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, 
+                 hosts=None, log_file=None, duration=None):
         self.module = module
 
         self.common_options = [ydbops_bin, 'restart', '--storage']
@@ -176,6 +178,8 @@ class YdbOps(CLI):
             self.common_environ['YDB_TOKEN'] = token
         elif token_file is not None:
             self.common_options.extend(['--token-file', token_file])
+        if duration is not None:
+            self.common_options.extend(['--duration', duration])
         if log_file is not None and log_file != "":
             self.cmd_format = "{cmd} >> " + shlex.quote(log_file)
             self.use_unsafe_shell = True

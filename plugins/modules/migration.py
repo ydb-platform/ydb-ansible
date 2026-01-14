@@ -64,16 +64,21 @@ def cleanup(config):
             for subsection in config['config']:
                 match subsection:
                     case 'domains_config':
+                        if 'domain' in config['config']['domains_config'] and 'name' in  config['config']['domains_config']['domain'][0]:
+                            output['config']['domains_config'] = {"domain": [{"name": config['config']['domains_config']['domain'][0]["name"]}]}
                         if 'security_config' in config['config']['domains_config']:
                             output['config']['security_config'] = config['config']['domains_config']['security_config']
                         else:
                             output['config']['security_config'] = {}
                         if 'disable_builtin_security' in config['config']['domains_config']:
                             output['config']['security_config']['disable_builtin_security'] = config['config']['domains_config']['disable_builtin_security']
-                        if 'storage_pool_types' in config['config']['domains_config']['domain'][0]:
-                            output['config']['storage_pool_types'] = config['config']['domains_config']['domain'][0]['storage_pool_types']
-                            if 'state_storage' in config['config']['domains_config']:
-                                del config['config']['domains_config']['state_storage']
+                        # if 'storage_pool_types' in config['config']['domains_config']['domain'][0]:
+                            # output['config']['storage_pool_types'] = config['config']['domains_config']['domain'][0]['storage_pool_types']
+                            # config['config']['domains_config']['domain'][0]['storage_pool_types'] = {}
+                            # del config['config']['domains_config']['domain'][0]['storage_pool_types']
+                        if 'state_storage' in config['config']['domains_config']:
+                            del config['config']['domains_config']['state_storage']
+                        continue
                     case 'static_erasure':
                         section_newname = 'erasure'
                         fail_domain_type = 'rack'
@@ -89,6 +94,9 @@ def cleanup(config):
                     continue
                 output['config'][subsection] = config['config'][subsection]
         else:
+            # if section == 'metadata':
+            #     if 'version' in config[section]:
+            #         config[section]['version'] = config[section]['version'] + 1
             output[section] = config[section]
 
     return output
