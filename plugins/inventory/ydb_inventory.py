@@ -56,8 +56,8 @@ class InventoryModule(BaseInventoryPlugin):
         # Загружаем конфиг плагина (YAML-файл)
         if path.endswith(('ydb_inventory.yaml', 'ydb_inventory.yml', 'inventory.yaml', 'inventory.yml')):
             config = self._read_config_data(path)
-            ydb_config = config.get('ydb_config',os.path.join(self.get_ansible_config_path()))
-            group_name = config.get('ydb_hostgroup_name','ydb')
+            ydb_config = config.get('ydb_config', 'files/config.yaml')
+            group_name = config.get('ydb_hostgroup_name', 'ydb')
         else:
             ansible_config = ConfigManager()
             ydb_config = path

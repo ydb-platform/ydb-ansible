@@ -7,10 +7,33 @@
 #
 # ansible-playbook ydb_platform.ydb.migrate_to_v2
 #
-# REQUIRED SOFTWARE: curl
 
 # https://ydb.tech/docs/ru/devops/configuration-management/migration/migration-to-v2?version=v25.2
-# Steps
+# Steps (every step is tagged with tag like 'step-N'):
+# - name: Get current dynamic config (step 1)
+# - name: Generate new config (step 3)
+# - name: Remove folder for configs (step 4)
+# - name: Create folder for configs (step 4)
+# - name: Save config to storage nodes (step 4)
+# - name: Update systemd service for storage nodes (step 6)
+# - name: Reload systemd (step 6)
+# - name: Restart static nodes (step 6)
+# - name: Update cluster configuration using YDB config management V2 (step 7)
+# - name: Get current cluster config (step 8)
+# - name: Generate new config (step 9)
+# - name: Save config to storage nodes (step 10)
+# - name: Update cluster configuration using YDB config management V2 (step 10)
+# - name: Restart static nodes (step 11)
+# - name: Get current cluster config (step 12)
+# - name: Generate new config (step 12)
+# - name: Save config to storage nodes (step 12)
+# - name: Update cluster configuration using YDB config management V2 (step 12)
+# - name: Update systemd service for dynamic nodes (extra step 15)
+# - name: Reload systemd (extra step 15)
+# - name: Restart dynamic nodes (extra step 15)
+# - name: Rename old config dirs (extra step 16)
+# - name: Rename old config dirs (extra step 16)
+
 # - Check current cluster configuration version
 - hosts: "{{ groups['ydbd_static'] if 'ydbd_static' in groups else groups['ydb'] }}"
   become: true
@@ -60,7 +83,7 @@
       - token
       - always
 
-  - name: Get current dynamic config
+  - name: Get current dynamic config (step 1)
     ydb_platform.ydb.cluster_config:
       ydb_bin: "{{ ydb_dir }}/bin/ydb"
       ld_library_path: "{{ ydb_dir }}/lib"
