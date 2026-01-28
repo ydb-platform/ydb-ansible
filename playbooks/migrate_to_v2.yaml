@@ -173,10 +173,6 @@
       - storage
       - step-6
 
-  - name: Delay for 5 min. Storage status can be INACTIVE due to rapid restart
-    pause:
-      seconds: 300
-
   - name: "Get current YDB Cluster configuration"
     ansible.builtin.shell: python3 -c "import requests; import urllib3; urllib3.disable_warnings(); print(requests.get('https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus', verify=False).text)"  | grep '^ConfigurationV2'
     register: current_config_version
@@ -277,6 +273,10 @@
       - config
       - step-10
 
+  # - name: Delay for 2 min for cluster changes
+  #   pause:
+  #     seconds: 120
+
 # - Restart static nodes
   - name: Restart static nodes (step 11)
     become: true
@@ -289,10 +289,6 @@
       - restart
       - storage
       - step-11
-
-  - name: Delay for 5 min. Storage status can be INACTIVE due to rapid restart
-    pause:
-      seconds: 30
 
 # - Enrich config // При наличии секции config.domains_config.security_config в файле config.yaml вынести её на уровень выше — в секцию config.
 # - Enrich config // Удалить из файла config.yaml секции config.blob_storage_config и config.domains_config.
@@ -337,13 +333,6 @@
     tags:
       - config
       - step-12
-
-  # - name: Break
-  #   run_once: true
-  #   fail:
-  #     msg: Enough
-  #   tags:
-  #     - stop
 
   - name: Update cluster configuration using YDB config management V2 (step 12)
     ydb_platform.ydb.cluster_config:
@@ -433,3 +422,11 @@
       - config
       - storage
       - step-16
+
+  - name: Recommendations
+    run_once: true
+    ansible.builtin.debug:
+      msg: 
+        - "Now you can update your Ansible configuration for V2:"
+        - "- Move {{ ansible_config_file | dirname }}/ydb_cluster_config.yaml to {{ ydb_config }}"
+        - "- Add `ydb_config_v2: true` into inventory"

@@ -181,5 +181,5 @@ class YdbOps(CLI):
         if duration is not None:
             self.common_options.extend(['--duration', duration])
         if log_file is not None and log_file != "":
-            self.cmd_format = "{cmd} >> " + shlex.quote(log_file)
+            self.cmd_format = "{cmd} -v >> " + shlex.quote(log_file)
             self.use_unsafe_shell = True
