@@ -180,6 +180,7 @@ class YdbOps(CLI):
             self.common_options.extend(['--token-file', token_file])
         if duration is not None:
             self.common_options.extend(['--duration', duration])
+        self.common_options.extend(['--storage'])
         if log_file is not None and log_file != "":
             self.cmd_format = "{cmd} -v >> " + shlex.quote(log_file)
             self.use_unsafe_shell = True

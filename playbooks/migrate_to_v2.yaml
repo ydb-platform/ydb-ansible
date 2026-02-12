@@ -173,6 +173,10 @@
       - storage
       - step-6
 
+  - name: Delay for 2 min for cluster changes
+    pause:
+      seconds: 120
+
   - name: "Get current YDB Cluster configuration"
     ansible.builtin.shell: python3 -c "import requests; import urllib3; urllib3.disable_warnings(); print(requests.get('https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus', verify=False).text)"  | grep '^ConfigurationV2'
     register: current_config_version
@@ -273,9 +277,9 @@
       - config
       - step-10
 
-  # - name: Delay for 2 min for cluster changes
-  #   pause:
-  #     seconds: 120
+  - name: Delay for 4 min for cluster changes
+    pause:
+      seconds: 240
 
 # - Restart static nodes
   - name: Restart static nodes (step 11)
@@ -289,6 +293,10 @@
       - restart
       - storage
       - step-11
+
+  - name: Delay for 2 min for cluster changes
+    pause:
+      seconds: 120
 
 # - Enrich config // При наличии секции config.domains_config.security_config в файле config.yaml вынести её на уровень выше — в секцию config.
 # - Enrich config // Удалить из файла config.yaml секции config.blob_storage_config и config.domains_config.
