@@ -132,6 +132,12 @@
   - name: check if ydb_config is a map
     set_fact:
       ydb_config_is_map: "{{ ydb_config is mapping }}"
+    tags:
+      - storage
+      - static
+      - database
+      - dynamic
+      - no_restart
 
   - name: V2 configuration management block
     block:
