@@ -34,19 +34,17 @@
       tags:
         - services
 
-    - name: "Remove config dir"
+    - name: "Remove folders"
       ansible.builtin.file:
-        path: "{{ ydb_dir }}/cfg"
+        path: "{{ item }}"
         state: absent
+      with_items: 
+        - "{{ ydb_dir }}/bin"
+        - "{{ ydb_dir }}/cfg"
+        - "{{ ydb_dir }}/cfg.v1"
+        - "{{ ydb_dir }}/config-dir"
       tags:
-        - config
-
-    - name: Remove bin dir
-      ansible.builtin.file:
-        path: "{{ ydb_dir }}/bin"
-        state: absent
-      tags:
-        - binaries
+        - folders
 
     - name: Remove services
       ansible.builtin.shell:
