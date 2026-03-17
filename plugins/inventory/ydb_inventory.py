@@ -78,7 +78,7 @@ class InventoryModule(BaseInventoryPlugin):
                     """ V2 Config """
                     yaml_config = yaml_config['config']
 
-                if 'self_management_config' in yaml_config and 'enabled' in yaml_config['self_management_config'] and yaml_config['self_management_config']['enabled']:
+                if yaml_config.get('self_management_config', {}).get('enabled', false):
                     self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
                     ydb_enforce_user_token_requirement = yaml_config.get('security_config', {}).get('enforce_user_token_requirement', False)
                 else:
