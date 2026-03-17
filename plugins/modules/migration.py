@@ -11,7 +11,37 @@ DOCUMENTATION = r'''
         Migration from V2 to V1
 '''
 
-def compare_dict(dict1,dict2):
+def compare_dict(dict1, dict2):
+    if len(dict1) != len(dict2):
+        return False
+
+    for key, item in dict1.values():
+        if key not in dict2:
+            return False
+        
+        if not compare_item(item, dict2[key]):
+            return False
+    
+    return True
+
+def compare_list(list1, list2):
+    if len(list1) != len(list2):
+        return False
+
+    for item1, item2 in zip(list1, list2):
+        if not compare_item(item1, item2):
+            return False
+
+    return True
+
+def compare_item(item1, item2):
+    if isinstance(item1, list) anf isinstance(item2, list):
+        return compare_list(item1, item2)
+    
+    if isinstance(item1, dict) anf isinstance(item2, dict):
+        return compare_dict(item1, item2)
+    
+    return item1 == item2
     """
     Compare two structures
     """
