@@ -19,7 +19,7 @@ def fetch_cluster_config(ydb_cli, result):
     command = ['admin', 'cluster', 'config', 'fetch']
     rc, stdout, stderr = ydb_cli(command)
 
-    if 'No config' in stderr:
+    if 'No config' in stderr or 'YAML config is absent' in stderr:
         return {}, False
 
     if rc != 0:
