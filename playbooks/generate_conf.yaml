@@ -12,6 +12,7 @@
 # REQUIRED SOFTWARE: lsblk, dd
 #
 - hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  run_once: true
   vars:
     ydb_host_user: ydb
 
@@ -38,12 +39,14 @@
     tags:
       - token
 
-  - name: Get config
+  - name: Get config V1
+    when: ydb_config_v2 is not defined or not ydb_config_v2|bool
     block:
-      - name: Generate random temporary config file path
-        set_fact:
-          ydb_temp_config_path: "/tmp/ydbd-config-{{ ansible_date_time.epoch }}-{{ 999999 | random }}.yaml"
-        run_once: true
+
+      - name: Store file into {{ ansible_config_file | dirname }}/ydb_cluster_config.yaml
+        ansible.builtin.fetch:
+          src: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+          dest: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
 
       - name: Get dynamic config for YDB V1 configuration
         ydb_platform.ydb.dynconfig_version:
@@ -54,41 +57,21 @@
           database: "/{{ ydb_domain }}"
           token: "{{ ydb_credentials.token }}"
         register: current_cluster_config
-        when: not ydb_config_v2|bool
 
-      - name: Get dynamic config for YDB V2 configuration
-        ydb_platform.ydb.cluster_config:
-          ydb_bin: "{{ ydb_dir }}/bin/ydb"
-          ld_library_path: "{{ ydb_dir }}/lib"
-          ca_file: "{{ ydb_dir }}/certs/ca.crt"
-          endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-          token: "{{ ydb_credentials.token }}"
-          mode: fetch
+      - name: Store file into {{ ansible_config_file | dirname }}/ydb_cluster_dynconfig.yaml
+        delegate_to: localhost
+        ansible.builtin.copy:
+          content: "{{ current_cluster_config['config'] }}"
+          dest: "{{ ansible_config_file | dirname }}/ydb_cluster_dynconfig.yaml"
         run_once: true
-        become: true
-        become_method: sudo
-        become_user: ydb
-        register: current_cluster_config
-        until: current_cluster_config is succeeded
-        retries: 30
-        delay: 15
-        when: ydb_config_v2|bool | default(false)
+        when: current_cluster_config is defined and 'config' in current_cluster_config
+
+  - name: Get config V2
+    when: ydb_config_v2 is defined and ydb_config_v2|bool
+    block:
 
       - name: Store file into {{ ansible_config_file | dirname }}/ydb_cluster_config.yaml
-        delegate_to: localhost
         ansible.builtin.fetch:
-          src: "{{ ydb_temp_config_path }}"
+          src: "{{ ydb_dir }}/config-dir/config.yaml"
           dest: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
-        run_once: true
-        when: ydb_temp_config_path is defined
 
-    always:
-      - name: cleanup temporary config file
-        file:
-          path: "{{ ydb_temp_config_path }}"
-          state: absent
-        run_once: true
-        become: true
-        become_method: sudo
-        become_user: ydb
-        when: ydb_temp_config_path is defined
