@@ -35,31 +35,13 @@ def compare_list(list1, list2):
     return True
 
 def compare_item(item1, item2):
-    if isinstance(item1, list) anf isinstance(item2, list):
+    if isinstance(item1, list) and isinstance(item2, list):
         return compare_list(item1, item2)
     
-    if isinstance(item1, dict) anf isinstance(item2, dict):
+    if isinstance(item1, dict) and isinstance(item2, dict):
         return compare_dict(item1, item2)
     
     return item1 == item2
-    """
-    Compare two structures
-    """
-    result = True
-    if type(dict1) == type(dict2):
-        if isinstance(dict1, dict) or isinstance(dict1, list):
-            if len(dict1) == len(dict2):
-                for item in dict1:
-                    if item in dict2:
-                        pass
-                    else:
-                        result = False
-                        break
-        else:
-            result = (dict1 == dict2)
-    else:
-        result = False
-    return result
 
 def merge_static_dynamic(static_config, dynamic_config):
     """
@@ -68,7 +50,7 @@ def merge_static_dynamic(static_config, dynamic_config):
     output = dynamic_config
 
     for section in static_config:
-        if section in output['config'] and not compare_dict(output['config'][section],static_config[section]):
+        if section in output['config'] and not compare_item(output['config'][section],static_config[section]):
             print(f'PROBLEM: {section} is present in both configs and it\'s different, correct it manually')
             os._exit(1)
         else:
@@ -95,15 +77,16 @@ def cleanup(config):
                 match subsection:
                     case 'domains_config':
                         if 'domain' in config['config']['domains_config'] and 'name' in  config['config']['domains_config']['domain'][0]:
-                            output['config']['domains_config'] = {"domain": [{"name": config['config']['domains_config']['domain'][0]["name"]}]}
+                            # output['config']['domains_config'] = {"domain": [{"name": config['config']['domains_config']['domain'][0]["name"]}]}
+                            output['config']['domain_name'] = config['config']['domains_config']['domain'][0]["name"]
                         if 'security_config' in config['config']['domains_config']:
                             output['config']['security_config'] = config['config']['domains_config']['security_config']
                         else:
                             output['config']['security_config'] = {}
                         if 'disable_builtin_security' in config['config']['domains_config']:
                             output['config']['security_config']['disable_builtin_security'] = config['config']['domains_config']['disable_builtin_security']
-                        # if 'storage_pool_types' in config['config']['domains_config']['domain'][0]:
-                            # output['config']['storage_pool_types'] = config['config']['domains_config']['domain'][0]['storage_pool_types']
+                        if 'storage_pool_types' in config['config']['domains_config']['domain'][0]:
+                            output['config']['storage_pool_types'] = config['config']['domains_config']['domain'][0]['storage_pool_types']
                             # config['config']['domains_config']['domain'][0]['storage_pool_types'] = {}
                             # del config['config']['domains_config']['domain'][0]['storage_pool_types']
                         if 'state_storage' in config['config']['domains_config']:
