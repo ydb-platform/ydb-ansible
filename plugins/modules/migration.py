@@ -15,11 +15,11 @@ def compare_dict(dict1, dict2):
     if len(dict1) != len(dict2):
         return False
 
-    for key, item in dict1.values():
+    for key in dict1:
         if key not in dict2:
             return False
         
-        if not compare_item(item, dict2[key]):
+        if not compare_item(dict1[key], dict2[key]):
             return False
     
     return True
