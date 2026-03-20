@@ -29,7 +29,7 @@
 
     - name: "Stop services"
       ansible.builtin.shell:
-        cmd: "systemctl list-units | grep ydbd | awk '{print $1;}' | xargs systemctl stop"
+        cmd: "systemctl list-units | grep ydbd | awk '{print $1;}' | xargs systemctl stop || true"
       ignore_errors: True
       tags:
         - services

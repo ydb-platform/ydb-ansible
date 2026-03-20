@@ -21,7 +21,7 @@
 
 - name: assert usage of systemd as an init system
   ansible.builtin.assert:
-    that: ansible_service_mgr == 'systemd'
+    that: ansible_facts["service_mgr"] == 'systemd'
     msg: "only systemd service manager is supported"
 
 - name: set collection level constants
