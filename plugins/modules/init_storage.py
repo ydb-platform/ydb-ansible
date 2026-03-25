@@ -93,13 +93,15 @@ def init_storage_using_config_v1(ydbd_cli, config_file, result, update_config):
         return True
 
 
-def init_storage_using_config_v2(ydb_cli, result):
+def init_storage_using_config_v2(ydb_cli, ydb_dir, enforce_user_token_requirement, result):
     """Initialize storage using YDB configuration V2 (bootstrap only)"""
 
     # ydb_cli = cli.YDB.from_module(ydb_cli_with_db.module)
 
     # Run bootstrap with config directory (node init should have been done before ydbd start)
     cmd = ['--assume-yes', 'admin', 'cluster', 'bootstrap', '--uuid', str(uuid.uuid4())]
+    if enforce_user_token_requirement:
+        cmd = ['--client-cert-file',f'{ydb_dir}/certs/node.crt','--client-cert-key-file',f'{ydb_dir}/certs/node.key', '--assume-yes', 'admin', 'cluster', 'bootstrap', '--uuid', str(uuid.uuid4())]
     rc, stdout, stderr = ydb_cli(cmd)
     if rc != 0:
         result['msg'] = 'bootstrap failed'
@@ -116,9 +118,11 @@ def init_storage_using_config_v2(ydb_cli, result):
 
 def main():
     argument_spec=dict(
-        config_file=dict(type='str', required=True),
-        update_config=dict(type='bool', default=False),
-        use_config_v2=dict(type='bool', default=False),
+        config_file   = dict(type='str', required=True),
+        update_config = dict(type='bool', default=False),
+        use_config_v2 = dict(type='bool', default=False),
+        ydb_dir       = dict(type='str', required=False,   default="/opt/ydb"),
+        enforce_user_token_requirement = dict(type='bool', default=False),
     )
     cli.YDBD.add_arguments(argument_spec)
     cli.YDB.add_arguments(argument_spec)
@@ -127,12 +131,15 @@ def main():
     result = {'changed': False}
 
     try:
-        ydbd_cli = cli.YDBD.from_module(module)
-        ydb_cli = cli.YDB.from_module(module)
+        ydbd_cli   = cli.YDBD.from_module(module)
+        ydb_cli    = cli.YDB.from_module(module)
         ydb_dstool = cli.DsTool.from_module(module)
-        config_file = module.params.get('config_file')
+
+        config_file   = module.params.get('config_file')
         use_config_v2 = module.params.get('use_config_v2')
         update_config = module.params.get('update_config')
+        ydb_dir       = module.params.get('ydb_dir')
+        enforce_user_token_requirement = module.params.get('enforce_user_token_requirement')
 
         initialized, should_fail = check_storage_initialization(ydb_dstool, result)
 
@@ -146,7 +153,7 @@ def main():
 
         # Initialize storage using the appropriate method
         if use_config_v2:
-            success = init_storage_using_config_v2(ydb_cli, result)
+            success = init_storage_using_config_v2(ydb_cli, ydb_dir, enforce_user_token_requirement, result)
         else:
             success = init_storage_using_config_v1(ydbd_cli, config_file, result, update_config)
 

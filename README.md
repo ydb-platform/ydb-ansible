@@ -18,7 +18,7 @@ The following scenarios are yet to be implemented (TODO):
 
 Current limitations:
 
-* supported python interpreter version on managed servers must be >= 3.7
+* supported python interpreter version on managed servers must be >= 3.8
 * configuration file customization depends on the support of automatic actor system threads management, which requires YDB version 23.1.26.hotfix1 or later;
 * the cluster configuration file has to be manually created;
 * there are no examples for configuring the storage nodes with different disk layouts (it seems to be doable by defining different `ydb_disks` values for different host groups).
@@ -79,14 +79,12 @@ Overall installation is performed according to the [official instruction](https:
 1. Install the required YDB Ansible collections from Github:
 
     ```bash
-    ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git
+    ansible-galaxy collection install git+https://github.com/ydb-platform/ydb-ansible.git,latest
     ```
 
     Alternatively, download the current releases of Ansible collection for [YDB](https://github.com/ydb-platform/ydb-ansible/releases). In addition, [Prometheus](https://github.com/prometheus-community/ansible/releases) and [Grafana](https://github.com/grafana/grafana-ansible-collection) collections can be used to automatically deploy the monitoring services (optionally). Install the collections from the archives:
 
     ```bash
-    ansible-galaxy collection install prometheus-prometheus-X.Y.Z.tar.gz
-    ansible-galaxy collection install grafana-ansible-collection-X.Y.Z.tar.gz
     ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
     ```
 
@@ -187,6 +185,51 @@ graph TD;
     install_from_binary(use local binaries)
    end
 ```
+
+# Install with V2 config
+
+Ansible collection deploys and manages YDB cluster with [V1 configuration](https://ydb.tech/docs/en/devops/configuration-management/configuration-v1/) by default. You can use [V2 configuration](https://ydb.tech/docs/en/devops/configuration-management/configuration-v2) also. Before using V2 configuration on YDB you must:
+
+- get YDB v25.1 or newer
+- get YDB Ansible collection v2.0.0 or newer
+
+The type of configuration is managed by `ydb_version_v2` variable.
+
+| Variable | Meaning |
+| --------- | ------- |
+| ydb_version_v2 | False - V1 Configuration |
+| ydb_version_v2 | True  - V2 Configuration |
+
+Example:
+
+```
+        # Define version of YDB Configuration file
+        # V1 - ydb_config_v2: false (default)
+        # V2 - ydb_config_v2: true
+        ydb_config_v2: true
+```
+
+Example configurations for V2 can be found in [ydb-ansible-examples](https://github.com/ydb-platform/ydb-ansible-examples/tree/main/6-nodes-bridge-2-dc) repository.
+
+Also you can get sample configurations for different [use cases](https://github.com/ydb-platform/ydb-ansible-examples/tree/main/use-cases-v2) (such as `add new hard drive`, `add new storage host`)
+
+## How to migrate from V1 to V2
+
+There no playbook yet for this action for YDB cluster and you must follow the documentaion procedure https://ydb.tech/docs/en/devops/configuration-management/migration/migration-to-v2. The playbook is under construction and it will be releases in the next YDB Ansible release.
+
+Changes in ansible configuraton:
+
+- replace config.yaml (v1 version) with new config.yaml (v2 version)
+- add `ydb_config_v2: true` into inventory
+
+## How to migrate from V2 to V1
+
+There no playbook yet for this action for YDB cluster and you must follow the documentaion procedure https://ydb.tech/docs/en/devops/configuration-management/migration/migration-to-v1. The playbook is under construction and it will be releases in the next YDB Ansible release.
+
+Changes in ansible configuraton:
+
+- replace config.yaml (v2 version) with new config.yaml (v1 version)
+- remove `ydb_config_v2` from inventory or set it to `False` value
 
 # Install in isolated mode
 
