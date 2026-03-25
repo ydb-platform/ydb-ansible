@@ -1,10 +1,9 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
+      - lookup('vars', item, default=None) is not none
     fail_msg: "{{ item }} variable is required"
   loop:
-    - {ydb_archive | ydbd_binary}
     - ydb_config
 
 - name: create certs group

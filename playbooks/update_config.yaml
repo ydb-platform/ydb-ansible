@@ -20,7 +20,7 @@
 
   - ansible.builtin.assert:
       that:
-        - "{{ item is defined}}"
+        - lookup('vars', item, default=None) is not none
       fail_msg: "Either {{ item }} variable is required"
     loop:
       - "ydb_cores_static"

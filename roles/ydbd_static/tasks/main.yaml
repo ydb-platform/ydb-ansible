@@ -10,7 +10,7 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
+      - lookup('vars', item, default=None) is not none
     fail_msg: "Either {{ item }} variable is required"
   loop:
     - "ydb_cores_static"
@@ -123,7 +123,7 @@
   no_log: true
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
+      - lookup('vars', item, default=None) is not none
     fail_msg: "{{ item }} secret is required"
   loop:
     - ydb_password
