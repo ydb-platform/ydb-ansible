@@ -4,7 +4,6 @@
       - lookup('vars', item, default=None) is not none
     fail_msg: "{{ item }} variable is required"
   loop:
-    - {ydb_archive | ydbd_binary}
     - ydb_config
 
 - name: install custom libidn from archive

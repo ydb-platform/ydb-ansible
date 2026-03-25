@@ -1,4 +1,5 @@
 import yaml
+import os
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.ydb_platform.ydb.plugins.module_utils.yaml_utils import safe_dump
 
@@ -160,6 +161,10 @@ def main():
         elif mode == 'v2-cleanup':
             result_config = cleanup(dynamic_config)
             result['changed'] = True
+        else:
+            module.fail_json(
+                msg=f"Unsupported mode '{mode}'. Supported modes are: 'v2', 'v2-self-management', 'v2-cleanup'."
+            )
 
         if not module.check_mode:
             if output_file and result['changed']:

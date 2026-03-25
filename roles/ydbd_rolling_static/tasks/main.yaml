@@ -79,6 +79,7 @@
         availability_mode: "{{ availability_mode }}"
         hosts: "{{ ansible_play_batch | join(',') }}"
         log_file: "{{ ydbops_log }}"
+        duration: "{{ ydbops_duration }}"
       when: ansible_limit is defined
 
     - name: "Run ydbops to gracefully restart the cluster, it takes a long time"
