@@ -253,22 +253,23 @@
     path: "{{ ydb_dir }}/bin/ydb-dstool"
   register: ydb_dstool_exists
 
-- name: install ydb-dstool (from ydb_dstool_binary)
+- name: Install ydb-dstool (from ydb_dstool_binary)
   ansible.builtin.copy:
     src: "{{ ydb_dstool_binary }}"
     dest: "{{ ydb_dir }}/bin/ydb-dstool"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is defined
 
-- name: install ydb-dstool (from URL)
+- name: Install ydb-dstool (from URL) to localhost
   delegate_to: 127.0.0.1
+  run_once: true
   ansible.builtin.get_url:
     url: https://storage.yandexcloud.net/yandexcloud-ydb-dstool/release/0.0.14/linux/amd64/ydb-dstool
     dest: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
 
-- name: install ydb-dstool (from URL)
+- name: Install ydb-dstool from localhost
   ansible.builtin.copy:
     src: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
     dest: "{{ ydb_dir }}/bin/ydb-dstool"
