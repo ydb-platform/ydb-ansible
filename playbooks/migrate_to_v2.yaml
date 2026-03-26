@@ -45,22 +45,91 @@
 
   tasks:
 
-  - name: "Get current YDB Cluster configuration"
-    ansible.builtin.shell: python3 -c "import requests; import urllib3; urllib3.disable_warnings(); print(requests.get('https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus', verify=False).text)"  | grep '^ConfigurationV2'
-    register: current_config_version
+  - name: "Check YDB Cluster configuration version"
+    block:
+    - name: "Get current YDB Cluster configuration (via URI)"
+      ansible.builtin.uri:
+        url: https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus
+        method: GET
+        validate_certs: false  # Отключаем проверку SSL (как в исходном коде)
+        return_content: true
+        timeout: 30
+        status_code: 200  # Ожидаем успешный HTTP-ответ
+      register: config_response
+
+    - name: "Extract ConfigurationV2 line from response"
+      set_fact:
+        current_config_version: >-
+          {{ config_response.content
+            | regex_findall('^ConfigurationV2.*$', multiline=true)
+            | first | default('') }}
+      when: config_response.status == 200 and config_response.content is not none
+
+    - name: "Fail if configuration could not be retrieved"
+      ansible.builtin.fail:
+        msg: >
+          Failed to retrieve YDB configuration.
+          Status: {{ config_response.status }},
+          Error: {{ config_response.msg | default('No error message') }}
+      when: >
+        config_response.status is not defined or
+        config_response.status != 200 or
+        current_config_version == ''
+
+    - name: "Check current YDB Cluster configuration is not V2"
+      ansible.builtin.assert:
+        that:
+        - "current_config_version is defined"
+        - "current_config_version == 'ConfigurationV2 0'"
+        fail_msg: "Current cluster config is wrong: {{ current_config_version }}"    
     tags:
       - check
       - version
 
-  - name: "Check current YDB Cluster configuration is not V2"
-    ansible.builtin.assert:
-      that:
-      - "current_config_version.stdout is defined"
-      - "current_config_version.stdout == 'ConfigurationV2 0'"
-      fail_msg: "Current cluster config is wrong: {{ current_config_version }}"    
+  - name: "Check current services for YDB storage"
+    block:
+    - name: generate random temporary config file path
+      set_fact:
+        ydb_temp_service_path: "/tmp/ydbd-storage-{{ ansible_date_time.epoch }}-{{ 999999 | random }}.service"
+
+    - name: create static node systemd unit
+      ansible.builtin.template:
+        src: ../roles/ydbd_static/templates/ydbd-storage.service
+        dest: "{{ ydb_temp_service_path }}"
+    
+    - name: Get diff
+      ansible.builtin.command:
+        cmd: diff -u "{{ ydb_storage_service_filename }}" "{{ ydb_temp_service_path }}"
+      register: diff_result
+      ignore_errors: yes
+
+    - name: Set facts
+      set_fact:
+        file_diff: "{{ diff_result.stdout }}"
+        files_are_identical: "{{ diff_result.rc == 0 }}"
+        diff_exit_code: "{{ diff_result.rc }}"
+
+    - name: Debug output
+      ansible.builtin.debug:
+        msg:
+          - "Files identical: {{ files_are_identical }}"
+          - "Diff output: {{ file_diff }}"
+
+    - name: "Ask user confirmation for updating services"
+      ansible.builtin.pause:
+        prompt: 'RISK OF DATA LOSS: the current service `ydbd-storage` is different. Shall we continue migration and rewrite this service?'
+      register: prompt
+      when: files_are_identical|bool == False
+      run_once: true
+
+    - name: "Stop execution"
+      ansible.builtin.fail:
+        msg: "aborting playbook execution"
+      when: files_are_identical|bool == False and prompt.user_input != "yes"
+
     tags:
       - check
-      - version
+      - service
 
 # - Get current config // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
 # - Get current dynamic config
@@ -147,7 +216,11 @@
 
 # - Update systemd services for static nodes
   - name: Update systemd service for storage nodes (step 6)
-    ansible.builtin.shell: "sed -i 's|--yaml-config  {{ ydb_dir | replace('/','\\\/') }}\/cfg\/ydbd-config-static.yaml|--config-dir {{ ydb_dir | replace('/','\\\/') }}\/config-dir |' /etc/systemd/system/ydbd-storage.service"
+    ansible.builtin.template:
+      src: ../roles/ydbd_static/templates/ydbd-storage.service
+      dest: "{{ ydb_storage_service_filename }}"
+    vars:
+      ydb_config_v2: true
     tags:
       - restart
       - storage
@@ -177,9 +250,40 @@
     pause:
       seconds: 120
 
-  - name: "Get current YDB Cluster configuration"
-    ansible.builtin.shell: python3 -c "import requests; import urllib3; urllib3.disable_warnings(); print(requests.get('https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus', verify=False).text)"  | grep '^ConfigurationV2'
-    register: current_config_version
+  - name: "Get current YDB Cluster configuration (via URI)"
+    ansible.builtin.uri:
+      url: https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus
+      method: GET
+      validate_certs: false  # Отключаем проверку SSL (как в исходном коде)
+      return_content: true
+      timeout: 30
+      status_code: 200  # Ожидаем успешный HTTP-ответ
+    register: config_response
+    tags:
+      - check
+      - version
+
+  - name: "Extract ConfigurationV2 line from response"
+    set_fact:
+      current_config_version: >-
+        {{ config_response.content
+          | regex_findall('^ConfigurationV2.*$', multiline=true)
+          | first | default('') }}
+    when: config_response.status == 200 and config_response.content is not none
+    tags:
+      - check
+      - version
+
+  - name: "Fail if configuration could not be retrieved"
+    ansible.builtin.fail:
+      msg: >
+        Failed to retrieve YDB configuration.
+        Status: {{ config_response.status }},
+        Error: {{ config_response.msg | default('No error message') }}
+    when: >
+      config_response.status is not defined or
+      config_response.status != 200 or
+      current_config_version == ''
     tags:
       - check
       - version
@@ -187,9 +291,9 @@
   - name: "Check current YDB Cluster configuration is V2"
     ansible.builtin.assert:
       that:
-      - "current_config_version.stdout is defined"
-      - "current_config_version.stdout == 'ConfigurationV2 1'"
-      fail_msg: "Current cluster config is wrong: {{ current_config_version }}"
+      - "current_config_version is defined"
+      - "current_config_version == 'ConfigurationV2 1'"
+      fail_msg: "Current cluster config is wrong: {{ current_config_version }}"    
     tags:
       - check
       - version
@@ -367,8 +471,13 @@
 
   tasks:
   - name: Update systemd service for dynamic nodes (extra step 15)
-    ansible.builtin.shell: "sed -i '/--yaml-config/d' /etc/systemd/system/ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}.service"
+    ansible.builtin.template:
+      src: ../roles/ydbd_dynamic/templates/ydbd-dynnode.service
+      dest: "/etc/systemd/system/ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}.service"
     loop: "{{ ydb_dynnodes }}"
+    when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
+    vars:
+      ydb_config_v2: true
     tags:
       - restart
       - dynamic
