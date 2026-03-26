@@ -102,6 +102,11 @@
         cmd: diff -u "{{ ydb_storage_service_filename }}" "{{ ydb_temp_service_path }}"
       register: diff_result
       ignore_errors: yes
+    
+    - name: Remove temporary file
+      ansible.builtin.file:
+        path: "{{ ydb_temp_service_path }}"
+        state: absent
 
     - name: Set facts
       set_fact:
