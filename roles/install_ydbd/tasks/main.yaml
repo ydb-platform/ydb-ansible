@@ -6,6 +6,17 @@
   loop:
     - ydb_config
 
+- name: ensure a YDB installation source is configured
+  ansible.builtin.assert:
+    that:
+      - ydb_archive is defined
+        or ydb_version is defined
+        or ydb_git_version is defined
+        or (ydbd_binary is defined and ydb_cli_binary is defined)
+    fail_msg: >-
+      You must configure at least one YDB installation source:
+      set one of ydb_archive, ydb_version, ydb_git_version,
+      or both ydbd_binary and ydb_cli_binary.
 - name: install custom libidn from archive
   import_tasks:
     file: install_libidn_from_archive.yaml
