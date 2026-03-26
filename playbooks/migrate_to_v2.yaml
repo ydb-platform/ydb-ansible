@@ -174,9 +174,10 @@
     tags:
       - config
       - step-1
+      - step-3
 
 # -[SKIP] Generate config if absent // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config generate > config.yaml
-# - Merge static and dynamic config // TODO: подумать как
+# - Merge static and dynamic config
 # - Enrich config // feature_flags.switch_to_config_v2: true
   - name: Generate new config (step 3)
     ydb_platform.ydb.migration:

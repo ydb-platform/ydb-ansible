@@ -52,8 +52,7 @@ def merge_static_dynamic(static_config, dynamic_config):
 
     for section in static_config:
         if section in output['config'] and not compare_item(output['config'][section],static_config[section]):
-            print(f'PROBLEM: {section} is present in both configs and it\'s different, correct it manually')
-            os._exit(1)
+            return f"MERGE PROBLEM: {section} is present in both configs and it\'s different, correct it manually: DYNAMIC:{output['config'][section]} STATIC:{static_config[section]}"
         else:
             output['config'][section] = static_config[section]
     if 'feature_flags' not in output['config']:
@@ -153,7 +152,12 @@ def main():
             if len(dynamic_config) == 0 or 'config' not in dynamic_config:
                 dynamic_config = empty_dynamic_config()
             result_config = merge_static_dynamic(static_config, dynamic_config)
-            result['changed'] = True
+            if not isinstance(result_config, dict):
+                result['changed'] = False
+                result['msg'] = result_config
+                module.fail_json(result)
+            else:  
+                result['changed'] = True
         elif mode == 'v2-self-management':
             result_config = dynamic_config
             result_config['config']['self_management_config'] = {'enabled': True}
