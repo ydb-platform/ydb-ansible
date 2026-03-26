@@ -2,7 +2,7 @@
 
 - name: stop storage node
   ansible.builtin.systemd:
-    name: "{{ ydb_storage_service }}"
+    name: "{{ ydb_storage_service | default('ydbd-storage') }}"
     state: stopped
     enabled: false
   any_errors_fatal: true
