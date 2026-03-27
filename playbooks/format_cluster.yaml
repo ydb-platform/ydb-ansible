@@ -41,7 +41,6 @@
       with_items: 
         - "{{ ydb_dir }}/bin"
         - "{{ ydb_dir }}/cfg"
-        - "{{ ydb_dir }}/cfg.v1"
         - "{{ ydb_dir }}/config-dir"
       tags:
         - folders

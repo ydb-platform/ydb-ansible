@@ -49,8 +49,11 @@
 - name: Create the YDB release directory
   file: state=directory path={{ ydb_dir }}/release group=bin owner=root mode='0755'
 
-- name: Create the YDB configuration directory
+- name: Create the YDB configuration (V1) directory
   file: state=directory path={{ ydb_dir }}/cfg group=ydb owner=ydb mode='0755'
+
+- name: Create the YDB configuration (V2) directory
+  file: state=directory path={{ ydb_dir }}/config-dir group=ydb owner=ydb mode='0755'
 
 - name: Create the YDB audit base directory
   file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode='0700'
@@ -143,7 +146,7 @@
       set_fact:
         ydb_config_is_map: "{{ ydb_config is mapping }}"
 
-    - name: copy configuration from map
+    - name: Copy configuration from map (V1)
       copy:
         content: "{{ ydb_config | ydb_platform.ydb.ydb_config_to_yaml }}"
         dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"
@@ -152,7 +155,7 @@
         mode: 0440
       when: ydb_config_is_map and not ydb_config_v2 | default(false)
 
-    - name: copy configuration from file
+    - name: Copy configuration from file (V1)
       copy:
         src: "{{ ydb_config }}"
         dest: "{{ ydb_dir }}/cfg/ydbd-config.yaml"

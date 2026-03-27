@@ -41,7 +41,7 @@
   ansible.builtin.shell:
     cmd: "dd if=/dev/zero of={{ item.name | default(ydb_disks|selectattr('label','match',item.label)|map(attribute='name')|join()| default('/dev/null')) }} bs=1M count=100 status=none"
   loop: "{{ ydb_drives }}"
-  when: ydb_format_disk|bool is defined and ydb_format_disk|bool == True
+  when: ydb_format_disk is defined and ydb_format_disk|bool == True
   tags:
     - format
 
@@ -50,7 +50,7 @@
   ansible.builtin.shell:
     cmd: "rm -f /dev/disk/by-partlabel/{{ item['label'] }}"
   loop: "{{ ydb_drives }}"
-  when: ydb_format_disk|bool is defined and ydb_format_disk|bool == True
+  when: ydb_format_disk is defined and ydb_format_disk|bool == True
   tags:
     - format
 

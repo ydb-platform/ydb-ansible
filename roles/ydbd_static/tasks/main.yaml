@@ -231,7 +231,7 @@
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:
     config_file: "{{ ydb_temp_config_path }}"
-    config_dir: "{{ ydb_dir }}/cfg"
+    config_dir: "{{ ydb_dir }}/config-dir"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
@@ -340,7 +340,7 @@
 # For v2 configs, initialize storage after the server is running
 - name: init YDB storage if not initialized (v2 configuration)
   ydb_platform.ydb.init_storage:
-    config_file: "{{ ydb_dir }}/cfg/config.yaml"
+    config_file: "{{ ydb_dir }}/config-dir/config.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
@@ -404,7 +404,7 @@
   become_user: "{{ ydb_host_user }}"
   tags:
     - healthcheck
-  when: "(ydb_version is regex(\"\\d+\\..*\") or ydb_version is regex(\"\\d+-.*\")) and ydb_version is version('25.1', '<')" # Hack until YDB HC will handle 3-nodes-mirror-3-dc in 25.*
+  # when: "(ydb_version is regex(\"\\d+\\..*\") or ydb_version is regex(\"\\d+-.*\")) and ydb_version is version('25.1', '<')" # Hack until YDB HC will handle 3-nodes-mirror-3-dc in 25.*
 
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:

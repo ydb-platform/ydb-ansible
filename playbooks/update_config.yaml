@@ -170,15 +170,6 @@
         retries: 30
         delay: 15
 
-      # - name: copy configuration from file for V2
-      #   copy:
-      #     src: "{{ ydb_config }}"
-      #     dest: "{{ ydb_dir }}/cfg/config.yaml"
-      #     owner: ydb
-      #     group: ydb
-      #     mode: 0640
-      #   when: not ydb_config_is_map
-
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
           config: "{{ ydb_config_dict }}"
@@ -189,7 +180,6 @@
           ydb_dir: "{{ ydb_dir }}"
         run_once: true
         register: patched_config_result
-        # when: not ydb_config_is_map
 
       - name: set ownership of temporary file
         file:
