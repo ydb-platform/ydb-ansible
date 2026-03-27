@@ -78,7 +78,7 @@ class InventoryModule(BaseInventoryPlugin):
                     """ V2 Config """
                     yaml_config = yaml_config['config']
 
-                if yaml_config.get('self_management_config', {}).get('enabled', false):
+                if yaml_config.get('self_management_config', {}).get('enabled', False):
                     self.inventory.groups[group_name].set_variable('ydb_config_v2', True)
                     ydb_enforce_user_token_requirement = yaml_config.get('security_config', {}).get('enforce_user_token_requirement', False)
                 else:
@@ -90,7 +90,6 @@ class InventoryModule(BaseInventoryPlugin):
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
                     if 'storage_pool_types' in yaml_config['domains_config']['domain'][0]:
                         self.inventory.groups[group_name].set_variable('ydb_pool_kind', yaml_config['domains_config']['domain'][0]['storage_pool_types'][0]['kind'])
-
 
                 domain = 'Root'
                 if 'domains_config' in yaml_config and 'domain' in yaml_config['domains_config']:
@@ -126,6 +125,7 @@ class InventoryModule(BaseInventoryPlugin):
                 self.inventory.groups[group_name].set_variable('ydb_brokers', brokers)
 
         except Exception as e:
+            print(f"Exception: Config parsing error: {str(e)}")
             raise AnsibleError(f"Config parsing error: {str(e)}")
 
 
