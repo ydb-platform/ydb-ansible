@@ -1,13 +1,13 @@
 ---
 
 # Example: Ubuntu
-vars_for_distribution_dir: "distributions/{{ ansible_facts['distribution'] }}"
+vars_for_distribution_dir:  "distributions/{{ ansible_facts['distribution'] }}"
 vars_for_distribution_file: "distributions/{{ ansible_facts['distribution'] }}/main.yaml"
 
 # Example: Ubuntu/22
-vars_for_distribution_major_dir: "distributions/{{ ansible_facts['distribution'] }}/{{ ansible_facts['distribution_major_version'] }}"
+vars_for_distribution_major_dir:  "distributions/{{ ansible_facts['distribution'] }}/{{ ansible_facts['distribution_major_version'] }}"
 vars_for_distribution_major_file: "distributions/{{ ansible_facts['distribution'] }}/{{ ansible_facts['distribution_major_version'] }}/main.yaml"
 
 # Example: Ubuntu/22.04
-vars_for_distribution_version_dir: "distributions/{{ ansible_facts['distribution'] }}/{{ ansible_facts['distribution_version'] }}"
+vars_for_distribution_version_dir:  "distributions/{{ ansible_facts['distribution'] }}/{{ ansible_facts['distribution_version'] }}"
 vars_for_distribution_version_file: "distributions/{{ ansible_facts['distribution'] }}/{{ ansible_facts['distribution_version'] }}/main.yaml"

@@ -1,40 +1,21 @@
 ---
 
 
-- name: Check presence of specific files for the Linux distribution version
-  ansible.builtin.stat:
-    path: "{{ vars_for_distribution_version_file }}"
-  register: vars_stat
-
 - name: Set vars_for_distribution_version variables for the Linux distribution version
   ansible.builtin.include_vars:
-    file: "{{ vars_for_distribution_version_file }}"
+    file: "{{ item }}"
     name: vars_for_distribution_version
-  when: vars_stat.stat.exists|bool
+  with_first_found:
+    - files:
+      - "{{ vars_for_distribution_version_file }}"
+      - "{{ vars_for_distribution_major_file }}"
+      - "{{ vars_for_distribution_file }}"
+      skip: True
 
-- name: Check presence of specific files for the Linux distribution (major version)
-  ansible.builtin.stat:
-    path: "{{ vars_for_distribution_major_file }}"
-  register: vars_stat
+- name: Alert
+  ansible.builtin.pause:
+    prompt: "WARRNING: Can't find settings for this Linux distribution {{ vars_for_distribution_version_dir }}."
   when: vars_for_distribution_version is not defined
-
-- name: Set vars_for_distribution_version variables (major version)
-  ansible.builtin.include_vars:
-    file: "{{ vars_for_distribution_major_file }}"
-    name: vars_for_distribution_version
-  when: vars_for_distribution_version is not defined and vars_stat.stat.exists|bool
-
-- name: Check presence of specific files for the Linux distribution
-  ansible.builtin.stat:
-    path: "{{ vars_for_distribution_file }}"
-  register: vars_stat
-  when: vars_for_distribution_version is not defined
-
-- name: Set vars_for_distribution_version variables
-  ansible.builtin.include_vars:
-    file: "{{ vars_for_distribution_file }}"
-    name: vars_for_distribution_version
-  when: vars_for_distribution_version is not defined and vars_stat.stat.exists|bool
 
 - name: Manual install packages for SberLinux
   when: ansible_distribution == "SberLinux" and ansible_distribution_version == "9.0"
@@ -77,6 +58,7 @@
     pkg: "{{ vars_for_distribution_version.packages_required }}"
     state: present
   timeout: 900
+  when: vars_for_distribution_version is defined
   tags:
     - packages
 
@@ -148,7 +130,7 @@
     pkg: "{{ vars_for_distribution_version.packages }}"
     state: present
   timeout: 900
-  when: ydb_tools_install|bool
+  when: ydb_tools_install|bool and vars_for_distribution_version is defined
 
 - name: configure systemd-timesyncd
   when: ansible_os_family == 'Debian' and ydb_tools_install|bool
