@@ -20,7 +20,7 @@
 
   - ansible.builtin.assert:
       that:
-        - "{{ item is defined}}"
+        - lookup('vars', item, default=None) is not none
       fail_msg: "Either {{ item }} variable is required"
     loop:
       - "ydb_cores_static"
@@ -132,6 +132,12 @@
   - name: check if ydb_config is a map
     set_fact:
       ydb_config_is_map: "{{ ydb_config is mapping }}"
+    tags:
+      - storage
+      - static
+      - database
+      - dynamic
+      - no_restart
 
   - name: V2 configuration management block
     block:
@@ -164,15 +170,6 @@
         retries: 30
         delay: 15
 
-      # - name: copy configuration from file for V2
-      #   copy:
-      #     src: "{{ ydb_config }}"
-      #     dest: "{{ ydb_dir }}/cfg/config.yaml"
-      #     owner: ydb
-      #     group: ydb
-      #     mode: 0640
-      #   when: not ydb_config_is_map
-
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
           config: "{{ ydb_config_dict }}"
@@ -183,7 +180,6 @@
           ydb_dir: "{{ ydb_dir }}"
         run_once: true
         register: patched_config_result
-        # when: not ydb_config_is_map
 
       - name: set ownership of temporary file
         file:

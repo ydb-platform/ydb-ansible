@@ -1,11 +1,12 @@
 ---
 
 - name: Stop script
-  shell: "pkill -f -e \"port_listner\""
+  ansible.builtin.shell: 
+    cmd: "pkill -f -e \"port_listner\" || true"
   ignore_errors: True
 
 - name: Copy script for testing connectivity
-  copy:
+  ansible.builtin.copy:
     src: "files/port_listner2.py"
     dest: "/tmp/port_listner.py"
     owner: root
@@ -13,7 +14,8 @@
     mode: 0755
 
 - name: Start script to listen YDB ports
-  shell: "nohup python3 /tmp/port_listner.py {{ ydb_static_ports| join(' ') }} {{ ydb_dynamic_ports| join(' ') }}  &"
+  ansible.builtin.shell: 
+    cmd: "nohup python3 /tmp/port_listner.py {{ ydb_static_ports| join(' ') }} {{ ydb_dynamic_ports| join(' ') }}  &"
 
 # - name: Stop netcat
 #   shell: "pkill nc"
@@ -67,8 +69,10 @@
 #   ignore_errors: True
 
 - name: Stop script
-  shell: "pkill -f -e \"port_listner\""
+  ansible.builtin.shell: 
+    cmd: "pkill -f -e \"port_listner\""
   ignore_errors: True
 
 - name: Remove script
-  shell: "rm /tmp/port_listner.py"
+  ansible.builtin.shell: 
+    cmd: "rm /tmp/port_listner.py"

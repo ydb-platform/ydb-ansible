@@ -13,7 +13,7 @@ PermissionsStartOnly=true
 Environment=LD_LIBRARY_PATH={{ ydb_dir }}/lib
 ExecStart={{ ydb_dir }}/bin/ydbd server \
 {% if ydb_config_v2 | default(false) %}
-    --config-dir {{ ydb_dir }}/cfg \
+    --config-dir {{ ydb_dir }}/config-dir \
 {% else %}
     --yaml-config  {{ ydb_dir }}/cfg/ydbd-config-static.yaml \
 {% endif %}

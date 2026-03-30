@@ -21,12 +21,14 @@
 
 - name: assert usage of systemd as an init system
   ansible.builtin.assert:
-    that: ansible_service_mgr == 'systemd'
+    that: ansible_facts["service_mgr"] == 'systemd'
     msg: "only systemd service manager is supported"
 
 - name: set collection level constants
   set_fact:
     ydb_dir: /opt/ydb
+    ydb_storage_service: ydbd-storage.service
+    ydb_storage_service_filename: /etc/systemd/system/ydbd-storage.service
 
 - name: Check current user
   ansible.builtin.command: whoami

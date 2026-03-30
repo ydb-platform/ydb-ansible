@@ -34,6 +34,7 @@ def main():
             if match:
                 version = int(match.group(1))
                 result['version'] = version
+                result['config']  = stdout
             result['msg'] = ''
         module.exit_json(**result)
 

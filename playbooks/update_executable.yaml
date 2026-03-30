@@ -19,7 +19,7 @@
   tasks:
   - ansible.builtin.assert:
       that:
-        - "{{ item }} is defined"
+        - lookup('vars', item, default=None) is not none
       fail_msg: "Either {{ item }} variable is required"
     loop:
       - "ydb_cores_static"
@@ -65,10 +65,21 @@
       tags:
         - no_restart
 
-    - name: install ydb-dstool (from URL)
+    - name: Install ydb-dstool (from URL) to localhost
+      delegate_to: 127.0.0.1
+      run_once: true
       ansible.builtin.get_url:
         url: https://storage.yandexcloud.net/yandexcloud-ydb-dstool/release/0.0.14/linux/amd64/ydb-dstool
-        dest: "{{ ydb_dir }}/bin/"
+        dest: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
+        mode: 0755
+      when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
+      tags:
+        - no_restart
+
+    - name: Install ydb-dstool from localhost
+      ansible.builtin.copy:
+        src: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
+        dest: "{{ ydb_dir }}/bin/ydb-dstool"
         mode: 0755
       when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
       tags:

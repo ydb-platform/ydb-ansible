@@ -1,0 +1,76 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.generate_conf
+# PROPOSE : This playbook is designed to get current configs for YDB cluster
+#           
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.generate_conf
+#
+
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
+  run_once: true
+  become: true
+  vars:
+    ydb_host_user: ydb
+
+  roles:
+  - role: preflight
+
+  tasks:
+  - name: Get YDB token with user credentials
+    ydb_platform.ydb.get_token:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
+      database: "/{{ ydb_domain }}"
+      user: "{{ ydb_user }}"
+      password: "{{ ydb_password }}"
+      retry_on_ssl_error: true
+    run_once: true
+    register: ydb_credentials
+    until: "'token' in ydb_credentials"
+    retries: 5
+    delay: 20
+    become: true
+    become_user: "{{ ydb_host_user }}"
+    tags:
+      - token
+
+  - name: Get config V1
+    when: ydb_config_v2 is not defined or not ydb_config_v2|bool
+    block:
+
+      - name: Store file into {{ ansible_config_file | dirname }}/ydb_cluster_config
+        ansible.builtin.fetch:
+          src: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+          dest: "{{ ansible_config_file | dirname }}/ydb_cluster_config"
+
+      - name: Get dynamic config for YDB V1 configuration
+        ydb_platform.ydb.dynconfig_version:
+          ydb_bin: "{{ ydb_dir }}/bin/ydb"
+          ld_library_path: "{{ ydb_dir }}/lib"
+          ca_file: "{{ ydb_dir }}/certs/ca.crt"
+          endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
+          database: "/{{ ydb_domain }}"
+          token: "{{ ydb_credentials.token }}"
+        register: current_cluster_config
+
+      - name: Store file into {{ ansible_config_file | dirname }}/ydb_cluster_config/ydb_cluster_dynconfig.yaml
+        delegate_to: localhost
+        become: false
+        ansible.builtin.copy:
+          content: "{{ current_cluster_config['config'] }}"
+          dest: "{{ ansible_config_file | dirname }}/ydb_cluster_config/ydb_cluster_dynconfig.yaml"
+        run_once: true
+        when: current_cluster_config is defined and 'config' in current_cluster_config
+
+  - name: Get config V2
+    when: ydb_config_v2 is defined and ydb_config_v2|bool
+    block:
+
+      - name: Store file into {{ ansible_config_file | dirname }}/ydb_cluster_config.yaml
+        ansible.builtin.fetch:
+          src: "{{ ydb_dir }}/config-dir/config.yaml"
+          dest: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+

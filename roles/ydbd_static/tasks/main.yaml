@@ -10,7 +10,7 @@
 - name: Check if required variables are defined
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
+      - lookup('vars', item, default=None) is not none
     fail_msg: "Either {{ item }} variable is required"
   loop:
     - "ydb_cores_static"
@@ -123,7 +123,7 @@
   no_log: true
   ansible.builtin.assert:
     that:
-      - "{{ item }} is defined"
+      - lookup('vars', item, default=None) is not none
     fail_msg: "{{ item }} secret is required"
   loop:
     - ydb_password
@@ -160,7 +160,7 @@
 - name: create static node systemd unit
   template:
     src: ydbd-storage.service
-    dest: "/etc/systemd/system/ydbd-storage.service"
+    dest: "{{ ydb_storage_service_filename }}"
   notify:
     - daemon reload
 
@@ -231,7 +231,7 @@
 - name: init YDB node configuration (V2 only - before ydbd start)
   ydb_platform.ydb.init_node_config:
     config_file: "{{ ydb_temp_config_path }}"
-    config_dir: "{{ ydb_dir }}/cfg"
+    config_dir: "{{ ydb_dir }}/config-dir"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
     endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
@@ -253,23 +253,33 @@
     path: "{{ ydb_dir }}/bin/ydb-dstool"
   register: ydb_dstool_exists
 
-- name: install ydb-dstool (from ydb_dstool_binary)
+- name: Install ydb-dstool (from ydb_dstool_binary)
   ansible.builtin.copy:
     src: "{{ ydb_dstool_binary }}"
     dest: "{{ ydb_dir }}/bin/ydb-dstool"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is defined
 
-- name: install ydb-dstool (from URL)
+- name: Install ydb-dstool (from URL) to localhost
+  delegate_to: 127.0.0.1
+  run_once: true
   ansible.builtin.get_url:
     url: https://storage.yandexcloud.net/yandexcloud-ydb-dstool/release/0.0.14/linux/amd64/ydb-dstool
-    dest: "{{ ydb_dir }}/bin/"
+    dest: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
 
+- name: Install ydb-dstool from localhost
+  ansible.builtin.copy:
+    src: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
+    dest: "{{ ydb_dir }}/bin/ydb-dstool"
+    mode: 0755
+  when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
+
+
 - name: start storage node
   ansible.builtin.systemd:
-    name: ydbd-storage
+    name: "{{ ydb_storage_service }}"
     state: started
     enabled: true
   any_errors_fatal: true
@@ -330,7 +340,7 @@
 # For v2 configs, initialize storage after the server is running
 - name: init YDB storage if not initialized (v2 configuration)
   ydb_platform.ydb.init_storage:
-    config_file: "{{ ydb_dir }}/cfg/config.yaml"
+    config_file: "{{ ydb_dir }}/config-dir/config.yaml"
     ydbd_bin: "{{ ydb_dir }}/bin/ydbd"
     ydb_bin: "{{ ydb_dir }}/bin/ydb"
     ld_library_path: "{{ ydb_dir }}/lib"
@@ -394,7 +404,7 @@
   become_user: "{{ ydb_host_user }}"
   tags:
     - healthcheck
-  when: "(ydb_version is regex(\"\\d+\\..*\") or ydb_version is regex(\"\\d+-.*\")) and ydb_version is version('25.1', '<')" # Hack until YDB HC will handle 3-nodes-mirror-3-dc in 25.*
+  when: ydb_version|split('.')|first != '25' and ydb_version|split('-')|first != '25' 
 
 - name: set cluster root password
   ydb_platform.ydb.set_user_password:
