@@ -14,9 +14,14 @@ DOCUMENTATION = r'''
         Work with ydb cluster config (it's needed for V2 cluster configuration)
 '''
 
-def fetch_cluster_config(ydb_cli, result):
+def fetch_cluster_config(ydb_cli, result, fetch_v2=False):
     """Fetch current cluster configuration from YDB"""
-    command = ['admin', 'cluster', 'config', 'fetch']
+    
+    if fetch_v2:
+        command = ['admin', 'cluster', 'config', 'fetch', '--v2-internal-state']
+    else:
+        command = ['admin', 'cluster', 'config', 'fetch']
+    
     rc, stdout, stderr = ydb_cli(command)
 
     if 'No config' in stderr or 'YAML config is absent' in stderr:
@@ -75,7 +80,7 @@ def configs_different(current_config, new_config):
 def main():
     argument_spec = dict(
         config_file = dict(type='str', required=False),
-        mode        = dict(type='str', default='replace', choices=['replace', 'fetch','set_variable']),
+        mode        = dict(type='str', default='replace', choices=['replace', 'fetch', 'fetch-v2', 'set_variable']),
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -96,17 +101,23 @@ def main():
             result['msg'] = 'configuration is loaded into variable'
             result['config'] = local_config
             module.exit_json(**result)
-
-        if mode == 'fetch':
+        elif mode == 'fetch':
             # Just fetch and return current configuration without writing to file
             current_config, should_fail = fetch_cluster_config(ydb_cli, result)
             if should_fail:
                 module.fail_json(**result)
-
             result['msg'] = 'cluster configuration retrieved'
             result['config'] = current_config
             if 'metadata' in current_config:
                 result['metadata'] = current_config['metadata']
+            module.exit_json(**result)
+        elif mode == 'fetch-v2':
+            # Just fetch and return current v2 configuration without writing to file
+            current_config, should_fail = fetch_cluster_config(ydb_cli, result, fetch_v2=True)
+            if should_fail:
+                module.fail_json(**result)
+            result['msg'] = 'cluster configuration retrieved'
+            result['config'] = current_config
             module.exit_json(**result)
 
         # For 'replace' mode, config_file is required

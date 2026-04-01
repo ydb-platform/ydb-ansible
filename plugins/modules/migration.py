@@ -162,6 +162,10 @@ def main():
             result_config = dynamic_config
             result_config['config']['self_management_config'] = {'enabled': True}
             result['changed'] = True
+        elif mode == 'v1-self-management':
+            result_config = dynamic_config
+            result_config['config']['self_management_config'] = {'enabled': False}
+            result['changed'] = True
         elif mode == 'v2-cleanup':
             result_config = cleanup(dynamic_config)
             result['changed'] = True

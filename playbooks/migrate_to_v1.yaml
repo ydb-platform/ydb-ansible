@@ -1,0 +1,232 @@
+---
+
+# PLAYBOOK: ydb_platform.ydb.migrate_to_v1
+# PROPOSE : This playbook is designed for migration from V2 to V1 configuration
+#           
+# EXAMPLE:
+#
+# ansible-playbook ydb_platform.ydb.migrate_to_v1
+#
+
+# https://ydb.tech/docs/ru/devops/configuration-management/migration/migration-to-v1?version=v25.2
+# Steps (every step is tagged with tag like 'step-N'):
+# - name: Get current cluster config (step 8)
+
+# - Get current config and compare it // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
+
+- hosts: "{{ groups['ydbd_static'] if 'ydbd_static' in groups else groups['ydb'] }}"
+  become: true
+
+  roles:
+  - role: preflight
+    tags:
+      - always
+
+  tasks:
+
+# - Get current config // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
+# - Get current dynamic config
+  - name: Get ydb token with user credentials
+    ydb_platform.ydb.get_token:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
+      database: "/{{ ydb_domain }}"
+      user: "{{ ydb_user }}"
+      password: "{{ ydb_password }}"
+      retry_on_ssl_error: true
+    run_once: true
+    register: ydb_credentials
+    until: "'token' in ydb_credentials"
+    retries: 5
+    delay: 20
+    become: true
+    tags:
+      - token
+      - always
+
+# - Get current config and compare it // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch --v2-internal-state > config.yaml
+  - name: Get current cluster config (step 1)
+    ydb_platform.ydb.cluster_config:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ld_library_path: "{{ ydb_dir }}/lib"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      mode: "fetch-v2"
+    run_once: true
+    become: true
+    register: current_cluster_config
+    until: current_cluster_config is succeeded
+    retries: 30
+    delay: 15
+    tags:
+      - config
+      - step-1
+
+# - Enrich config // self_management_config.enabled: false
+  - name: Generate new config (step 2)
+    ydb_platform.ydb.migration:
+      static_config:  "{{ ydb_config_dict }}"
+      dynamic_config: "{{ current_cluster_config.config }}"
+      output_file:    "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      mode: "v1-self-management"
+    run_once: true
+    become: false
+    delegate_to: localhost
+    tags:
+      - config
+      - step-2
+
+# - Replace config in cluster // ydb -e grpc://<node.ydb.tech>:2135 cluster config replace -f config.yaml
+  - name: Save config to storage nodes (step 3)
+    ansible.builtin.copy:
+      src: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      dest: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+      force: true
+    become: true
+    tags:
+      - config
+      - step-3
+
+  - name: Update cluster configuration using YDB config management V1 (step 3)
+    ydb_platform.ydb.cluster_config:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ld_library_path: "{{ ydb_dir }}/lib"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      config_file: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+      mode: replace
+    run_once: true
+    become: true
+    register: update_cluster_config_result
+    until: update_cluster_config_result is succeeded
+    retries: 30
+    delay: 15
+    tags:
+      - config
+      - step-3
+
+  - name: Delay for 4 min for cluster changes
+    pause:
+      seconds: 240
+
+# - Restart static nodes
+  - name: Restart static nodes (step 4)
+    become: true
+    ansible.builtin.import_role:
+      name: ydb_platform.ydb.ydbd_rolling_static
+    vars:
+      availability_mode: weak
+      ydbops_duration: 120
+    tags:
+      - restart
+      - storage
+      - step-4
+
+  - name: Delay for 2 min for cluster changes
+    pause:
+      seconds: 120
+
+# - Get current config and compare it // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
+  - name: Get current cluster config (step 5)
+    ydb_platform.ydb.cluster_config:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ld_library_path: "{{ ydb_dir }}/lib"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      mode: fetch
+    run_once: true
+    become: true
+    register: current_cluster_config
+    until: current_cluster_config is succeeded
+    retries: 30
+    delay: 15
+    tags:
+      - config
+      - step-5
+
+  - name: Remove folder for configs (step 6)
+    ansible.builtin.file:
+      path: "{{ ydb_dir }}/config-dir"
+      state: absent
+    tags:
+      - config
+      - step-6
+
+  - name: Create folder for configs (step 6)
+    ansible.builtin.file:
+      path: "{{ ydb_dir }}/config-dir"
+      state: directory
+      recurse: true
+      owner: "ydb"
+      group: "ydb"
+    tags:
+      - config
+      - step-6
+
+  - name: Save config to storage nodes (step 6)
+    ansible.builtin.copy:
+      src: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      dest: "{{ ydb_dir }}/config-dir/config.yaml"
+      force: true
+    tags:
+      - config
+      - step-6
+
+  - name: Get ydb token with user credentials
+    ydb_platform.ydb.get_token:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(ydb_brokers | flatten(levels=1) | first) }}:2135"
+      database: "/{{ ydb_domain }}"
+      user: "{{ ydb_user }}"
+      password: "{{ ydb_password }}"
+      retry_on_ssl_error: true
+    run_once: true
+    register: ydb_credentials
+    until: "'token' in ydb_credentials"
+    retries: 5
+    delay: 20
+    become: true
+    tags:
+      - token
+      - always
+
+# - Update systemd services for static nodes
+  - name: Update systemd service for storage nodes (step 7)
+    ansible.builtin.template:
+      src: ../roles/ydbd_static/templates/ydbd-storage.service
+      dest: "{{ ydb_storage_service_filename }}"
+    vars:
+      ydb_config_v2: false
+    tags:
+      - restart
+      - storage
+      - step-7
+
+  - name: Reload systemd (step 7)
+    ansible.builtin.shell: "systemctl daemon-reload"
+    tags:
+      - restart
+      - storage
+      - step-7
+
+# - Restart static nodes
+  - name: Restart static nodes (step 7)
+    become: true
+    ansible.builtin.import_role:
+      name: ydb_platform.ydb.ydbd_rolling_static
+    vars:
+      availability_mode: weak
+      ydbops_duration: 120
+    tags:
+      - restart
+      - storage
+      - step-7
+
+  - name: Delay for 2 min for cluster changes
+    pause:
+      seconds: 120
