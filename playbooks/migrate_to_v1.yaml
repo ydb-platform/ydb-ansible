@@ -10,17 +10,17 @@
 
 # https://ydb.tech/docs/ru/devops/configuration-management/migration/migration-to-v1?version=v25.2
 # Steps (every step is tagged with tag like 'step-N'):
-# - name: Get current cluster config (step 1)
-# - name: Generate new config (step 2)
-# - name: Save config to storage nodes (step 3)
-# - name: Update cluster configuration using YDB config management V1 (step 3)
+# - name: Get current cluster config with --v2-internal-state (step 1)
+# - name: Set self_management_config.enabled to false (step 2)
+# - name: Push updated config to cluster via cluster config replace (step 3)
 # - name: Restart static nodes (step 4)
-# - name: Get current cluster config (step 5)
-# - name: Generate new config (step 6)
-# - name: Save config to storage nodes (step 6)
+# - name: Restart dynamic nodes (step 4)
+# - name: Get current cluster config without --v2-internal-state (step 5)
+# - name: Save V1 static config to all nodes (step 6)
 # - name: Update systemd service for storage nodes (step 7)
 # - name: Reload systemd (step 7)
 # - name: Restart static nodes (step 7)
+# - name: Save V1 config for dynamic nodes (extra step 8)
 # - name: Update systemd service for dynamic nodes (extra step 8)
 # - name: Reload systemd (extra step 8)
 # - name: Restart dynamic nodes (extra step 8)
@@ -42,10 +42,10 @@
       ansible.builtin.uri:
         url: https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus
         method: GET
-        validate_certs: false  # Отключаем проверку SSL (как в исходном коде)
+        validate_certs: false
         return_content: true
         timeout: 30
-        status_code: 200  # Ожидаем успешный HTTP-ответ
+        status_code: 200
       register: config_response
 
     - name: "Extract ConfigurationV2 line from response"
@@ -129,8 +129,7 @@
       - check
       - service
 
-# - Get current config // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
-# - Get current dynamic config
+# - Get ydb token for CLI operations
   - name: Get ydb token with user credentials
     ydb_platform.ydb.get_token:
       ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -150,7 +149,8 @@
       - token
       - always
 
-# - Get current config and compare it // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch --v2-internal-state > config.yaml
+# Step 1. Fetch current cluster config with --v2-internal-state
+# ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch --v2-internal-state > config.yaml
   - name: Get current cluster config (step 1)
     ydb_platform.ydb.cluster_config:
       ydb_bin: "{{ ydb_dir }}/bin/ydb"
@@ -169,12 +169,12 @@
       - config
       - step-1
 
-# - Enrich config // self_management_config.enabled: false
+# Step 2. Set self_management_config.enabled: false
   - name: Generate new config (step 2)
     ydb_platform.ydb.migration:
       static_config:  "{{ ydb_config_dict }}"
       dynamic_config: "{{ current_cluster_config.config }}"
-      output_file:    "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      output_file:    "{{ ansible_config_file | dirname }}/ydb_cluster_config_v2.yaml"
       mode: "v1-self-management"
     run_once: true
     become: false
@@ -183,10 +183,11 @@
       - config
       - step-2
 
-# - Replace config in cluster // ydb -e grpc://<node.ydb.tech>:2135 cluster config replace -f config.yaml
+# Step 3. Push updated config to cluster
+# ydb -e grpc://<node.ydb.tech>:2135 admin cluster config replace -f config.yaml
   - name: Save config to storage nodes (step 3)
     ansible.builtin.copy:
-      src: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      src: "{{ ansible_config_file | dirname }}/ydb_cluster_config_v2.yaml"
       dest: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
       force: true
     become: true
@@ -217,7 +218,7 @@
     pause:
       seconds: 240
 
-# - Restart static nodes
+# Step 4. Rolling-restart all cluster nodes
   - name: Restart static nodes (step 4)
     become: true
     ansible.builtin.import_role:
@@ -230,52 +231,22 @@
       - storage
       - step-4
 
+# Step 4 (continued). Rolling-restart dynamic nodes
+  - name: Restart dynamic nodes (step 4)
+    become: true
+    ansible.builtin.import_role:
+      name: ydb_platform.ydb.ydbd_rolling_dynamic
+    vars:
+      availability_mode: weak
+      ydbops_duration: 120
+    tags:
+      - restart
+      - dynamic
+      - step-4
+
   - name: Delay for 2 min for cluster changes
     pause:
       seconds: 120
-
-# - Get current config and compare it // ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
-  - name: Get current cluster config (step 5)
-    ydb_platform.ydb.cluster_config:
-      ydb_bin: "{{ ydb_dir }}/bin/ydb"
-      ld_library_path: "{{ ydb_dir }}/lib"
-      ca_file: "{{ ydb_dir }}/certs/ca.crt"
-      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
-      token: "{{ ydb_credentials.token }}"
-      mode: fetch
-    run_once: true
-    become: true
-    register: current_cluster_config
-    until: current_cluster_config is succeeded
-    retries: 30
-    delay: 15
-    tags:
-      - config
-      - step-5
-
-# - Generate new config without domains_config and blob_storage_config sections
-  - name: Generate new config (step 6)
-    ydb_platform.ydb.migration:
-      static_config:  "{{ ydb_config_dict }}"
-      dynamic_config: "{{ current_cluster_config.config }}"
-      output_file:    "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
-      mode: "v1-self-management"
-    run_once: true
-    become: false
-    delegate_to: localhost
-    tags:
-      - config
-      - step-6
-
-  - name: Save dynamic config to all nodes (step 6)
-    ansible.builtin.copy:
-      src: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
-      dest: "{{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml"
-      force: true
-    become: true
-    tags:
-      - config
-      - step-6
 
   - name: Get ydb token with user credentials
     ydb_platform.ydb.get_token:
@@ -296,7 +267,51 @@
       - token
       - always
 
-# - Update systemd services for static nodes
+# Step 5. Fetch current cluster config (without --v2-internal-state)
+# ydb -e grpc://<node.ydb.tech>:2135 admin cluster config fetch > config.yaml
+# Result will NOT contain domains_config and blob_storage_config
+  - name: Get current cluster config (step 5)
+    ydb_platform.ydb.cluster_config:
+      ydb_bin: "{{ ydb_dir }}/bin/ydb"
+      ld_library_path: "{{ ydb_dir }}/lib"
+      ca_file: "{{ ydb_dir }}/certs/ca.crt"
+      endpoint: "grpcs://{{ ydb_front | default(inventory_hostname) }}:2135"
+      token: "{{ ydb_credentials.token }}"
+      mode: fetch
+    run_once: true
+    become: true
+    register: v1_static_config
+    until: v1_static_config is succeeded
+    retries: 30
+    delay: 15
+    tags:
+      - config
+      - step-5
+
+# Step 6. Place fetched config (V1 static configuration) on every node's filesystem
+  - name: Save V1 static config locally (step 6)
+    ansible.builtin.copy:
+      content: "{{ v1_static_config.config.config | to_nice_yaml }}"
+      dest: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      force: true
+    run_once: true
+    become: false
+    delegate_to: localhost
+    tags:
+      - config
+      - step-6
+
+  - name: Save V1 static config to all nodes (step 6)
+    ansible.builtin.copy:
+      src: "{{ ansible_config_file | dirname }}/ydb_cluster_config.yaml"
+      dest: "{{ ydb_dir }}/cfg/ydbd-config-static.yaml"
+      force: true
+    become: true
+    tags:
+      - config
+      - step-6
+
+# Step 7. Switch from --config-dir to --yaml-config and rolling-restart
   - name: Update systemd service for storage nodes (step 7)
     ansible.builtin.template:
       src: ../roles/ydbd_static/templates/ydbd-storage.service
@@ -309,13 +324,14 @@
       - step-7
 
   - name: Reload systemd (step 7)
-    ansible.builtin.shell: "systemctl daemon-reload"
+    ansible.builtin.systemd:
+      daemon_reload: true
     tags:
       - restart
       - storage
       - step-7
 
-# - Restart static nodes
+# Step 7 (continued). Rolling-restart static nodes with --yaml-config
   - name: Restart static nodes (step 7)
     become: true
     ansible.builtin.import_role:
@@ -332,60 +348,64 @@
     pause:
       seconds: 120
 
-# - Check current YDB Cluster configuration has switched to V1 
-  - name: "Get current YDB Cluster configuration (via URI)"
-    ansible.builtin.uri:
-      url: https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus
-      method: GET
-      validate_certs: false  # Отключаем проверку SSL (как в исходном коде)
-      return_content: true
-      timeout: 30
-      status_code: 200  # Ожидаем успешный HTTP-ответ
-    register: config_response
+# Step 7 (verification). Check that cluster has switched to V1
+  - name: "Verify YDB Cluster has switched to V1 configuration"
+    block:
+    - name: "Get current YDB Cluster configuration (via URI)"
+      ansible.builtin.uri:
+        url: https://localhost:8765/counters/counters=config/subsystem%3Dconfigs_dispatcher/prometheus
+        method: GET
+        validate_certs: false
+        return_content: true
+        timeout: 30
+        status_code: 200
+      register: config_response
+
+    - name: "Extract ConfigurationV2 line from response"
+      set_fact:
+        current_config_version: >-
+          {{ config_response.content
+            | regex_findall('^ConfigurationV2.*$', multiline=true)
+            | first | default('') }}
+      when: config_response.status == 200 and config_response.content is not none
+
+    - name: "Fail if configuration could not be retrieved"
+      ansible.builtin.fail:
+        msg: >
+          Failed to retrieve YDB configuration.
+          Status: {{ config_response.status }},
+          Error: {{ config_response.msg | default('No error message') }}
+      when: >
+        config_response.status is not defined or
+        config_response.status != 200 or
+        current_config_version == ''
+
+    - name: "Check current YDB Cluster configuration has switched to V1"
+      ansible.builtin.assert:
+        that:
+        - "current_config_version is defined"
+        - "current_config_version == 'ConfigurationV2 0'"
+        fail_msg: "Current cluster config is wrong: {{ current_config_version }}"    
     tags:
       - check
       - version
 
-  - name: "Extract ConfigurationV2 line from response"
-    set_fact:
-      current_config_version: >-
-        {{ config_response.content
-          | regex_findall('^ConfigurationV2.*$', multiline=true)
-          | first | default('') }}
-    when: config_response.status == 200 and config_response.content is not none
-    tags:
-      - check
-      - version
-
-  - name: "Fail if configuration could not be retrieved"
-    ansible.builtin.fail:
-      msg: >
-        Failed to retrieve YDB configuration.
-        Status: {{ config_response.status }},
-        Error: {{ config_response.msg | default('No error message') }}
-    when: >
-      config_response.status is not defined or
-      config_response.status != 200 or
-      current_config_version == ''
-    tags:
-      - check
-      - version
-
-  - name: "Check current YDB Cluster configuration has switched to V1"
-    ansible.builtin.assert:
-      that:
-      - "current_config_version is defined"
-      - "current_config_version == 'ConfigurationV2 0'"
-      fail_msg: "Current cluster config is wrong: {{ current_config_version }}"    
-    tags:
-      - check
-      - version
-
-# - Update systemd services for dynamic nodes
+# Extra step 8. Update and restart dynamic nodes with --yaml-config
 - hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic' in groups else groups['ydb'] }}"
   become: true
 
   tasks:
+  
+  - name: Save V1 config for dynamic nodes (extra step 8)
+    ansible.builtin.copy:
+      content: "{{ v1_static_config.config.config | to_nice_yaml }}"
+      dest: "{{ ydb_dir }}/cfg/ydbd-config-dynamic.yaml"
+      force: true
+    become: true
+    tags:
+      - config
+      - step-8
+
   - name: Update systemd service for dynamic nodes (extra step 8)
     ansible.builtin.template:
       src: ../roles/ydbd_dynamic/templates/ydbd-dynnode.service
@@ -394,20 +414,21 @@
     when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
     vars:
       ydb_config_v2: false
-      ydb_use_dynamic_config: true
+      ydb_use_dynamic_config: false
     tags:
       - restart
       - dynamic
       - step-8
 
   - name: Reload systemd (extra step 8)
-    ansible.builtin.shell: "systemctl daemon-reload"
+    ansible.builtin.systemd:
+      daemon_reload: true
     tags:
       - restart
       - dynamic
       - step-8
 
-# - Restart dynamic nodes
+# Extra step 8 (continued). Rolling-restart dynamic nodes
   - name: Restart dynamic nodes (extra step 8)
     become: true
     ansible.builtin.import_role:
@@ -419,9 +440,10 @@
       - dynamic
       - step-8
 
-# - Restore V1 config directory layout (undo symlink created by migrate_to_v2) and rename old config directory
+# Extra step 9. Restore V1 config directory layout (undo symlink from migrate_to_v2) and backup V2 config-dir
 - hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
   become: true
+
   tasks:
 
   - name: wait for ydb healthcheck switch to "GOOD" status
@@ -482,7 +504,8 @@
   - name: Recommendations
     run_once: true
     ansible.builtin.debug:
-      msg: 
+      msg:
+        - "Migration to V1 completed successfully."
         - "Now you can update your Ansible configuration for V1:"
         - "- Move {{ ansible_config_file | dirname }}/ydb_cluster_config.yaml to {{ ydb_config }}"
-        - "- Add `ydb_config_v2: false` into inventory"
+        - "- Set `ydb_config_v2: false` in inventory"
