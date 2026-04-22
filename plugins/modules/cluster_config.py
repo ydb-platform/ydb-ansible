@@ -40,12 +40,27 @@ def fetch_cluster_config(ydb_cli, result):
         result['command'] = ' '.join(ydb_cli.common_options + command)
         return None, True
 
+def increase_generation(config_file):
+    """Increase generation in cluster configuration"""
+    try:
+        with open(config_file, 'r') as f:
+            config = safe_load(f)
+        config['metadata']['version'] += 1
+        with open(config_file, 'w') as f:
+            safe_dump(config, f)
+    except Exception as e:
+        raise RuntimeError(f'failed to update configuration file {config_file}: {e}')
+    return config['metadata']['version']
 
 def replace_cluster_config(ydb_cli, config_file, result):
     """Replace cluster configuration in YDB"""
     command = ['--assume-yes', 'admin', 'cluster', 'config', 'replace', '-f', config_file]
     rc, stdout, stderr = ydb_cli(command)
-    if rc != 0:
+    if rc != 0 and 'config version mismatch' in stderr:
+        increase_generation(config_file)
+        command = ['--assume-yes', 'admin', 'cluster', 'config', 'replace', '-f', config_file]
+        rc, stdout, stderr = ydb_cli(command)
+    if rc != 0:                
         result['msg'] = 'cluster config replace failed'
         result['stdout'] = stdout
         result['stderr'] = stderr
