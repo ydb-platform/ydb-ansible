@@ -169,7 +169,7 @@
       - config
       - step-1
 
-# Step 2. Set self_management_config.enabled: false
+# Step 2. Set "self_management_config.enabled: false", "switch_to_config_v2: false" and replace "erasure" with "static_erasure"
   - name: Generate new config (step 2)
     ydb_platform.ydb.migration:
       static_config:  "{{ ydb_config_dict }}"

@@ -165,6 +165,9 @@ def main():
         elif mode == 'v1-self-management':
             result_config = dynamic_config
             result_config['config']['self_management_config'] = {'enabled': False}
+            if 'feature_flags' not in result_config['config']:
+                result_config['config']['feature_flags'] = {}
+            result_config['config']['feature_flags']['switch_to_config_v2'] = False
             result['changed'] = True
         elif mode == 'v2-cleanup':
             result_config = cleanup(dynamic_config)
