@@ -18,3 +18,6 @@ ydbops_log:
 # ydbops_duration - CMS will release the node for maintenance for duration * restart-retry-number seconds. 
 #                   Any maintenance after that would be considered a regular cluster failure (default 60)
 ydbops_duration: 60
+
+# Skip HC. It's useful some cases (for example in migration)
+healthcheck_skip: false

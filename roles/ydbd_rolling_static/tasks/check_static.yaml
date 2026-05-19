@@ -25,4 +25,4 @@
   run_once: true
   tags:
     - healthcheck
-  when: ydb_version|split('.')|first != '25' and ydb_version|split('-')|first != '25' 
+  when: ydb_version|split('.')|first != '25' and ydb_version|split('-')|first != '25' and healthcheck_skip|bool == false

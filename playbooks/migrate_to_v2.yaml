@@ -399,6 +399,7 @@
     vars:
       availability_mode: weak
       ydbops_duration: 120
+      healthcheck_skip: true
     tags:
       - restart
       - storage
