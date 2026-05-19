@@ -162,12 +162,19 @@ def main():
             result_config = dynamic_config
             result_config['config']['self_management_config'] = {'enabled': True}
             result['changed'] = True
+        elif mode == 'v1-self-management':
+            result_config = dynamic_config
+            result_config['config']['self_management_config'] = {'enabled': False}
+            if 'feature_flags' not in result_config['config']:
+                result_config['config']['feature_flags'] = {}
+            result_config['config']['feature_flags']['switch_to_config_v2'] = False
+            result['changed'] = True
         elif mode == 'v2-cleanup':
             result_config = cleanup(dynamic_config)
             result['changed'] = True
         else:
             module.fail_json(
-                msg=f"Unsupported mode '{mode}'. Supported modes are: 'v2', 'v2-self-management', 'v2-cleanup'."
+                msg=f"Unsupported mode '{mode}'. Supported modes are: 'v2', 'v2-self-management', 'v1-self-management', 'v2-cleanup'."
             )
 
         if not module.check_mode:
