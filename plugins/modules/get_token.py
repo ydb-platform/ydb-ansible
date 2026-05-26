@@ -3,6 +3,7 @@ from ansible_collections.ydb_platform.ydb.plugins.module_utils import cli
 
 
 INVALID_PASSWORD = 'Invalid password'
+
 SSL_HANDSHAKE_ERRORS = [
     'SSL_ERROR_SSL',
     'ssl3_get_record:wrong version number',
@@ -31,7 +32,7 @@ def main():
         ydb_cli = cli.YDB.from_module(module)
         rc, stdout, stderr = ydb_cli(['auth', 'get-token', '-f'])
 
-        if rc != 0 and INVALID_PASSWORD in stderr and module.params.get('fallback_to_default_user'):
+        if rc != 0 and (INVALID_PASSWORD in stderr or 'UNAUTHORIZED' in stderr) and module.params.get('fallback_to_default_user'):
             module.log('falling back to default user')
             ydb_cli = cli.YDB.from_module(module, user='root', password='')
             rc, stdout, stderr = ydb_cli(['auth', 'get-token', '-f'])
