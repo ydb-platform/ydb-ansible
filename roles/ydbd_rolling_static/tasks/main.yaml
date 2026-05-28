@@ -143,3 +143,5 @@
   loop_control:
     loop_var: snode_name
   run_once: true
+  tags: 
+    - healthcheck
