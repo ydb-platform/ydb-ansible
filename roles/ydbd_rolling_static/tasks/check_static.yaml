@@ -22,6 +22,7 @@
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+    timeout: "{{ ydb_healthcheck_timeout | default(600) }}"
   run_once: true
   tags:
     - healthcheck
