@@ -1,7 +1,7 @@
 ---
 
 - name: Update dynconfig and restart dynamic nodes
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
   run_once: true
   become: true
   tasks:

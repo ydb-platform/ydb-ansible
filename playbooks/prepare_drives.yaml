@@ -19,7 +19,7 @@
 #
 
 - name: Format storage drives, erase metadata 
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: "{{ groups['ydbd_static'] if 'ydbd_static'  in groups else groups['ydb'] }}"
   any_errors_fatal: true
   become: true
   vars:
