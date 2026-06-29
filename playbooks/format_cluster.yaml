@@ -56,7 +56,7 @@
   any_errors_fatal: true
   vars:
     ydb_format_disk: True
-    ydb_format_disk_prepare: False
+    ydb_format_disk_prepare: True
   roles:
 
     - role: ydb_platform.ydb.format_drives
