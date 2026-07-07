@@ -22,3 +22,6 @@ run:
 test:
 	python3 -m unittest discover -v tests/unit
 .PHONY: test
+
+lint-collection-docs:  ## Lint ansible collection documentation
+	uv run --isolated --no-project --with-requirements requirements-docs.txt antsibull-docs lint-collection-docs --plugin-docs --validate-collection-refs=self --disallow-unknown-collection-refs .
