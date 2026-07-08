@@ -56,6 +56,14 @@
       - ydb_dynnodes is defined
     fail_msg: "ydb_dynnodes variable with dynamic node instances list is required"
 
+- name: Filter ydb_dynnodes to only the first database
+  ansible.builtin.set_fact:
+    ydb_dynnodes_filtered: >-
+      {{
+        (ydb_dynnodes | selectattr('dbname', 'undefined') | list)
+        + (ydb_dynnodes | selectattr('dbname', 'defined') | selectattr('dbname', 'eq', ydb_dbname) | list)
+      }}
+
 - name: set default for ydb_pool_kind from parsed config file
   ansible.builtin.set_fact:
     ydb_pool_kind: "{{ ydb_config_dict.config.default_disk_type | lower }}"
@@ -96,7 +104,7 @@
   template:
     src: ydbd-dynnode.service
     dest: "/etc/systemd/system/ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}.service"
-  loop: "{{ ydb_dynnodes }}"
+  loop: "{{ ydb_dynnodes_filtered }}"
   when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
   notify:
     - daemon reload
@@ -146,7 +154,7 @@
     name: "ydbd-{{ item.dbname | default(ydb_dbname, true) }}-{{ item.instance }}.service"
     state: started
     enabled: true
-  loop: "{{ ydb_dynnodes }}"
+  loop: "{{ ydb_dynnodes_filtered }}"
   when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
 
 - name: Wait for ydb discovery to start working locally
@@ -159,7 +167,7 @@
     token: "{{ ydb_credentials.token }}"
   become: true
   become_user: "{{ ydb_host_user }}"
-  loop: "{{ ydb_dynnodes }}"
+  loop: "{{ ydb_dynnodes_filtered }}"
   when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
   retries: 5
 
@@ -178,7 +186,7 @@
     password: "{{ ydb_password }}"
   become: true
   become_user: "{{ ydb_host_user }}"
-  loop: "{{ ydb_dynnodes }}"
+  loop: "{{ ydb_dynnodes_filtered }}"
   when: "item.hosts is not defined or '{{ inventory_hostname }}' in item.hosts"
   throttle: 1
   tags:
