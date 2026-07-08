@@ -70,6 +70,17 @@
 - hosts: "{{ groups['ydbd_dynamic'] if 'ydbd_dynamic'  in groups else groups['ydb'] }}"
   become: true
   any_errors_fatal: true
+  pre_tasks:
+
+    - name: Filter ydb_dynnodes to only the first database
+      ansible.builtin.set_fact:
+        ydb_dynnodes: >-
+          {{
+            (ydb_dynnodes | selectattr('dbname', 'undefined') | list)
+            +
+            (ydb_dynnodes | selectattr('dbname', 'defined') | selectattr('dbname', 'eq', ydb_dbname) | list)
+          }}
+
   tasks:
 
     - name: setup ydb dynamic nodes
