@@ -1,0 +1,37 @@
+---
+# PLAYBOOK: ydb_platform.ydb.update_certs
+# PROPOSE : Copy TLS certificate files to all YDB cluster nodes
+#
+# EXAMPLE:
+#
+# Update certificates on all nodes
+#   ansible-playbook ydb_platform.ydb.update_certs
+#
+# Update certificates on selected hosts
+#   ansible-playbook ydb_platform.ydb.update_certs -l <HostFQDN>
+#
+# NOTES:
+#   This playbook only copies certificate files and does not restart YDB processes.
+#   After updating certificates, restart the cluster to apply changes, for example:
+#     ansible-playbook ydb_platform.ydb.restart
+#   or, if the cluster is unavailable over TLS:
+#     ansible-playbook ydb_platform.ydb.stop_cluster
+#     ansible-playbook ydb_platform.ydb.start_cluster
+
+- name: Check if required variables are defined
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+
+  tasks:
+    - ansible.builtin.assert:
+        that:
+          - lookup('vars', item, default=None) is not none
+        fail_msg: "Either {{ item }} variable is required"
+      loop:
+        - ydb_tls_dir
+
+- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  become: true
+
+  roles:
+    - role: preflight
+    - role: ydbd_certs
