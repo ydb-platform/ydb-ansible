@@ -117,6 +117,25 @@ Notes:
     * first to deploy the ca.crt file, containing both new and old CA certificates;
     * second to deploy the fresh server keys and certificates signed by the new CA certificate.
 
+To update only TLS certificate files without reinstalling binaries or changing the cluster configuration, use the dedicated playbook:
+
+```bash
+ansible-playbook ydb_platform.ydb.update_certs
+```
+
+This playbook copies certificate files to all nodes over SSH and does not restart YDB processes. After updating certificates, restart the cluster to apply the changes:
+
+```bash
+ansible-playbook ydb_platform.ydb.restart
+```
+
+If the cluster is unavailable over TLS (for example, when certificates have expired), restart it with:
+
+```bash
+ansible-playbook ydb_platform.ydb.stop_cluster
+ansible-playbook ydb_platform.ydb.start_cluster
+```
+
 ### What is actually done by the playbooks?
 
 #### Actions executed for installing YDB nodes
@@ -167,6 +186,7 @@ For `ydb_config_v2: false`:
 * ydb_platform.ydb.binaries_all - Install YDB binaries to all nodes
 * ydb_platform.ydb.binaries_static - Install YDB binaries to all static/storage nodes
 * ydb_platform.ydb.binaries_dynamic - Install YDB binaries to all dynamic nodes
+* ydb_platform.ydb.update_certs - Copy TLS certificates to all nodes
 * ydb_platform.ydb.restart - Restart static (weak mode) and after that dynamic nodes
 * ydb_platform.ydb.rolling_restart_static - Restart static nodes in weak mode
 * ydb_platform.ydb.rolling_restart_dynamic - Restart dynamic nodes
