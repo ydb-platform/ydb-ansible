@@ -20,6 +20,8 @@ def check_storage_initialization(ydb_dstool, result):
     rc, stdout, stderr = ydb_dstool(['--http-timeout 5', 'box', 'list', '--format=json'])
     if rc != 0:
         # If dstool box list fails, assume storage is not initialized
+        result['dstool_storage_check_stdout'] = stdout
+        result['dstool_storage_check_stderr'] = stderr
         return False, False
 
     try:
@@ -104,6 +106,12 @@ def init_storage_using_config_v2(ydb_cli, ydb_dir, enforce_user_token_requiremen
         cmd = ['--client-cert-file',f'{ydb_dir}/certs/node.crt','--client-cert-key-file',f'{ydb_dir}/certs/node.key', '--assume-yes', 'admin', 'cluster', 'bootstrap', '--uuid', str(uuid.uuid4())]
     rc, stdout, stderr = ydb_cli(cmd)
     if rc != 0:
+        combined_output = f'{stdout}\n{stderr}'.lower()
+        if 'already bootstrapped' in combined_output:
+            result['msg'] = 'storage already initialized'
+            result['stdout'] = stdout
+            result['stderr'] = stderr
+            return True
         result['msg'] = 'bootstrap failed'
         result['cmd'] = ' '.join(ydb_cli.common_options + cmd)
         result['stdout'] = stdout
