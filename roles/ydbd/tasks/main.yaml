@@ -97,38 +97,8 @@
         ydb_tls_dir: "{{ ansible_config_file | dirname }}/files/TLS/certs/{{ current_time }}"
 
 - name: setup certificates
-  block:
-    - name: copy the TLS ca.crt
-      copy:
-        src: "{{ ydb_tls_dir }}/ca.crt"
-        dest: "{{ ydb_dir }}/certs/ca.crt"
-        owner: root
-        group: certs
-        mode: 0440
-
-    - name: copy the TLS node.crt
-      copy:
-        src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.crt"
-        dest: "{{ ydb_dir }}/certs/node.crt"
-        owner: root
-        group: certs
-        mode: 0440
-
-    - name: copy the TLS node.key
-      copy:
-        src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.key"
-        dest: "{{ ydb_dir }}/certs/node.key"
-        owner: root
-        group: certs
-        mode: 0440
-
-    - name: copy the TLS web.pem
-      copy:
-        src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/web.pem"
-        dest: "{{ ydb_dir }}/certs/web.pem"
-        owner: root
-        group: certs
-        mode: 0440
+  ansible.builtin.import_role:
+    name: ydb_platform.ydb.ydbd_certs
 
 - name: install ydbd
   ansible.builtin.import_role:
