@@ -162,13 +162,15 @@ DNS.1={node}
     create_directory(dest_dir)
     run_command(f'cp -v {os.path.join(certs_dir, "ca.crt")} {dest_dir}/')
 
+    # Keep the inventory host name intact. Short names (the label before the
+    # first dot) are not unique across zones, so certificate directories and
+    # SANs must use the exact name the playbook was given.
     node = fqdn.strip()
-    short_node = node.split(".")[0]
-    safe_node = short_node.replace("*", "_").replace("$", "_").replace("/", "_")
-    make_node_conf(safe_node, short_node, node)
-    make_node_key(safe_node, short_node)
-    make_node_csr(safe_node, short_node)
-    make_node_cert(safe_node, short_node)
+    safe_node = node.replace("*", "_").replace("$", "_").replace("/", "_")
+    make_node_conf(safe_node, node, "")
+    make_node_key(safe_node, node)
+    make_node_csr(safe_node, node)
+    make_node_cert(safe_node, node)
     move_node_files(safe_node)
 
     print(f"All done. Certificates are in {dest_dir}", file=debug_info)
