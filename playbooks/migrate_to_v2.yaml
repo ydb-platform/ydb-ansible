@@ -147,6 +147,7 @@
       user: "{{ ydb_user }}"
       password: "{{ ydb_password }}"
       retry_on_ssl_error: true
+    no_log: true
     run_once: true
     register: ydb_credentials
     until: "'token' in ydb_credentials"

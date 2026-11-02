@@ -19,6 +19,7 @@
         database: "/{{ ydb_domain }}"
         user: "{{ ydb_user }}"
         password: "{{ ydb_password }}"
+      no_log: true
       register: ydb_credentials
       until: "'token' in ydb_credentials"
       retries: 10

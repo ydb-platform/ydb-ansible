@@ -113,6 +113,7 @@
     user: "{{ ydb_user }}"
     password: "{{ ydb_password }}"
     retry_on_ssl_error: true
+  no_log: true
   become: true
   become_user: "{{ ydb_host_user }}"
   # when: "ydb_credentials is not defined or 'token' not in ydb_credentials"
