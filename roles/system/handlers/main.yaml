@@ -25,7 +25,7 @@
   when: "'crond' in services"
 
 - name: apply kernel settings
-  ansible.builtin.shell: sysctl -p
+  ansible.builtin.shell: "sysctl --system"
 
 - name: restart cpufrequtils
   ansible.builtin.systemd:
