@@ -16,7 +16,13 @@ DOCUMENTATION = r'''
     plugin_type: module
     short_description: Get YDB token
     description: |
-        Get token from YDB cluster
+        Get an access token from a YDB cluster.
+    notes:
+        - The returned token is a credential. The task must set C(no_log=true).
+          Ansible still keeps the token in the registered variable.
+        - C(no_target_syslog) does not hide the token from the controller log.
+          Only task-level C(no_log=true) does.
+        - Without C(no_log=true) the module fails and does not request a token.
 '''
 
 def main():
@@ -27,6 +33,18 @@ def main():
     )
     cli.YDB.add_arguments(argument_spec)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
+    # Task no_log censors the callback output but leaves the registered result
+    # intact. no_log_values cannot do that: remove_values() rewrites the JSON
+    # before Ansible registers it. Adding the literal "token" only masks that
+    # substring (the "get-********" in the task message) and leaves the JWT.
+    if not module.no_log:
+        module.fail_json(
+            msg=(
+                'Refusing to obtain a YDB access token because no_log is not set. '
+                'Add `no_log: true` to the task that calls ydb_platform.ydb.get_token. '
+                'The registered variable still receives the token for later tasks.'
+            )
+        )
     result = {'changed': False}
     try:
         ydb_cli = cli.YDB.from_module(module)
@@ -87,12 +105,10 @@ def main():
                 module.fail_json(**result)
 
         if rc != 0:
-            result['msg'] = f'command: "ydb auth get-token" failed'
+            result['msg'] = 'command: "ydb auth get-token" failed'
             result['stderr'] = stderr
-            result['stdout'] = stdout
             module.fail_json(**result)
 
-        module.no_log_values.add('token')
         token = stdout.strip()
         result['msg'] = 'command: "ydb auth get-token" succeeded'
         result['token'] = token
