@@ -72,43 +72,6 @@ class UpdateCertsPlaybookTest(unittest.TestCase):
         self.env["ANSIBLE_COLLECTIONS_PATH"] = str(collection_root)
         self.env["ANSIBLE_FORCE_COLOR"] = "0"
         self.env["PYTHONDONTWRITEBYTECODE"] = "1"
-        self.ensure_system_group("ydb")
-        self.ensure_system_user("ydb", "ydb")
-
-    def ensure_system_group(self, name):
-        existing = subprocess.run(
-            ["getent", "group", name],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        )
-        if existing.returncode == 0:
-            return
-        subprocess.run(["sudo", "groupadd", "--system", name], check=True)
-        self.addCleanup(lambda: subprocess.run(
-            ["sudo", "groupdel", name],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        ))
-
-    def ensure_system_user(self, name, group):
-        existing = subprocess.run(
-            ["getent", "passwd", name],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        )
-        if existing.returncode == 0:
-            return
-        subprocess.run(
-            [
-                "sudo", "useradd", "--system", "--no-create-home",
-                "--gid", group, "--shell", "/usr/sbin/nologin", name,
-            ],
-            check=True,
-        )
-        self.addCleanup(lambda: subprocess.run(["sudo", "userdel", name], check=False))
 
     def write_inventory(self, tls_dir, node_dirs, host_user="ydb"):
         inventory = self.tmpdir / "inventory.yaml"
@@ -123,7 +86,6 @@ class UpdateCertsPlaybookTest(unittest.TestCase):
                 "    ansible_connection: local",
                 "    ansible_python_interpreter: /usr/bin/python3",
                 "    ydb_host_user: %s" % host_user,
-                "    ydb_host_group: ydb",
                 "    ydb_tls_dir: %s" % tls_dir,
                 "ydb:",
                 "  hosts:",
@@ -188,7 +150,7 @@ class UpdateCertsPlaybookTest(unittest.TestCase):
                 ["sudo", "stat", "-c", "%U %G %a", str(certs)],
                 text=True,
             ).split()
-            self.assertEqual(ownership, ["ydb", "ydb", "700"])
+            self.assertEqual(ownership, ["root", "certs", "750"])
             for name, source in (
                 ("ca.crt", tls_root / "ca.crt"),
                 ("node.crt", node.certificate_path),
@@ -200,7 +162,7 @@ class UpdateCertsPlaybookTest(unittest.TestCase):
                     ["sudo", "stat", "-c", "%U %G %a", str(installed)],
                     text=True,
                 ).split()
-                self.assertEqual(file_ownership, ["root", "ydb", "440"])
+                self.assertEqual(file_ownership, ["root", "certs", "440"])
                 installed_hash = subprocess.check_output(
                     ["sudo", "sha256sum", str(installed)],
                     text=True,
@@ -260,46 +222,21 @@ class UpdateCertsPlaybookTest(unittest.TestCase):
         self.assertEqual(repeated.returncode, 0, repeated.stdout)
         self.assertEqual(changed_count(repeated.stdout), 0)
 
-    def test_certificate_update_leaves_the_service_account_unchanged(self):
+    def test_existing_service_account_joins_certificate_group(self):
         account = "ydbct" + uuid.uuid4().hex[:8]
         subprocess.run(
             ["sudo", "useradd", "--system", "--no-create-home", "--shell", "/usr/sbin/nologin", account],
             check=True,
         )
         self.addCleanup(lambda: subprocess.run(["sudo", "userdel", account], check=False))
-        groups_before = subprocess.check_output(["id", "-nG", account], text=True).split()
-        certs_group_before = subprocess.run(
-            ["getent", "group", "certs"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        ).returncode
         tls_root = self.tmpdir / "tls"
         node_dirs, _material = self.prepare_nodes(tls_root)
         inventory = self.write_inventory(tls_root, node_dirs, host_user=account)
 
         first = self.run_playbook(inventory)
         self.assertEqual(first.returncode, 0, first.stdout)
-        groups_after = subprocess.check_output(["id", "-nG", account], text=True).split()
-        self.assertEqual(groups_after, groups_before)
-        certs_group_after = subprocess.run(
-            ["getent", "group", "certs"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        ).returncode
-        self.assertEqual(certs_group_after, certs_group_before)
-        for node_dir in node_dirs.values():
-            ownership = subprocess.check_output(
-                ["sudo", "stat", "-c", "%U %G %a", str(node_dir / "certs")],
-                text=True,
-            ).split()
-            self.assertEqual(ownership, [account, "ydb", "700"])
-            file_ownership = subprocess.check_output(
-                ["sudo", "stat", "-c", "%U %G %a", str(node_dir / "certs" / "node.key")],
-                text=True,
-            ).split()
-            self.assertEqual(file_ownership, ["root", "ydb", "440"])
+        groups = subprocess.check_output(["id", "-nG", account], text=True).split()
+        self.assertIn("certs", groups)
 
         second = self.run_playbook(inventory)
         self.assertEqual(second.returncode, 0, second.stdout)

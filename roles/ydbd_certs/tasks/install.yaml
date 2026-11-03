@@ -15,13 +15,35 @@
       {{ ydb_dir }} does not exist. Certificate installation only updates a node
       where YDB is already installed.
 
+- name: Ensure the certificate group exists
+  ansible.builtin.group:
+    name: certs
+    system: true
+
+- name: Check whether the YDB account exists
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ ydb_host_user }}"
+  register: ydb_passwd_entry
+  failed_when: false
+  changed_when: false
+
+- name: Ensure the YDB account can read certificate files
+  ansible.builtin.user:
+    name: "{{ ydb_host_user }}"
+    groups: certs
+    append: true
+  when:
+    - ydb_passwd_entry.ansible_facts is defined
+    - ydb_host_user in (ydb_passwd_entry.ansible_facts.getent_passwd | default({}))
+
 - name: Enforce certificate directory ownership
   ansible.builtin.file:
     path: "{{ ydb_dir }}/certs"
     state: directory
-    owner: "{{ ydb_host_user }}"
-    group: "{{ ydb_host_group }}"
-    mode: "0700"
+    owner: root
+    group: certs
+    mode: "0750"
 
 - name: Checksum the validated certificate sources
   ansible.builtin.stat:
@@ -74,7 +96,7 @@
     or not (pair[1].stat.isreg | default(false))
     or (pair[1].stat.checksum | default('')) != (pair[0].stat.checksum | default(''))
     or (pair[1].stat.pw_name | default('')) != 'root'
-    or (pair[1].stat.gr_name | default('')) != ydb_host_group
+    or (pair[1].stat.gr_name | default('')) != 'certs'
     or (pair[1].stat.mode | default('')) != '0440'
   loop: "{{ ydb_source_cert_stats.results | zip(ydb_live_cert_stats.results) | list }}"
   loop_control:
@@ -104,7 +126,7 @@
     src: "{{ item.src }}"
     dest: "{{ ydb_dir }}/certs/{{ item.name }}"
     owner: root
-    group: "{{ ydb_host_group }}"
+    group: certs
     mode: "0440"
     follow: false
   loop: "{{ ydb_cert_files }}"
@@ -211,7 +233,7 @@
         dest: "{{ ydb_dir }}/certs/{{ item.name }}"
         remote_src: true
         owner: root
-        group: "{{ ydb_host_group }}"
+        group: certs
         mode: "0440"
         follow: false
       loop: "{{ ydb_cert_files | rejectattr('secret') | list }}"
@@ -224,7 +246,7 @@
         dest: "{{ ydb_dir }}/certs/{{ item.name }}"
         remote_src: true
         owner: root
-        group: "{{ ydb_host_group }}"
+        group: certs
         mode: "0440"
         follow: false
       loop: "{{ ydb_cert_files | selectattr('secret') | list }}"
@@ -239,7 +261,7 @@
         dest: "{{ ydb_dir }}/certs/{{ item.name }}"
         remote_src: true
         owner: root
-        group: "{{ ydb_host_group }}"
+        group: certs
         mode: "0440"
         follow: false
       loop: "{{ ydb_cert_files }}"

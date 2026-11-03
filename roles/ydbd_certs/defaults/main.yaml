@@ -1,5 +1,4 @@
 ---
 ydb_dir: /opt/ydb
 ydb_host_user: ydb
-ydb_host_group: ydb
 ydb_cert_stage: "{{ ydb_dir }}/.ydbd-cert-staging"

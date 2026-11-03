@@ -130,7 +130,7 @@ Notes:
 
 Set `ydb_tls_dir` to the directory containing `ca.crt` and one subdirectory per node. The subdirectory name is the short inventory hostname: for `node1.example.net`, the node files are `node1/node.crt`, `node1/node.key`, and `node1/web.pem`. OpenSSL must be available on the control node. The node certificate must be current, chain to `ca.crt`, and contain the inventory hostname or its short name as a DNS SAN, IP SAN, or CN. `node.key` and the private key embedded in `web.pem` must match `node.crt`.
 
-The playbook validates every selected host before changing any host. It then stages each complete set and activates it only after the staged bytes match the control node. If activation fails, the previous files are restored. Private keys are omitted from Ansible diffs. The shared certificate directory belongs to `ydb_host_user` and `ydb_host_group` (both `ydb` by default) with mode `0700`. Its files belong to `root` and `ydb_host_group` with mode `0440`. Storage and all dynamic nodes on the same host use this one directory. Node installation creates the YDB account; this playbook only sets ownership on the certificate directory and files.
+The playbook validates every selected host before changing any host. It then stages each complete set and activates it only after the staged bytes match the control node. If activation fails, the previous files are restored. Private keys are omitted from Ansible diffs. The shared certificate directory is `root:certs` with mode `0750`, and its files are `root:certs` with mode `0440`. Storage and all dynamic nodes on the same host use this one directory. When the `ydb` account exists, the playbook adds it to the `certs` group; Prometheus and Grafana accounts already added to that group retain read access.
 
 For server certificates signed by a CA that the running cluster already trusts, install the files and perform a rolling restart:
 
@@ -210,7 +210,7 @@ For `ydb_config_v2: false`:
 #### Actions executed for a TLS certificate update
 
 1. The certificate set of every selected node is validated on the control node. No node is changed when any selected set is invalid.
-1. The certificate directory is assigned to the YDB account and group with mode `0700`. Certificate files are assigned to `root` and the YDB group with mode `0440`.
+1. The `certs` group and `root:certs` `0750` directory permissions are enforced. The YDB account is added to `certs` when the account exists.
 1. Each node's four certificate files are staged, verified, and activated together.
 1. YDB processes are not restarted.
 
