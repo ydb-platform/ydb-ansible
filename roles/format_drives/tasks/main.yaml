@@ -36,6 +36,31 @@
         msg: "aborting playbook execution"
       when: prompt.user_input != "yes"
 
+- name: "Ensure no partitions on target disks are mounted"
+  block:
+    - name: "Gather currently mounted filesystems"
+      ansible.builtin.command:
+        cmd: mount
+      register: mounted_fs
+      changed_when: false
+      check_mode: false
+
+    - name: "Check each disk for mounted partitions"
+      vars:
+        disk_device: "{{ item.name }}"
+      ansible.builtin.assert:
+        that:
+          - not (mounted_fs.stdout_lines | select('regex', '^' ~ disk_device ~ '[0-9]+') | list | length > 0)
+        fail_msg: >
+          One or more partitions on disk {{ disk_device }} are currently mounted.
+          This could lead to data loss. Please unmount them before proceeding.
+          Example: for i in $(ls {{ disk_device }}[0-9]*); do umount "$i"; done
+      loop: "{{ ydb_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+  when: ydb_disks is defined and ydb_disks | length > 0
+
 - name: "Erase disk with dd"
   become: true
   ansible.builtin.shell:
@@ -62,7 +87,8 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
-    allow_format: "{{ ydb_allow_format_drives }}"
+    allow_format: "{{ ydb_allow_format_drives | default(False) }}"
+    force_format: "{{ ydb_format_disk | default(False) }}"
   with_items: "{{ ydb_drives }}"
   when: ydb_disk_prepare is not defined and ydb_format_disk_prepare|bool is defined and ydb_format_disk_prepare|bool == True
   become: true
@@ -75,7 +101,8 @@
     ld_library_path: "{{ ydb_dir }}/lib"
     ca_file: "{{ ydb_dir }}/certs/ca.crt"
     endpoint: "grpcs://{{ ydb_brokers | flatten(levels=1) | first }}:2135"
-    allow_format: "{{ ydb_allow_format_drives }}"
+    allow_format: "{{ ydb_allow_format_drives | default(False) }}"
+    force_format: "{{ ydb_format_disk | default(False) }}"
   when: ydb_disk_prepare is defined and item.label == ydb_disk_prepare
   with_items: "{{ ydb_drives }}"
   become: true

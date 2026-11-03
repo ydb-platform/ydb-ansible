@@ -18,6 +18,7 @@ def main():
         name=dict(type='str', required=True),
         label=dict(type='str', required=True),
         allow_format=dict(type='bool', default=False),
+        force_format=dict(type='bool', default=False),
         main_key=dict(type='str', default='8229298086344098676'),
     )
     cli.YDBD.add_arguments(argument_spec)
@@ -27,6 +28,7 @@ def main():
         name = module.params.get('name')
         label = module.params.get('label')
         allow_format = module.params.get('allow_format')
+        force_format = module.params.get('force_format')
 
         if not os.path.isabs(name):
             result['msg'] = 'device name must be specified as absolute path to block device node'
@@ -67,24 +69,33 @@ def main():
 
         ydbd_cli = cli.YDBD.from_module(module)
 
-        rc, _, _ = ydbd_cli(['admin', 'bs', 'disk', 'info', '-k', module.params.get('main_key'), label_path])
-        if rc == 0:
-            module.log(f'found pre-formatted YDB disk {label_path}')
+        if force_format and allow_format:
+            module.log(f'obliterating YDB disk {label_path}')
+            rc, _, _ = ydbd_cli(['admin', 'bs', 'disk', 'obliterate', label_path])
+            result['changed'] =  True
+            if rc != 0:
+                result['msg'] = f'failed to obliterate disk {label_path}'
+                module.fail_json(**result)
+                return
         else:
-            obliterated = drive.check_if_disk_was_obliterated(module, label_path)
-            if obliterated:
-                module.log(f'found pre-obliterated YDB disk {label_path}')
+            rc, _, _ = ydbd_cli(['admin', 'bs', 'disk', 'info', '-k', module.params.get('main_key'), label_path])
+            if rc == 0:
+                module.log(f'found pre-formatted YDB disk {label_path}')
             else:
-                if allow_format:
-                    module.log(f'obliterating YDB disk {label_path}')
-                    rc, _, _ = ydbd_cli(['admin', 'bs', 'disk', 'obliterate', label_path])
-                    result['changed'] =  True
-                    if rc != 0:
-                        result['msg'] = f'failed to obliterate disk {label_path}'
-                        module.fail_json(**result)
-                        return
+                obliterated = drive.check_if_disk_was_obliterated(module, label_path)
+                if obliterated:
+                    module.log(f'found pre-obliterated YDB disk {label_path}')
                 else:
-                    module.log(f'obliterating YDB disk {label_path} is disallowed: "allow_format" flag is False')
+                    if allow_format:
+                        module.log(f'obliterating YDB disk {label_path}')
+                        rc, _, _ = ydbd_cli(['admin', 'bs', 'disk', 'obliterate', label_path])
+                        result['changed'] =  True
+                        if rc != 0:
+                            result['msg'] = f'failed to obliterate disk {label_path}'
+                            module.fail_json(**result)
+                            return
+                    else:
+                        module.log(f'obliterating YDB disk {label_path} is disallowed: "allow_format" flag is False')
 
         result['changed'] = changed
 
