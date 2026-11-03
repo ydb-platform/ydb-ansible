@@ -1,0 +1,38 @@
+---
+# PLAYBOOK: ydb_platform.ydb.update_certs
+# PURPOSE: Validate and copy TLS certificate files to YDB hosts over SSH.
+#
+# The first play checks every selected host without changing it. Installation
+# starts only after that whole set is valid. YDB processes are not restarted.
+#
+# EXAMPLES:
+#
+#   ansible-playbook ydb_platform.ydb.update_certs
+#   ansible-playbook ydb_platform.ydb.restart
+#
+# When the certificates currently loaded by the cluster are expired:
+#
+#   ansible-playbook ydb_platform.ydb.update_certs
+#   ansible-playbook ydb_platform.ydb.stop_cluster
+#   ansible-playbook ydb_platform.ydb.start_cluster
+
+- name: Validate TLS certificates for every selected node
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Validate TLS certificate files
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_certs
+        tasks_from: validate
+
+- name: Install TLS certificates on every selected node
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Install TLS certificate files
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_certs
+        tasks_from: install

@@ -1,0 +1,6 @@
+---
+# One inventory host has one certificate directory. Its storage service and every
+# dynamic node use those same files, so this role runs once per host. include_role
+# and import_role override this setting unless allow_duplicates is set explicitly;
+# ydbd therefore still imports the role while installing a host.
+allow_duplicates: false

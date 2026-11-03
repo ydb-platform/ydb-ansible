@@ -124,6 +124,45 @@ Notes:
     * first to deploy the ca.crt file, containing both new and old CA certificates;
     * second to deploy the fresh server keys and certificates signed by the new CA certificate.
 
+### Updating TLS certificates without a configuration change
+
+`ydb_platform.ydb.update_certs` copies `ca.crt`, `node.crt`, `node.key`, and `web.pem` to each selected host over SSH. It does not install binaries, change the YDB configuration, or restart processes. A node continues to serve the certificate loaded at process startup until that process is restarted.
+
+Set `ydb_tls_dir` to the directory containing `ca.crt` and one subdirectory per node. The subdirectory name is the short inventory hostname: for `node1.example.net`, the node files are `node1/node.crt`, `node1/node.key`, and `node1/web.pem`. OpenSSL must be available on the control node. The node certificate must be current, chain to `ca.crt`, and contain the inventory hostname or its short name as a DNS SAN, IP SAN, or CN. `node.key` and the private key embedded in `web.pem` must match `node.crt`.
+
+The playbook validates every selected host before changing any host. It then stages each complete set and activates it only after the staged bytes match the control node. If activation fails, the previous files are restored. Private keys are omitted from Ansible diffs. The shared certificate directory is `root:certs` with mode `0750`, and its files are `root:certs` with mode `0440`. Storage and all dynamic nodes on the same host use this one directory. When the `ydb` account exists, the playbook adds it to the `certs` group; Prometheus and Grafana accounts already added to that group retain read access.
+
+For server certificates signed by a CA that the running cluster already trusts, install the files and perform a rolling restart:
+
+```bash
+ansible-playbook ydb_platform.ydb.update_certs
+ansible-playbook ydb_platform.ydb.restart
+```
+
+Rolling restart contacts the cluster over TLS. The certificates currently loaded by the servers must still be valid and trusted by `ydb_tls_dir/ca.crt`.
+
+CA rotation takes two passes. First distribute a `ca.crt` bundle containing both the current and new CAs, while the existing server certificates remain in place, and roll the nodes. Then distribute server certificates signed by the new CA and roll the nodes again:
+
+```bash
+ansible-playbook ydb_platform.ydb.update_certs
+ansible-playbook ydb_platform.ydb.restart
+# Replace the node files with certificates signed by the new CA.
+ansible-playbook ydb_platform.ydb.update_certs
+ansible-playbook ydb_platform.ydb.restart
+```
+
+The first pass makes every restarted node trust both CAs. The second pass makes every restarted node present a certificate signed by the new CA. Trust stores outside the cluster are not updated by this playbook.
+
+When the loaded certificates are already expired or rejected, rolling restart cannot authenticate. Stop and start the services over SSH instead:
+
+```bash
+ansible-playbook ydb_platform.ydb.update_certs
+ansible-playbook ydb_platform.ydb.stop_cluster
+ansible-playbook ydb_platform.ydb.start_cluster
+```
+
+`stop_cluster` and `start_cluster` control the systemd services directly. `start_cluster` finishes by checking cluster health over the new TLS configuration. A host limit validates and installs only the selected hosts, so use it only when a partial rollout is intentional.
+
 ### What is actually done by the playbooks?
 
 #### Actions executed for installing YDB nodes
@@ -168,12 +207,20 @@ For `ydb_config_v2: false`:
 1. Rolling restart is performed for YDB storage nodes, node by node, checking for the YDB storage cluster to become healthy after the restart of each node.
 1. Rolling restart is performed for YDB database nodes, server by server, restarting all nodes sitting in the single server at a time, and waiting for the specified number of seconds after each server's nodes restart.
 
+#### Actions executed for a TLS certificate update
+
+1. The certificate set of every selected node is validated on the control node. No node is changed when any selected set is invalid.
+1. The `certs` group and `root:certs` `0750` directory permissions are enforced. The YDB account is added to `certs` when the account exists.
+1. Each node's four certificate files are staged, verified, and activated together.
+1. YDB processes are not restarted.
+
 ## List of playbooks
 
 * ydb_platform.ydb.initial_setup - Install cluster from scratch
 * ydb_platform.ydb.binaries_all - Install YDB binaries to all nodes
 * ydb_platform.ydb.binaries_static - Install YDB binaries to all static/storage nodes
 * ydb_platform.ydb.binaries_dynamic - Install YDB binaries to all dynamic nodes
+* ydb_platform.ydb.update_certs - Validate and copy TLS certificates to all nodes
 * ydb_platform.ydb.restart - Restart static (weak mode) and after that dynamic nodes
 * ydb_platform.ydb.rolling_restart_static - Restart static nodes in weak mode
 * ydb_platform.ydb.rolling_restart_dynamic - Restart dynamic nodes
