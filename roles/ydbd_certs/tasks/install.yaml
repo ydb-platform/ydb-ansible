@@ -1,0 +1,298 @@
+---
+- name: Validate TLS certificates before changing the node
+  ansible.builtin.import_tasks: validate.yaml
+
+- name: Check the YDB installation directory
+  ansible.builtin.stat:
+    path: "{{ ydb_dir }}"
+  register: ydb_dir_stat
+
+- name: Require an existing YDB installation directory
+  ansible.builtin.assert:
+    that:
+      - ydb_dir_stat.stat.isdir | default(false)
+    fail_msg: >-
+      {{ ydb_dir }} does not exist. Certificate installation only updates a node
+      where YDB is already installed.
+
+- name: Ensure the certificate group exists
+  ansible.builtin.group:
+    name: certs
+    system: true
+
+- name: Check whether the YDB account exists
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ ydb_host_user }}"
+  register: ydb_passwd_entry
+  failed_when: false
+  changed_when: false
+
+- name: Ensure the YDB account can read certificate files
+  ansible.builtin.user:
+    name: "{{ ydb_host_user }}"
+    groups: certs
+    append: true
+  when:
+    - ydb_passwd_entry.ansible_facts is defined
+    - ydb_host_user in (ydb_passwd_entry.ansible_facts.getent_passwd | default({}))
+
+- name: Enforce certificate directory ownership
+  ansible.builtin.file:
+    path: "{{ ydb_dir }}/certs"
+    state: directory
+    owner: root
+    group: certs
+    mode: "0750"
+
+- name: Checksum the validated certificate sources
+  ansible.builtin.stat:
+    path: "{{ item.src }}"
+    checksum_algorithm: sha256
+    get_checksum: true
+    get_mime: false
+    get_attributes: false
+  loop: "{{ ydb_cert_files }}"
+  loop_control:
+    label: "{{ item.name }}"
+  delegate_to: localhost
+  become: false
+  register: ydb_source_cert_stats
+
+- name: Require checksums for the certificate sources
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+      - item.stat.isreg
+      - item.stat.checksum is defined
+    fail_msg: "Cannot read certificate source {{ item.item.src }}."
+  loop: "{{ ydb_source_cert_stats.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Checksum the installed certificate files
+  ansible.builtin.stat:
+    path: "{{ ydb_dir }}/certs/{{ item.name }}"
+    checksum_algorithm: sha256
+    get_checksum: true
+    get_mime: false
+    get_attributes: false
+    follow: false
+  loop: "{{ ydb_cert_files }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ydb_live_cert_stats
+
+- name: Assume the installed certificates match the validated sources
+  ansible.builtin.set_fact:
+    ydb_certs_need_install: false
+  changed_when: false
+
+- name: Replace the certificate set when any installed file differs
+  ansible.builtin.set_fact:
+    ydb_certs_need_install: true
+  when: >-
+    not (pair[1].stat.exists | default(false))
+    or not (pair[1].stat.isreg | default(false))
+    or (pair[1].stat.checksum | default('')) != (pair[0].stat.checksum | default(''))
+    or (pair[1].stat.pw_name | default('')) != 'root'
+    or (pair[1].stat.gr_name | default('')) != 'certs'
+    or (pair[1].stat.mode | default('')) != '0440'
+  loop: "{{ ydb_source_cert_stats.results | zip(ydb_live_cert_stats.results) | list }}"
+  loop_control:
+    loop_var: pair
+    label: "{{ pair[0].item.name }}"
+  changed_when: false
+
+- name: Collect certificate files that are already installed
+  ansible.builtin.set_fact:
+    ydb_existing_cert_names: "{{ ydb_live_cert_stats.results | selectattr('stat.exists') | map(attribute='item.name') | list }}"
+  changed_when: false
+
+- name: Check for a certificate staging directory
+  ansible.builtin.stat:
+    path: "{{ ydb_cert_stage }}"
+    follow: false
+  register: ydb_cert_stage_stat
+
+- name: Remove a stale certificate staging directory
+  ansible.builtin.file:
+    path: "{{ ydb_cert_stage }}"
+    state: absent
+  when: ydb_cert_stage_stat.stat.exists | default(false)
+
+- name: Report certificate changes in check mode
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ ydb_dir }}/certs/{{ item.name }}"
+    owner: root
+    group: certs
+    mode: "0440"
+    follow: false
+  loop: "{{ ydb_cert_files }}"
+  loop_control:
+    label: "{{ item.name }}"
+  diff: false
+  when:
+    - ydb_certs_need_install | bool
+    - ansible_check_mode
+
+- name: Replace the certificate set from a verified staging directory
+  when:
+    - ydb_certs_need_install | bool
+    - not ansible_check_mode
+  block:
+    - name: Create the certificate staging directory
+      ansible.builtin.file:
+        path: "{{ ydb_cert_stage }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Stage public certificate files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ ydb_cert_stage }}/{{ item.name }}"
+        owner: root
+        group: root
+        mode: "0444"
+        follow: false
+      loop: "{{ ydb_cert_files | rejectattr('secret') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Stage private certificate files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ ydb_cert_stage }}/{{ item.name }}"
+        owner: root
+        group: root
+        mode: "0400"
+        follow: false
+      loop: "{{ ydb_cert_files | selectattr('secret') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+      diff: false
+
+    - name: Checksum the staged certificate files
+      ansible.builtin.stat:
+        path: "{{ ydb_cert_stage }}/{{ item.name }}"
+        checksum_algorithm: sha256
+        get_checksum: true
+        get_mime: false
+        get_attributes: false
+        follow: false
+      loop: "{{ ydb_cert_files }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: ydb_staged_cert_stats
+
+    - name: Require the staged files to match the validated sources
+      ansible.builtin.assert:
+        that:
+          - pair[0].stat.checksum is defined
+          - pair[0].stat.checksum == pair[1].stat.checksum
+        fail_msg: "Staged certificate {{ pair[1].item.name }} does not match its source."
+      loop: "{{ ydb_staged_cert_stats.results | zip(ydb_source_cert_stats.results) | list }}"
+      loop_control:
+        loop_var: pair
+        label: "{{ pair[1].item.name }}"
+
+    - name: Create the certificate backup directory
+      ansible.builtin.file:
+        path: "{{ ydb_cert_stage }}/backup"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Back up certificate files that are already installed
+      ansible.builtin.copy:
+        src: "{{ ydb_dir }}/certs/{{ item.name }}"
+        dest: "{{ ydb_cert_stage }}/backup/{{ item.name }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0400"
+        follow: false
+      loop: "{{ ydb_cert_files }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.name in ydb_existing_cert_names
+      diff: false
+
+    - name: Record that live certificate files are about to be replaced
+      ansible.builtin.set_fact:
+        ydb_certs_promotion_started: true
+      changed_when: false
+
+    - name: Install the staged public certificates
+      ansible.builtin.copy:
+        src: "{{ ydb_cert_stage }}/{{ item.name }}"
+        dest: "{{ ydb_dir }}/certs/{{ item.name }}"
+        remote_src: true
+        owner: root
+        group: certs
+        mode: "0440"
+        follow: false
+      loop: "{{ ydb_cert_files | rejectattr('secret') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Install the staged private certificates
+      ansible.builtin.copy:
+        src: "{{ ydb_cert_stage }}/{{ item.name }}"
+        dest: "{{ ydb_dir }}/certs/{{ item.name }}"
+        remote_src: true
+        owner: root
+        group: certs
+        mode: "0440"
+        follow: false
+      loop: "{{ ydb_cert_files | selectattr('secret') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+      diff: false
+
+  rescue:
+    - name: Restore the previous certificate files
+      ansible.builtin.copy:
+        src: "{{ ydb_cert_stage }}/backup/{{ item.name }}"
+        dest: "{{ ydb_dir }}/certs/{{ item.name }}"
+        remote_src: true
+        owner: root
+        group: certs
+        mode: "0440"
+        follow: false
+      loop: "{{ ydb_cert_files }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - ydb_certs_promotion_started | default(false) | bool
+        - item.name in ydb_existing_cert_names
+      diff: false
+
+    - name: Remove certificate files introduced by the failed replacement
+      ansible.builtin.file:
+        path: "{{ ydb_dir }}/certs/{{ item.name }}"
+        state: absent
+      loop: "{{ ydb_cert_files }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - ydb_certs_promotion_started | default(false) | bool
+        - item.name not in ydb_existing_cert_names
+
+    - name: Report the certificate installation failure
+      ansible.builtin.fail:
+        msg: >-
+          {{ 'Certificate installation failed and the previous files were restored.'
+             if ydb_certs_promotion_started | default(false) | bool
+             else 'Certificate installation failed before replacing the live files.' }}
+          {{ ansible_failed_result.msg | default('') }}
+
+  always:
+    - name: Remove the certificate staging directory
+      ansible.builtin.file:
+        path: "{{ ydb_cert_stage }}"
+        state: absent

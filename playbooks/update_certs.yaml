@@ -1,37 +1,38 @@
 ---
 # PLAYBOOK: ydb_platform.ydb.update_certs
-# PROPOSE : Copy TLS certificate files to all YDB cluster nodes
+# PURPOSE: Validate and copy TLS certificate files to YDB hosts over SSH.
 #
-# EXAMPLE:
+# The first play checks every selected host without changing it. Installation
+# starts only after that whole set is valid. YDB processes are not restarted.
 #
-# Update certificates on all nodes
+# EXAMPLES:
+#
 #   ansible-playbook ydb_platform.ydb.update_certs
+#   ansible-playbook ydb_platform.ydb.restart
 #
-# Update certificates on selected hosts
-#   ansible-playbook ydb_platform.ydb.update_certs -l <HostFQDN>
+# When the certificates currently loaded by the cluster are expired:
 #
-# NOTES:
-#   This playbook only copies certificate files and does not restart YDB processes.
-#   After updating certificates, restart the cluster to apply changes, for example:
-#     ansible-playbook ydb_platform.ydb.restart
-#   or, if the cluster is unavailable over TLS:
-#     ansible-playbook ydb_platform.ydb.stop_cluster
-#     ansible-playbook ydb_platform.ydb.start_cluster
+#   ansible-playbook ydb_platform.ydb.update_certs
+#   ansible-playbook ydb_platform.ydb.stop_cluster
+#   ansible-playbook ydb_platform.ydb.start_cluster
 
-- name: Check if required variables are defined
+- name: Validate TLS certificates for every selected node
   hosts: "{{ ansible_play_hosts | default('ydb') }}"
-
+  gather_facts: false
+  any_errors_fatal: true
   tasks:
-    - ansible.builtin.assert:
-        that:
-          - lookup('vars', item, default=None) is not none
-        fail_msg: "Either {{ item }} variable is required"
-      loop:
-        - ydb_tls_dir
+    - name: Validate TLS certificate files
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_certs
+        tasks_from: validate
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- name: Install TLS certificates on every selected node
+  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  gather_facts: false
   become: true
-
-  roles:
-    - role: preflight
-    - role: ydbd_certs
+  any_errors_fatal: true
+  tasks:
+    - name: Install TLS certificate files
+      ansible.builtin.import_role:
+        name: ydb_platform.ydb.ydbd_certs
+        tasks_from: install

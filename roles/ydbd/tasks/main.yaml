@@ -59,7 +59,7 @@
   file: state=directory path={{ ydb_dir }}/audit group=ydb owner=ydb mode='0700'
 
 - name: Create the YDB certs directory
-  file: state=directory path={{ ydb_dir }}/certs group=ydb owner=ydb mode='0700'
+  file: state=directory path={{ ydb_dir }}/certs group=certs owner=root mode='0750'
 
 - name: Create the YDB configuration backup directory
   file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode='0700'

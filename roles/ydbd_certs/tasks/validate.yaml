@@ -1,0 +1,49 @@
+---
+- name: Check that ydb_tls_dir is defined
+  ansible.builtin.assert:
+    that:
+      - ydb_tls_dir is defined
+      - ydb_tls_dir | length > 0
+    fail_msg: >-
+      ydb_tls_dir is required and must point to the directory containing
+      ca.crt and the per-node certificate files.
+
+- name: Define the certificate file set
+  ansible.builtin.set_fact:
+    ydb_cert_files:
+      - name: ca.crt
+        src: "{{ ydb_tls_dir }}/ca.crt"
+        secret: false
+      - name: node.crt
+        src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.crt"
+        secret: false
+      - name: node.key
+        src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.key"
+        secret: true
+      - name: web.pem
+        src: "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/web.pem"
+        secret: true
+  changed_when: false
+
+- name: Validate the TLS certificate set on the control node
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ role_path }}/files/validate_cert_set.py"
+      - --ca
+      - "{{ ydb_tls_dir }}/ca.crt"
+      - --cert
+      - "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.crt"
+      - --key
+      - "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/node.key"
+      - --web
+      - "{{ ydb_tls_dir }}/{{ inventory_hostname_short }}/web.pem"
+      - --name
+      - "{{ inventory_hostname }}"
+      - --name
+      - "{{ inventory_hostname_short }}"
+      - --label
+      - "{{ inventory_hostname }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
