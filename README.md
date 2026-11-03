@@ -25,7 +25,7 @@ Current limitations:
 
 ## Supported operation systems
 
-* Ubuntu 20.04, 22.04, 24.04
+* Ubuntu 20.04, 22.04, 24.04, 26.04
 * Debian 11.11, 12.7
 * AstraLinux 1.7, 1.8
 * AlmaLinux 8.9, 9.4, 9.5
@@ -86,6 +86,13 @@ Overall installation is performed according to the [official instruction](https:
 
     ```bash
     ansible-galaxy collection install ydb-ansible-X.Y.tar.gz
+    ```
+
+    Local installation from Git repository can also be performed using the following commands:
+
+    ```bash
+    cd /path/to/ydb-ansible
+    ansible-galaxy collection install git+file://$(pwd)
     ```
 
 1. In the new subdirectory, create the `ansible.cfg` file using the [provided example](https://github.com/ydb-platform/ydb-ansible-examples/blob/main/3-nodes-mirror-3-dc/ansible.cfg).

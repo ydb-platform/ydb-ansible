@@ -17,7 +17,14 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
     result = {'changed': False}
     try:
-        ydbops_cli = cli.YdbOps.from_module(module)
+        database = module.params.get('database')
+        if database is not None:
+            database = cli.YdbOps.compatible_database(
+                module,
+                module.params.get('ydbops_bin'),
+                database,
+            )
+        ydbops_cli = cli.YdbOps.from_module(module, database=database)
         module.log(f'running {ydbops_cli.common_options}')
         rc, stdout, stderr = ydbops_cli([])
         result['msg'] = f'ydbops status — rc: {rc}, stdout: {stdout}, stderr: {stderr}'

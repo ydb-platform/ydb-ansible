@@ -143,6 +143,7 @@ class YdbOps(CLI):
     argument_spec = dict(
         ydbops_bin=dict(type='str', default=None),
         ydbops_endpoint=dict(type='str', default=None),
+        database=dict(type='str', default=None),
         ydbops_systemd_unit=dict(type='str', default='ydbd-storage'),
         ca_file=dict(type='str', default=None),
         ssh_args=dict(type='str', default=None),
@@ -156,7 +157,7 @@ class YdbOps(CLI):
 
     def __init__(self, module, ydbops_bin, ydbops_endpoint, ydbops_systemd_unit=None,
                  ca_file=None, ssh_args=None, availability_mode=None, token=None, token_file=None, 
-                 hosts=None, log_file=None, duration=None):
+                 hosts=None, log_file=None, duration=None, database=None):
         self.module = module
 
         self.common_options = [ydbops_bin, 'restart', '--storage']
@@ -164,6 +165,8 @@ class YdbOps(CLI):
 
         if ydbops_endpoint is not None:
             self.common_options.extend(['--endpoint', ydbops_endpoint])
+        if database is not None:
+            self.common_options.extend(['--database', database])
         if ca_file is not None:
             self.common_options.extend(['--ca-file', ca_file])
         if ssh_args is not None:
@@ -183,3 +186,31 @@ class YdbOps(CLI):
         if log_file is not None and log_file != "":
             self.cmd_format = "{cmd} -v >> " + shlex.quote(log_file)
             self.use_unsafe_shell = True
+
+    @staticmethod
+    def compatible_database(module, ydbops_bin, database):
+        rc, stdout, stderr = module.run_command([
+            ydbops_bin,
+            '--database',
+            database,
+            'version',
+        ])
+        if rc == 0:
+            return database
+
+        output_lines = {
+            normalized
+            for line in f'{stdout}\n{stderr}'.splitlines()
+            if (normalized := line.strip().lower())
+        }
+        unsupported_database_output = {
+            'error: unknown flag: --database',
+            'unknown flag: --database',
+        }
+        if output_lines and output_lines <= unsupported_database_output:
+            return None
+
+        raise RuntimeError(
+            f'cannot check ydbops database support — rc: {rc}, '
+            f'stdout: {stdout}, stderr: {stderr}'
+        )
