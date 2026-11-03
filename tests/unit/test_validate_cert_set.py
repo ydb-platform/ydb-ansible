@@ -172,7 +172,11 @@ class ValidateCertSetTest(unittest.TestCase):
         metadata = (ROOT / "roles" / "ydbd_certs" / "meta" / "main.yaml").read_text()
         self.assertIn("allow_duplicates: false", metadata)
         installer = (ROOT / "roles" / "ydbd" / "tasks" / "main.yaml").read_text()
-        self.assertIn("path={{ ydb_dir }}/certs group=certs owner=root mode='0750'", installer)
+        self.assertIn("path={{ ydb_dir }}/certs group=ydb owner=ydb mode='0700'", installer)
+        certificate_install = (ROOT / "roles" / "ydbd_certs" / "tasks" / "install.yaml").read_text()
+        self.assertIn('group: "{{ ydb_host_group }}"', certificate_install)
+        self.assertNotIn("name: certs", certificate_install)
+        self.assertNotIn("ansible.builtin.user:", certificate_install)
 
 
 if __name__ == "__main__":
