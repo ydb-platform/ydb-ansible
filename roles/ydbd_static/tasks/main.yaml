@@ -128,6 +128,45 @@
   loop:
     - ydb_password
 
+- name: validate ydb_password characters
+  no_log: true
+  ansible.builtin.assert:
+    that:
+      - ydb_password is match('^[A-Za-z0-9]+$')
+    fail_msg: ydb_password must contain only latin letters and digits
+
+- name: check time synchronization with timedatectl
+  ansible.builtin.command: timedatectl show -p NTPSynchronized --value
+  register: ydb_timedatectl_sync
+  changed_when: false
+  failed_when: false
+  when: ydb_time_sync_check|bool
+  tags:
+    - checks
+    - time_sync
+
+- name: check time synchronization with chronyc
+  ansible.builtin.command: chronyc tracking
+  register: ydb_chronyc_tracking
+  changed_when: false
+  failed_when: false
+  when:
+    - ydb_time_sync_check|bool
+    - ydb_timedatectl_sync.stdout | trim != 'yes'
+  tags:
+    - checks
+    - time_sync
+
+- name: fail if time is not synchronized
+  ansible.builtin.assert:
+    that:
+      - ydb_timedatectl_sync.stdout | trim == 'yes' or ('Leap status     : Normal' in (ydb_chronyc_tracking.stdout | default('')))
+    fail_msg: "Host time is not synchronized. Fix NTP/chrony before YDB bootstrap to avoid CLOCK_SKEW healthcheck failures."
+  when: ydb_time_sync_check|bool
+  tags:
+    - checks
+    - time_sync
+
 - name: Add the disk formatting script
   template: src=safe_format.j2 dest={{ ydb_dir }}/home/safe_format.sh mode='755'
 
@@ -259,6 +298,15 @@
     dest: "{{ ydb_dir }}/bin/ydb-dstool"
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is defined
+
+- name: Ensure local bin directory exists for ydb-dstool download
+  delegate_to: 127.0.0.1
+  run_once: true
+  ansible.builtin.file:
+    path: "{{ ansible_config_file | dirname }}/bin"
+    state: directory
+    mode: 0755
+  when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
 
 - name: Install ydb-dstool (from URL) to localhost
   delegate_to: 127.0.0.1
@@ -395,11 +443,9 @@
     database: "/{{ ydb_domain }}"
     token: "{{ ydb_credentials.token }}"
     enforce_user_token_requirement: "{{ ydb_enforce_user_token_requirement }}"
+    timeout: "{{ ydb_healthcheck_timeout }}"
   run_once: true
   register: healthcheck_result
-  until: healthcheck_result is succeeded
-  retries: 30
-  delay: 10
   become: true
   become_user: "{{ ydb_host_user }}"
   tags:

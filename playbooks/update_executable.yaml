@@ -65,6 +65,17 @@
       tags:
         - no_restart
 
+    - name: Ensure local bin directory exists for ydb-dstool download
+      delegate_to: 127.0.0.1
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ ansible_config_file | dirname }}/bin"
+        state: directory
+        mode: 0755
+      when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
+      tags:
+        - no_restart
+
     - name: Install ydb-dstool (from URL) to localhost
       delegate_to: 127.0.0.1
       run_once: true

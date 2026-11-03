@@ -13,6 +13,17 @@ DOCUMENTATION = r'''
         Wait until healthcheck becomes GOOD
 '''
 
+def collect_issue_messages(data, limit=5):
+    messages = []
+    for issue in data.get('issue_log', []):
+        message = issue.get('message')
+        if message:
+            messages.append(message)
+        if len(messages) >= limit:
+            break
+    return messages
+
+
 def main():
     argument_spec=dict(
         timeout=dict(type='int', default=180),
@@ -67,7 +78,8 @@ def main():
                 time.sleep(5)
                 continue
             if self_check_result not in ("GOOD", "DEGRADED"):
-                module.log(f'self check result: {self_check_result}: {data}')
+                issue_messages = collect_issue_messages(data)
+                module.log(f'self check result: {self_check_result}, issue messages: {issue_messages}')
                 time.sleep(5)
                 continue
             result['msg'] = f'ydb healthcheck result "{self_check_result}": {data}'
@@ -82,7 +94,8 @@ def main():
                     failure_msg += f', stdout="{last_stdout}", stderr="{last_stderr}"'
                 elif last_data:
                     if last_self_check_result:
-                        failure_msg += f', result="{last_self_check_result}", data={last_data}'
+                        issue_messages = collect_issue_messages(last_data)
+                        failure_msg += f', result="{last_self_check_result}", issue_messages={issue_messages}, data={last_data}'
                     else:
                         failure_msg += f', stdout="{last_stdout}"'
                 else:

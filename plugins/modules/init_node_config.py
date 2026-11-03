@@ -1,6 +1,7 @@
 import json
 from logging import basicConfig
 import os
+import shutil
 import tempfile
 import yaml
 
@@ -17,12 +18,42 @@ DOCUMENTATION = r'''
         Create initial config for a node with V2 configuration
 '''
 
-def check_node_config_exists(config_dir, result):
-    """Check if node configuration already exists"""
+def prepare_node_config(config_file):
+    """Read a config file and add metadata required by node config init."""
+    with open(config_file, 'r') as f:
+        config = yaml.safe_load(f)
+
+    config['metadata'] = {
+        'kind': 'MainConfig',
+        'cluster': '',
+        'version': 0
+    }
+    return config
+
+
+def dump_config(config):
+    return yaml.safe_dump(config, default_flow_style=False, sort_keys=True)
+
+
+def check_node_config_current(config_file, config_dir, result):
+    """Check if node configuration already matches the requested config."""
     config_path = os.path.join(config_dir, 'config.yaml')
-    if os.path.exists(config_path):
+    if not os.path.exists(config_path):
+        return False
+
+    desired_config = prepare_node_config(config_file)
+    try:
+        with open(config_path, 'r') as f:
+            current_config = yaml.safe_load(f)
+    except Exception as e:
+        result['msg'] = f'failed to read existing node configuration: {e}'
+        return False
+
+    if dump_config(current_config) == dump_config(desired_config):
         result['msg'] = 'node configuration already exists'
         return True
+
+    result['msg'] = 'node configuration exists but differs from requested config'
     return False
 
 
@@ -31,16 +62,7 @@ def init_node_config(ydb_cli, config_file, config_dir, result):
 
     temp_file = None
     try:
-        # Read the original config file
-        with open(config_file, 'r') as f:
-            original_config = yaml.safe_load(f)
-
-        # Create the initial metadata structure
-        original_config['metadata'] = {
-            'kind': 'MainConfig',
-            'cluster': '',
-            'version': 0
-        }
+        original_config = prepare_node_config(config_file)
 
         # Create temporary file
         temp_fd, temp_file = tempfile.mkstemp(suffix='.yaml', text=True)
@@ -89,15 +111,26 @@ def main():
         config_file = module.params.get('config_file')
         config_dir = module.params.get('config_dir')
 
-        # Check if node configuration already exists
-        if check_node_config_exists(config_dir, result):
+        config_path = os.path.join(config_dir, 'config.yaml')
+        backup_path = config_path + '.ansible.bak'
+
+        # Check if node configuration already matches the requested config
+        if check_node_config_current(config_file, config_dir, result):
             module.exit_json(**result)
+
+        if os.path.exists(config_path):
+            shutil.move(config_path, backup_path)
 
         # Initialize node configuration
         success = init_node_config(ydb_cli, config_file, config_dir, result)
 
         if not success:
+            if os.path.exists(backup_path):
+                shutil.move(backup_path, config_path)
             module.fail_json(**result)
+
+        if os.path.exists(backup_path):
+            os.unlink(backup_path)
 
         result['changed'] = True
         module.exit_json(**result)
