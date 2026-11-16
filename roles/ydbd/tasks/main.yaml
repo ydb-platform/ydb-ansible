@@ -64,6 +64,13 @@
 - name: Create the YDB configuration backup directory
   file: state=directory path={{ ydb_dir }}/reserve group=ydb owner=ydb mode='0700'
 
+- name: require ydb_tls_dir when the node certificates are placed on the hosts
+  assert:
+    that:
+      - ydb_tls_dir is defined
+    fail_msg: "ydb_tls_copy_node_certs is false, so ydb_tls_dir must hold the ca.crt to copy and no certificates are generated"
+  when: not ydb_tls_copy_node_certs | bool
+
 - name: generate certificates
   when: ydb_tls_dir is not defined
   delegate_to: 127.0.0.1
@@ -113,6 +120,7 @@
         owner: root
         group: certs
         mode: 0440
+      when: ydb_tls_copy_node_certs | bool
 
     - name: copy the TLS node.key
       copy:
@@ -121,6 +129,7 @@
         owner: root
         group: certs
         mode: 0440
+      when: ydb_tls_copy_node_certs | bool
 
     - name: copy the TLS web.pem
       copy:
@@ -129,6 +138,25 @@
         owner: root
         group: certs
         mode: 0440
+      when: ydb_tls_copy_node_certs | bool
+
+    - name: check the node certificates placed on the host
+      stat:
+        path: "{{ ydb_dir }}/certs/{{ item }}"
+      loop: [node.crt, node.key, web.pem]
+      register: ydb_node_cert_files
+      when: not ydb_tls_copy_node_certs | bool
+
+    - name: require the node certificates placed on the host
+      assert:
+        that:
+          - item.stat.exists
+        fail_msg: "{{ ydb_dir }}/certs/{{ item.item }} is missing on {{ inventory_hostname }}, and ydb_tls_copy_node_certs is false"
+        quiet: true
+      loop: "{{ ydb_node_cert_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: not ydb_tls_copy_node_certs | bool
 
 - name: install ydbd
   ansible.builtin.import_role:
