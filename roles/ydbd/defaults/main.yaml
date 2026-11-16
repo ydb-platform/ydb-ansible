@@ -2,3 +2,9 @@ ydb_transparent_hugepages_enable: true
 ydb_config_v2: false
 ydb_host_user: ydb
 ydb_host_group: ydb
+# Copy each node's certificate, key and web.pem from `ydb_tls_dir` on the
+# control host. Set to false when they are placed on the hosts by other means,
+# such as a key generated on each host and certified through a CSR: `ydb_tls_dir`
+# then needs to hold only `ca.crt`, and the files must already be in
+# `{{ ydb_dir }}/certs` on each host.
+ydb_tls_copy_node_certs: true
