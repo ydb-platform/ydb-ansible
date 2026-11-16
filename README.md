@@ -26,7 +26,7 @@ Current limitations:
 ## Supported operation systems
 
 * Ubuntu 20.04, 22.04, 24.04, 26.04
-* Debian 11.11, 12.7
+* Debian 11.11, 12.7, 13
 * AstraLinux 1.7, 1.8
 * AlmaLinux 8.9, 9.4, 9.5
 * Altlinux 8.4, 10, 10.1, 10.2
