@@ -34,6 +34,14 @@ export PATH
 set -e
 set -u
 
+# The token is root's: files this script creates are readable by root alone.
+umask 077
+
+# One trap for the token and the log, set before either exists: a second
+# `trap ... EXIT` would replace the first and leave the token behind.
+TMPLOG=`mktemp /tmp/ydbd.createdb.XXXXXX`
+trap "rm -f ${TOKEN} ${TMPLOG}" EXIT
+
 if [ -f ${PASSFILE} ]; then
   # Username and password are passed in file for reconfiguration.
   . ${PASSFILE}
@@ -45,14 +53,15 @@ else
   ydb --ca-file ${CAFILE} -e ${DB_ENDPOINT} -d ${DB_DOMAIN} \
     --user root --no-password auth get-token -f > ${TOKEN}
 fi
-trap "rm -f ${TOKEN}" EXIT
 
-TMPLOG=`mktemp /tmp/ydbd.createdb.XXXXXX`
-trap "rm -f ${TMPLOG}" EXIT
-
-ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
+# Under `set -e` a failing ydbd would end the script before its log is
+# printed, and the trap would delete it unread, so a failure is caught here.
+if ! ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
   admin database /{{ ydb_domain }}/${DB_NAME} \
-  create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1
+  create ${DB_POOL}:${DB_GROUPS} >>${TMPLOG} 2>&1; then
+  cat ${TMPLOG} >&2
+  exit 1
+fi
 
 if grep -qE '^ERROR: ' ${TMPLOG}; then
   cat ${TMPLOG};
@@ -121,9 +130,12 @@ if [ "$4" -eq "1" ]; then
   echo "-------------------------------------------"
   echo ""
 
-  ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
+  if ! ydbd --ca-file ${CAFILE} -s ${DB_ENDPOINT} -f ${TOKEN} \
     admin database /{{ ydb_domain }}/${DB_NAME} \
-    quotas change --data-size-hard-quota $hard_quota_bytes --data-size-soft-quota $soft_quota_bytes >>${TMPLOG} 2>&1
+    quotas change --data-size-hard-quota $hard_quota_bytes --data-size-soft-quota $soft_quota_bytes >>${TMPLOG} 2>&1; then
+    cat ${TMPLOG} >&2
+    exit 1
+  fi
 fi
 
 # Ensure success, e.g. no error messages even when the exit code is zero.
