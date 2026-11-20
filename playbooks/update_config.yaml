@@ -170,11 +170,19 @@
         retries: 30
         delay: 15
 
+      # Only each YDB host's location, not the whole hostvars: since ansible-core
+      # 2.19 passing hostvars resolves every variable of every host, and fails on
+      # any that refers to hostvars itself.
+      - name: collect the location of each YDB host for patch_config_v2
+        set_fact:
+          ydb_hosts_locations: "{{ ydb_hosts_locations | default({}) | combine({item: {'location': hostvars[item].location | default({})}}) }}"
+        loop: "{{ groups['ydb'] }}"
+
       - name: apply patch_config_v2 to configuration
         ydb_platform.ydb.patch_config:
           config: "{{ ydb_config_dict }}"
           output_file: "{{ ydb_temp_config_path }}"
-          hostvars: "{{ hostvars }}"
+          hostvars: "{{ ydb_hosts_locations }}"
           ydb_disks: "{{ ydb_disks }}"
           groups: "{{ groups }}"
           ydb_dir: "{{ ydb_dir }}"
