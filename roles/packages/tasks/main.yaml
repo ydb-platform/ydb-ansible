@@ -29,6 +29,16 @@
         path: "{{ package_libxcrypt }}"
       register: package_libxcrypt_stat
     
+    - name: Create the directory for libxcrypt
+      delegate_to: 127.0.0.1
+      run_once: true
+      become: false
+      ansible.builtin.file:
+        path: "{{ package_libxcrypt | dirname }}"
+        state: directory
+        mode: "0755"
+      when: not package_libxcrypt_stat.stat.exists|bool
+
     - name: Download libxcrypt
       delegate_to: 127.0.0.1
       run_once: true

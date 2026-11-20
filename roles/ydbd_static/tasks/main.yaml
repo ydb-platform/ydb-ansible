@@ -260,9 +260,20 @@
     mode: 0755
   when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is defined
 
+- name: Create the directory for ydb-dstool on localhost
+  delegate_to: 127.0.0.1
+  run_once: true
+  become: false
+  ansible.builtin.file:
+    path: "{{ ansible_config_file | dirname }}/bin"
+    state: directory
+    mode: "0755"
+  when: not ydb_dstool_exists.stat.exists and ydb_dstool_binary is not defined
+
 - name: Install ydb-dstool (from URL) to localhost
   delegate_to: 127.0.0.1
   run_once: true
+  become: false
   ansible.builtin.get_url:
     url: https://storage.yandexcloud.net/yandexcloud-ydb-dstool/release/0.0.14/linux/amd64/ydb-dstool
     dest: "{{ ansible_config_file | dirname }}/bin/ydb-dstool"
