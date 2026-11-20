@@ -34,6 +34,9 @@ export PATH
 set -e
 set -u
 
+# The token is root's: files this script creates are readable by root alone.
+umask 077
+
 # One trap for the token and the log, set before either exists: a second
 # `trap ... EXIT` would replace the first and leave the token behind.
 TMPLOG=`mktemp /tmp/ydbd.createdb.XXXXXX`
