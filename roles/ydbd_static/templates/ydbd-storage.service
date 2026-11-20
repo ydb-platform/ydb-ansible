@@ -27,6 +27,9 @@ ExecStart={{ ydb_dir }}/bin/ydbd server \
 {% endif %}
     --grpcs-port 2135 --grpc-ca {{ ydb_dir }}/certs/ca.crt \
     --ic-port 19001 --ca {{ ydb_dir }}/certs/ca.crt \
+{% if ydb_mon_address is defined %}
+    --mon-address {{ ydb_mon_address }} \
+{% endif %}
     --mon-port 8765 --mon-cert {{ ydb_dir }}/certs/web.pem
 LimitNOFILE=65536
 LimitCORE=0
