@@ -1,5 +1,6 @@
 import yaml
 import io
+from collections.abc import Mapping
 from ansible.errors import AnsibleFilterError
 from ansible.module_utils.six import string_types
 from ansible.utils.display import Display
@@ -27,6 +28,28 @@ def dict_representer(dumper, data):
 
 YDBDynCustomYAMLDumper.add_representer(dict, dict_representer)
 
+def _to_plain(data):
+    """
+    Copy data into plain Python types, which yaml.SafeDumper can represent.
+
+    Since ansible-core 2.19, templated values arrive as subclasses of dict, list,
+    str and the number types. SafeDumper looks representers up by exact type, so
+    it cannot represent them, and the dump would fall back to str().
+    """
+    if isinstance(data, Mapping):
+        return {_to_plain(key): _to_plain(value) for key, value in data.items()}
+    if isinstance(data, (list, tuple)):
+        return [_to_plain(item) for item in data]
+    if isinstance(data, bool):
+        return bool(data)
+    if isinstance(data, int):
+        return int(data)
+    if isinstance(data, float):
+        return float(data)
+    if isinstance(data, str):
+        return str(data)
+    return data
+
 def ydb_config_to_yaml(a, indent=2, *args, **kw):
     """
     A custom variant of to_nice_yaml that ensures proper formatting
@@ -40,6 +63,7 @@ def ydb_config_to_yaml(a, indent=2, *args, **kw):
     Returns:
         A formatted YAML string
     """
+    a = _to_plain(a)
     try:
         output = io.StringIO()
         yaml.dump(
