@@ -15,6 +15,16 @@
     path: "{{ ydb_archive_download }}"
   register: ydbd_archive_stat
 
+- name: Create the directory for the YDB release archive
+  delegate_to: 127.0.0.1
+  run_once: true
+  become: false
+  ansible.builtin.file:
+    path: "{{ ydb_archive_dest }}"
+    state: directory
+    mode: "0755"
+  when: not ydbd_archive_stat.stat.exists|bool or ydb_force_update|bool
+
 - name: Download YDB release archive
   delegate_to: 127.0.0.1
   run_once: true
