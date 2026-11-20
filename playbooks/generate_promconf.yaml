@@ -12,7 +12,7 @@
 #
 # WARNING: Run only on localhost
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- hosts: ydb
   run_once: true
   tasks:
     - name: generate prometheus config

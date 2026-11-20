@@ -19,7 +19,7 @@
 #
 
 - name: Format storage drives, erase metadata 
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
   any_errors_fatal: true
   vars:
     ydb_format_disk: True

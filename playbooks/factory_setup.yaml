@@ -1,5 +1,5 @@
 - name: setup YDB on appliance factory
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
   become: true
   tasks:
     - name: setup ipv4 connectivity

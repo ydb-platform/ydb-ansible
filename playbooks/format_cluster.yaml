@@ -19,7 +19,7 @@
 # REQUIRED SOFTWARE: lsblk, dd, xargs, awk, rm
 #
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- hosts: ydb
   become: true
 
   roles:

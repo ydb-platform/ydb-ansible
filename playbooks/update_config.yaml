@@ -14,7 +14,7 @@
 #   ansible-playbook ydb_platform.ydb.update_config --extra-vars "availability_mode=force"
 
 - name: Check if required variables are defined
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
 
   tasks:
 
@@ -35,7 +35,7 @@
     - always
 
 - name: Load presettings
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
 
   roles:
   - role: preflight
@@ -67,7 +67,7 @@
     - always
 
 - name: Update configs
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
   become: true
   become_method: sudo
   become_user: root

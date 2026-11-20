@@ -14,7 +14,7 @@
 #   ansible-playbook ydb_platform.ydb.update_executable --extra-vars "availability_mode=force"
 
 - name: check if required variables are defined
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
 
   tasks:
   - ansible.builtin.assert:
@@ -31,7 +31,7 @@
     - dynamic
     - no_restart
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- hosts: ydb
   become: true
   vars:
     ydb_force_update: true
@@ -46,7 +46,7 @@
     - dynamic
     - no_restart
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- hosts: ydb
   become: true
   tasks:
     - name: Check ydb-dstool presence
