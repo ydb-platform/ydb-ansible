@@ -18,7 +18,7 @@
 #   ansible-playbook ydb_platform.ydb.restart -t dynamic
 #
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- hosts: ydb
   become: true
 
   roles:
@@ -28,7 +28,7 @@
       - storage
       - static
 
-- hosts: "{{ ansible_play_hosts | default('ydb') }}"
+- hosts: ydb
   serial: "{{ ydb_restart_serial | default(1) }}"
 
   roles:

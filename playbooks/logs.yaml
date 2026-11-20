@@ -1,6 +1,6 @@
 ---
 - name: Get logs of YDB nodes
-  hosts: "{{ ansible_play_hosts | default('ydb') }}"
+  hosts: ydb
   tasks:
     - name: Fetch storage nodes logs
       shell: journalctl -u ydbd-storage
