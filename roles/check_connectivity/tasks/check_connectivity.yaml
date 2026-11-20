@@ -2,7 +2,7 @@
 
 - name: Stop script
   ansible.builtin.shell: 
-    cmd: "pkill -f -e \"port_listner\" || true"
+    cmd: "pkill -f -e \"[p]ort_listner\" || true"
   ignore_errors: True
 
 - name: Copy script for testing connectivity
@@ -70,7 +70,7 @@
 
 - name: Stop script
   ansible.builtin.shell: 
-    cmd: "pkill -f -e \"port_listner\""
+    cmd: "pkill -f -e \"[p]ort_listner\""
   ignore_errors: True
 
 - name: Remove script
