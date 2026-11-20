@@ -178,6 +178,9 @@
           ydb_disks: "{{ ydb_disks }}"
           groups: "{{ groups }}"
           ydb_dir: "{{ ydb_dir }}"
+          # Without it, a configuration that does not name its domain is
+          # replaced with none, and the cluster comes back as Root.
+          ydb_domain: "{{ ydb_domain }}"
         run_once: true
         register: patched_config_result
 
