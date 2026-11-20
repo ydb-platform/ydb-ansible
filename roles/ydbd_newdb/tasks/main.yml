@@ -4,12 +4,18 @@
 - name: YDB database creation
   become: true
   block:
+    # The file holds root's password: readable by root alone, and never shown
+    # as a diff.
     - name: Transfer the secrets
       ansible.builtin.template: 
         src: "secret.j2"
         dest: "{{ ydb_dir }}/certs/secret"
+        mode: "0600"
+      diff: false
     - name: Run the database creation script
       command: "{{ ydb_dir }}/home/create_database.sh {{ ydb_brokers | default(groups['ydb']) | flatten(levels=1) | first }} {{ ydb_dbname }} {{ ydb_database_groups }} {{ '1' if ydb_database_quotas else '0' }}"
+  # Removed whether or not the database was created.
+  always:
     - name: Cleanup the transferred secrets
       file: state=absent path={{ ydb_dir }}/certs/secret
   run_once: true
