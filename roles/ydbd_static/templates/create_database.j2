@@ -35,7 +35,11 @@ set -e
 set -u
 
 # The token is root's: files this script creates are readable by root alone.
+# The umask covers only a file the script creates, and the token's path is
+# fixed, so a token an earlier run left there, which `>` would truncate under
+# its own mode, is removed first.
 umask 077
+rm -f ${TOKEN}
 
 # One trap for the token and the log, set before either exists: a second
 # `trap ... EXIT` would replace the first and leave the token behind.
